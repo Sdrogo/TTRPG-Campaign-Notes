@@ -1,4 +1,5 @@
 import uuid
+from dataclasses import replace
 from datetime import UTC, datetime
 from typing import Any
 
@@ -10,6 +11,7 @@ from app.domain.imports import validate_files
 from app.domain.map_transfer import (
     UnreadableMapError,
     map_name,
+    map_to_json,
     plan_map,
     read_map,
 )
@@ -204,3 +206,20 @@ def test_maps_must_be_a_list_of_objects_and_within_the_cap() -> None:
         validate_files([many])
 
     assert raised.value.key == "errors.import.tooManyMaps"
+
+
+def test_an_arrows_bend_survives_export_and_import_and_is_optional_in_files() -> None:
+    a, b = _card(text="A"), _card(text="B")
+    bent = replace(_arrow(ArrowEnd(card_id=a.id), ArrowEnd(card_id=b.id)), bend=-75.5)
+    automatic = _arrow(ArrowEnd(card_id=b.id), ArrowEnd(card_id=a.id))
+    exported = map_to_json(
+        _map(), Board(cards=[a, b], arrows=[bent, automatic]), GeoBoard(), None, []
+    )
+
+    read = read_map(exported)
+    assert [arrow.bend for arrow in read.board.arrows] == [-75.5, None]
+
+    # A file from before spec 67 has no `bend` at all.
+    for arrow in exported["arrows"]:
+        del arrow["bend"]
+    assert [arrow.bend for arrow in read_map(exported).board.arrows] == [None, None]

@@ -1304,7 +1304,12 @@
       "none": "Tylko linia",
       "label": "Etykieta",
       "labelTowards": "Etykieta w stronę {{name}}",
-      "delete": "Usuń relację"
+      "delete": "Usuń relację",
+      "adjust": "Dostosuj łuk",
+      "bendHint": "Przeciągnij kropkę na strzałce, aby ją wygiąć. Dwukrotne kliknięcie przywraca łuk automatyczny.",
+      "resetBend": "Przywróć łuk",
+      "bendDone": "Gotowe",
+      "bendHandle": "Wygnij strzałkę"
     },
     "mention": {
       "button": "Mapa wzmianek",

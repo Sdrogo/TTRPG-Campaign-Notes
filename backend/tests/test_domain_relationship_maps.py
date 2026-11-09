@@ -607,6 +607,21 @@ def test_a_label_keeps_its_distance_from_the_arrow_only_with_a_place() -> None:
     assert plan.arrows[0].reverse_label_offset is None
 
 
+def test_an_arrows_bend_is_kept_within_the_limit_and_refused_beyond_it() -> None:
+    a, b = _text_card(), _text_card()
+    bent = _arrow(_card_end(a), _card_end(b), None, bend=-120.5)
+    automatic = _arrow(_card_end(b), _card_end(a), None)
+
+    plan = _plan(Board(), Board(cards=[a, b], arrows=[bent, automatic]))
+
+    assert plan.arrows[0].bend == -120.5
+    assert plan.arrows[1].bend is None
+    for bend in (5000.5, -5001, float("nan"), float("inf")):
+        arrow = _arrow(_card_end(a), _card_end(b), None, bend=bend)
+        with pytest.raises(InvalidBoardError):
+            _plan(Board(), Board(cards=[a, b], arrows=[arrow]))
+
+
 def test_a_label_farther_than_the_board_allows_is_refused() -> None:
     a, b = _text_card(), _text_card()
     for offset in (-2000.5, 2001):

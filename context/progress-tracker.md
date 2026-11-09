@@ -49,13 +49,13 @@ migration before its PR merges into `staging`; production gets it before the
 release to `main` that ships it. Before any release, list what is pending
 here and remind the product owner.
 
-- **Head in the repository**: `c1d7e3a9f5b2` (Clocks, spec 61, PR #293).
+- **Head in the repository**: `d4a8f2c6b9e1` (arrow bend, spec 67, PR #314).
 - **Staging database**: `c1d7e3a9f5b2 (head)`, applied 2026-11-03 with
   `backend/.env.staging` loaded.
 - **Production database**: `c1d7e3a9f5b2 (head)`, applied 2026-11-03 with
   `backend/.env` loaded (product owner's go-ahead), before the release that
   shipped it (PR #302). `e8c4a2f6b1d9` and `e9c4a2f7b1d8` were applied the same day.
-- **Pending**: none on staging, none on production.
+- **Pending**: `d4a8f2c6b9e1` (arrow bend, spec 67, additive nullable column) on staging and on production.
 
 When a new migration lands, update the three lines above and add it to the
 top of the chain below. Per-migration apply history (who, when, which env
@@ -238,9 +238,10 @@ image search, read aloud, GDPR (10-01 → 10-10). See the two older archives.
   2026-10-27). Ticket not written yet (the DDI template itself is in 47_3).
 - **67, Adjustable relationship arc** (product owner, 2026-11-09): a
   draggable bend per arrow on the free maps, as geographic links have (the
-  62 follow-up). Ticket written, awaiting confirmation of the defaults
-  and 3 open questions before code. One additive migration (`bend` on
-  `relationship_map_arrows`).
+  62 follow-up). Ticket confirmed by Andrea 2026-11-09 (players: same
+  rights as moving a card; plain-line bundle bends together; no automatic
+  reset); **built on PR #314**, migration `d4a8f2c6b9e1` to apply on staging
+  before merge and on production before the release.
 - **Two small tickets, not written yet**: default Tags in the creator's UI
   language (decided 2026-10-03), and a read-only members list for every
   member (the setup page stays Administrator-only).

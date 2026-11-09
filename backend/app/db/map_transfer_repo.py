@@ -146,6 +146,7 @@ async def insert_maps(
                 "reverse_label_position": arrow.reverse_label_position,
                 "label_offset": arrow.label_offset,
                 "reverse_label_offset": arrow.reverse_label_offset,
+                "bend": arrow.bend,
                 "color": arrow.color.value,
                 "master_only": arrow.master_only,
             }

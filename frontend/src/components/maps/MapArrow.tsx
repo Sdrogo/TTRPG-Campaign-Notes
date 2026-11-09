@@ -7,9 +7,11 @@ import {
   type EdgeProps,
 } from '@xyflow/react';
 import { Text, UnstyledButton } from '@mantine/core';
+import { useMediaQuery } from '@mantine/hooks';
 import { useTranslation } from 'react-i18next';
 import {
   arrowCurve,
+  bendThrough,
   colorValue,
   curvePath,
   fanBend,
@@ -52,15 +54,20 @@ export function MapArrow({ id, source, target, markerEnd, markerStart, data }: E
   // The press that may become a drag; a press that never moves is a click.
   const press = useRef<{ which: Which; x: number; y: number; moved: { position: number; offset: number } | null } | null>(null);
   const justDragged = useRef(false);
+  // The bend handle being dragged: the bend it would drop at, in the arrow's own way.
+  const [bendDrag, setBendDrag] = useState<number | null>(null);
+  const touch = useMediaQuery('(pointer: coarse)');
   const sourceRect = rectOf(useInternalNode(source));
   const targetRect = rectOf(useInternalNode(target));
   if (!sourceRect || !targetRect || !data) return null;
-  const { arrow, shift, fan, editable, onEdit, onMoveLabel } = data;
-  const length = Math.hypot(
-    targetRect.x + targetRect.width / 2 - (sourceRect.x + sourceRect.width / 2),
-    targetRect.y + targetRect.height / 2 - (sourceRect.y + sourceRect.height / 2),
-  );
-  const curve = shiftCurve(arrowCurve(sourceRect, targetRect, fanBend(fan, length)), shift);
+  const { arrow, shift, fan, bend, bending, editable, onEdit, onBend, onMoveLabel } = data;
+  const sourceCenter = { x: sourceRect.x + sourceRect.width / 2, y: sourceRect.y + sourceRect.height / 2 };
+  const targetCenter = { x: targetRect.x + targetRect.width / 2, y: targetRect.y + targetRect.height / 2 };
+  const length = Math.hypot(targetCenter.x - sourceCenter.x, targetCenter.y - sourceCenter.y);
+  // Its own bend (spec 67, stored on the fan's side) or its slot of the fan,
+  // or the bend being dragged right now.
+  const shownBend = bendDrag ?? (bend !== null ? fan.side * bend : fanBend(fan, length));
+  const curve = shiftCurve(arrowCurve(sourceRect, targetRect, shownBend), shift);
   const { from, to } = curve;
   const color = colorValue(arrow.color);
 
@@ -148,6 +155,24 @@ export function MapArrow({ id, source, target, markerEnd, markerStart, data }: E
     if (start?.moved) onMoveLabel(arrow.id, start.which, start.moved.position, start.moved.offset);
   };
 
+  const moveBend = (event: React.PointerEvent) => {
+    if (bendDrag === null && !(event.buttons & 1)) return;
+    const at = flow.screenToFlowPosition({ x: event.clientX, y: event.clientY });
+    // The pointer is where the (shifted) curve's middle should be. The ends
+    // are clipped to the cards, which pulls the middle toward the control
+    // point, so one correction puts it back under the pointer.
+    const wanted = bendThrough(sourceCenter, targetCenter, at) - shift;
+    const middleOf = (b: number) =>
+      bendThrough(sourceCenter, targetCenter, pointOnCurve(arrowCurve(sourceRect, targetRect, b), 0.5));
+    setBendDrag(wanted + (wanted - middleOf(wanted)));
+  };
+  const dropBend = () => {
+    if (bendDrag !== null) onBend(arrow.id, bendDrag);
+    setBendDrag(null);
+  };
+  const handleAt = pointOnCurve(curve, 0.5);
+  const handleSize = touch ? 44 : 28;
+
   return (
     <>
       <BaseEdge
@@ -163,6 +188,46 @@ export function MapArrow({ id, source, target, markerEnd, markerStart, data }: E
         }}
       />
       <EdgeLabelRenderer>
+        {bending && editable && (
+          <UnstyledButton
+            className="nodrag nopan"
+            aria-label={t('maps.arrow.bendHandle')}
+            onPointerDown={(event: React.PointerEvent<HTMLButtonElement>) => {
+              if (event.button !== 0) return;
+              event.currentTarget.setPointerCapture?.(event.pointerId);
+              setBendDrag(shownBend);
+            }}
+            onPointerMove={moveBend}
+            onPointerUp={dropBend}
+            onPointerCancel={() => setBendDrag(null)}
+            onClick={(event) => event.stopPropagation()}
+            onDoubleClick={() => onBend(arrow.id, null)}
+            style={{
+              position: 'absolute',
+              transform: `translate(-50%, -50%) translate(${handleAt.x}px, ${handleAt.y}px)`,
+              pointerEvents: 'all',
+              width: handleSize,
+              height: handleSize,
+              borderRadius: '50%',
+              background: 'transparent',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'grab',
+              touchAction: 'none',
+            }}
+          >
+            <span
+              style={{
+                width: 14,
+                height: 14,
+                borderRadius: '50%',
+                background: color,
+                border: '2px solid var(--bg-base)',
+              }}
+            />
+          </UnstyledButton>
+        )}
         {labels.map((label) => (
           <UnstyledButton
             key={label.which}

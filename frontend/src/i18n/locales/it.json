@@ -1236,7 +1236,12 @@
       "none": "Solo linea",
       "label": "Etichetta",
       "labelTowards": "Etichetta verso {{name}}",
-      "delete": "Elimina la relazione"
+      "delete": "Elimina la relazione",
+      "adjust": "Regola l'arco",
+      "bendHint": "Trascina il punto sulla relazione per piegarla. Doppio clic per tornare all'arco automatico.",
+      "resetBend": "Reimposta arco",
+      "bendDone": "Fatto",
+      "bendHandle": "Piega la relazione"
     },
     "mention": {
       "button": "Mappa delle menzioni",

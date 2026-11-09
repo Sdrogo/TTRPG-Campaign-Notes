@@ -941,6 +941,10 @@ class RelationshipMapArrowRow(Base):
             " AND reverse_label_offset <= 2000)",
             name="ck_relationship_map_arrows_reverse_label_offset",
         ),
+        CheckConstraint(
+            "bend IS NULL OR (bend >= -5000 AND bend <= 5000)",
+            name="ck_relationship_map_arrows_bend",
+        ),
     )
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
@@ -970,6 +974,9 @@ class RelationshipMapArrowRow(Base):
     # (negative to the other side); only with a position.
     label_offset: Mapped[float | None] = mapped_column(Float)
     reverse_label_offset: Mapped[float | None] = mapped_column(Float)
+    # How far the curve's middle leaves the straight line, in board pixels
+    # (positive to the right of the arrow's way); null = the automatic curve.
+    bend: Mapped[float | None] = mapped_column(Float)
     color: Mapped[str] = mapped_column(String(10))
     master_only: Mapped[bool] = mapped_column(Boolean, default=False)
 

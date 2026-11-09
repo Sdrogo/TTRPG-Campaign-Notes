@@ -91,6 +91,7 @@ export interface RawMapArrow {
   reverse_label_position: number | null;
   label_offset: number | null;
   reverse_label_offset: number | null;
+  bend: number | null;
   color: MapColor;
   master_only: boolean;
 }
@@ -163,6 +164,7 @@ function toArrow(arrow: RawMapArrow): MapArrow {
     reverseLabelPosition: arrow.reverse_label_position,
     labelOffset: arrow.label_offset,
     reverseLabelOffset: arrow.reverse_label_offset,
+    bend: arrow.bend,
     color: arrow.color,
     masterOnly: arrow.master_only,
   };
@@ -289,6 +291,7 @@ export function toBoardBody(board: Board, baseRevision?: number) {
       label_offset: arrow.label ? arrow.labelOffset : null,
       reverse_label_offset:
         arrow.direction === 'both' && arrow.reverseLabel ? arrow.reverseLabelOffset : null,
+      bend: arrow.bend,
       color: arrow.color,
       master_only: arrow.masterOnly,
     })),
@@ -580,6 +583,7 @@ export function addArrow(board: Board, from: ArrowEnd, to: ArrowEnd): [Board, st
     reverseLabelPosition: null,
     labelOffset: null,
     reverseLabelOffset: null,
+    bend: null,
     color: 'default',
     masterOnly: false,
   };
@@ -633,6 +637,8 @@ function boxExit(box: Rect, toward: Point): Point {
 export const DEFAULT_BEND_RATIO = 0.12;
 /** How far apart relations sharing both ends curve. */
 export const PARALLEL_BEND = 40;
+/** The farthest a curve may bend from its straight line (the backend refuses more). */
+export const MAX_BEND = 5000;
 
 /** A relation's curve: a quadratic one from `from` to `to` pulled toward `control`. */
 export interface Curve {
@@ -731,11 +737,17 @@ export function shiftCurve(curve: Curve, shift: number): Curve {
 export function arrowFan(arrows: MapArrow[], arrow: MapArrow): { slot: number; side: 1 | -1 } {
   const a = endId(arrow.from);
   const b = endId(arrow.to);
-  const units: string[] = [];
-  for (const other of arrows) {
+  const pair = arrows.filter((other) => {
     const x = endId(other.from);
     const y = endId(other.to);
-    if (!((x === a && y === b) || (x === b && y === a))) continue;
+    return (x === a && y === b) || (x === b && y === a);
+  });
+  // An arrow with a bend of its own (spec 67), or a bundle whose lines have
+  // one, leaves the fan: the others close up.
+  const bentLines = pair.some((other) => other.direction === 'none' && other.bend !== null);
+  const units: string[] = [];
+  for (const other of pair) {
+    if (other.direction === 'none' ? bentLines : other.bend !== null) continue;
     const unit = other.direction === 'none' ? 'lines' : other.id;
     if (!units.includes(unit)) units.push(unit);
   }
@@ -744,6 +756,64 @@ export function arrowFan(arrows: MapArrow[], arrow: MapArrow): { slot: number; s
     slot: units.indexOf(plain ? 'lines' : arrow.id),
     side: plain && a > b ? -1 : 1,
   };
+}
+
+/**
+ * The bend an arrow was given by hand (spec 67), or null for the automatic
+ * curve. The lines of a bundle share one: the first line that has one sets it.
+ * Stored in the frame of `arrowFan`'s `side`: an arrow bends `side * bend` to
+ * the right of its own way.
+ */
+export function ownBend(arrows: MapArrow[], arrow: MapArrow): number | null {
+  if (arrow.bend !== null || arrow.direction !== 'none') return arrow.bend;
+  const a = endId(arrow.from);
+  const b = endId(arrow.to);
+  const mate = arrows.find((other) => {
+    if (other.direction !== 'none' || other.bend === null) return false;
+    const x = endId(other.from);
+    const y = endId(other.to);
+    return (x === a && y === b) || (x === b && y === a);
+  });
+  return mate ? mate.bend : null;
+}
+
+/**
+ * Gives an arrow the bend `bend` (how far, in its own way, its curve's
+ * middle sits to the right of the line between its ends), or null for the
+ * automatic curve again. The lines of a bundle all take it (spec 67
+ * Decision 5), stored on the bundle's canonical side.
+ */
+export function setArrowBend(board: Board, arrowId: string, bend: number | null): Board {
+  const arrow = board.arrows.find((candidate) => candidate.id === arrowId);
+  if (!arrow) return board;
+  const a = endId(arrow.from);
+  const b = endId(arrow.to);
+  const plain = arrow.direction === 'none';
+  const stored =
+    bend === null ? null : Math.max(-MAX_BEND, Math.min(MAX_BEND, bend)) * (plain && a > b ? -1 : 1);
+  return {
+    ...board,
+    arrows: board.arrows.map((other) => {
+      if (other.id === arrowId) return { ...other, bend: stored };
+      if (!plain || other.direction !== 'none') return other;
+      const x = endId(other.from);
+      const y = endId(other.to);
+      return (x === a && y === b) || (x === b && y === a) ? { ...other, bend: stored } : other;
+    }),
+  };
+}
+
+/**
+ * The bend that puts a curve's middle at `p`, dragged by its handle: how far
+ * `p` is to the side of the straight line, rounded and within the limit.
+ */
+export function bendThrough(from: Point, to: Point, p: Point): number {
+  const dx = to.x - from.x;
+  const dy = to.y - from.y;
+  const length = Math.hypot(dx, dy);
+  if (length === 0) return 0;
+  const offset = ((p.x - from.x) * -dy + (p.y - from.y) * dx) / length;
+  return Math.max(-MAX_BEND, Math.min(MAX_BEND, Math.round(offset)));
 }
 
 /** How far an arrow of `length` in `fan` bends (see `linkCurve`). */

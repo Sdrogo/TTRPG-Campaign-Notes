@@ -1236,7 +1236,12 @@
       "none": "Solo línea",
       "label": "Etiqueta",
       "labelTowards": "Etiqueta hacia {{name}}",
-      "delete": "Eliminar la relación"
+      "delete": "Eliminar la relación",
+      "adjust": "Ajustar el arco",
+      "bendHint": "Arrastra el punto de la flecha para curvarla. Doble clic para volver al arco automático.",
+      "resetBend": "Restablecer arco",
+      "bendDone": "Hecho",
+      "bendHandle": "Curvar la flecha"
     },
     "mention": {
       "button": "Mapa de menciones",

@@ -4,7 +4,8 @@
 
 - Product owner's request (2026-11-09): "Mi piacerebbe avere la possibilità
   di modificare l'arco di una relazione (come adesso succede per le mappe
-  geografiche) anche per le Mappe relazionali."
+  geografiche) anche per le Mappe relazionali." (That is: adjust the arc of a
+  relationship on the relationship maps too, as the geographic maps allow.)
 - Spec 62 draws every arrow of the free maps (spec 28) and mention maps
   (spec 36) as an automatic curve (12% bend, fanned 40 px apart). It left out
   (62 Decision 8) a bend per arrow dragged by a handle, as the links of a
@@ -22,17 +23,20 @@
    positive to the right of the way the arrow goes, negative to the left,
    within +/-5000 (geo's `MAX_BEND`). `null` (the default for every existing
    arrow) keeps spec 62's automatic curve, so nothing already on a map moves.
-2. **Handle**: while the editor has an arrow selected (the same click that
-   opens it today), a round handle in the arrow's color sits on the middle of
-   the curve. Dragging it bends the curve so its middle follows the pointer
+2. **Handle**: the arrow's dialog (the click that opens it today) gets an
+   "Adjust the arc" button; it closes the dialog and shows, on that arrow
+   only, a round handle in the arrow's color on the middle of the curve (a
+   dialog would cover the board). Dragging it bends the curve so its middle follows the pointer
    (`bendThrough`, rounded to whole pixels), dropping it saves. Double-click
    (phone: double-tap) the handle gives the arc back to the automatic one
-   (`null`). Dragging the handle across the straight line flips the curve to
+   (`null`). A hint bar at the bottom of the board says so, with "Reset arc"
+   and "Done"; a click on the empty board or on another arrow also ends the
+   mode. Dragging the handle across the straight line flips the curve to
    the other side; bend 0 is a straight line.
-3. **Phone**: the handle is drawn at least 44 px wide to touch, the drag uses
-   pointer events (one finger on the handle bends, one finger elsewhere pans
-   as today), and the arrow's dialog gets a "Reset arc" button so resetting
-   does not depend on a double-tap.
+3. **Phone**: the handle's touch target is 44 px, the drag uses pointer
+   events (one finger on the handle bends, one finger elsewhere pans as
+   today), and the hint bar's "Reset arc" button means resetting does not
+   depend on a double-tap.
 4. **Arrows with their own bend leave the fan**: an arrow with a bend is left
    out of the automatic 40 px fan of its two cards (as geo links with a bend
    are), so the others close up; those still on `null` keep fanning.
@@ -50,7 +54,7 @@
    other editors and viewers see the new arc without a reload; while one
    person drags, the others get it on drop, as for dragging a card.
 8. **Export, import, duplicate**: the JSON export (spec 40) writes `bend`
-   on each arrow only when set; import reads it as optional, so files without
+   on each arrow (`null` when automatic); import reads it as optional, so files without
    it (older exports, the Obsidian import of spec 65) still work and the
    export format version does not change. Duplicating a Room or a map copies
    it with the arrow (same transfer code). Out-of-range values on import are
@@ -94,11 +98,17 @@
 - Frontend CI's 100% branch coverage and `tsc -b` hold; geographic map tests
   stay green.
 
-## Open questions for the product owner
+## Answered (product owner, 2026-11-09)
 
-1. Do you want the handle on **players too** where the map is editable, or
-   the Master only? (Proposed: same rights as moving a card.)
-2. For a bundle of plain lines, is "all bend together" right, or should
-   each line be bendable alone (they would then cross)? (Proposed: together.)
-3. Should the bend be **reset automatically** when a card is moved far
-   away? (Proposed: no; it is a pixel offset, like geo links.)
+1. Players with edit rights bend arrows: **same rights as moving a card**.
+2. A bundle of plain lines **bends together**.
+3. The bend is **kept** when a card moves (no automatic reset).
+
+## Built (2026-11-09, PR #314)
+
+- Migration `d4a8f2c6b9e1` (`bend` + `ck_relationship_map_arrows_bend`);
+  `MapArrow.bend` through the domain, API, repo and transfer code.
+- Frontend: `ownBend`, `setArrowBend`, `bendThrough` (moved from
+  `geoMaps.ts`) in `lib/maps.ts`; `arrowFan` skips bent arrows; the handle
+  in `MapArrow.tsx` corrects for the ends being clipped to the cards so the
+  curve's middle lands under the pointer; the hint bar lives in `MapBoard`.

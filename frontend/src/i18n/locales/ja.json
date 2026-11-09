@@ -1202,7 +1202,12 @@
       "none": "線のみ",
       "label": "ラベル",
       "labelTowards": "{{name}}向けのラベル",
-      "delete": "関係を削除"
+      "delete": "関係を削除",
+      "adjust": "弧を調整",
+      "bendHint": "矢印上の点をドラッグして曲げます。ダブルクリックで自動の弧に戻ります。",
+      "resetBend": "弧をリセット",
+      "bendDone": "完了",
+      "bendHandle": "矢印を曲げる"
     },
     "mention": {
       "button": "言及マップ",

@@ -1202,7 +1202,12 @@
       "none": "仅线条",
       "label": "标签",
       "labelTowards": "指向 {{name}} 的标签",
-      "delete": "删除关系"
+      "delete": "删除关系",
+      "adjust": "调整弧度",
+      "bendHint": "拖动箭头上的圆点来弯曲它。双击可恢复自动弧度。",
+      "resetBend": "重置弧度",
+      "bendDone": "完成",
+      "bendHandle": "弯曲箭头"
     },
     "mention": {
       "button": "提及地图",

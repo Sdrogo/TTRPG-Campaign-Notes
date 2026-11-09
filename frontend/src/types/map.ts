@@ -132,6 +132,11 @@ export interface MapArrow {
   /** How far a dragged label sits to the side of the arrow, in board pixels. */
   labelOffset: number | null;
   reverseLabelOffset: number | null;
+  /**
+   * How far the curve's middle leaves the straight line, in board pixels, to
+   * the right of the arrow's way (spec 67); null for the automatic curve.
+   */
+  bend: number | null;
   color: MapColor;
   masterOnly: boolean;
 }

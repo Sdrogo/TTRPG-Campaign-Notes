@@ -20,6 +20,8 @@ interface ArrowDialogProps {
   onSave: (patch: Partial<ArrowLook>) => void;
   onDelete: () => void;
   onClose: () => void;
+  /** Closes the dialog and shows the arrow's bend handle (spec 67); only on a free map. */
+  onAdjust?: () => void;
 }
 
 /**
@@ -27,7 +29,7 @@ interface ArrowDialogProps {
  * direction on a two-way arrow), color and, for the Master, whether only
  * Masters see it. Mounted per arrow, so it starts from the arrow's values.
  */
-export function ArrowDialog({ arrow, fromName, toName, isMaster, onSave, onDelete, onClose }: ArrowDialogProps) {
+export function ArrowDialog({ arrow, fromName, toName, isMaster, onSave, onDelete, onClose, onAdjust }: ArrowDialogProps) {
   const { t } = useTranslation();
   const [direction, setDirection] = useState<ArrowDirection>(arrow.direction);
   const [label, setLabel] = useState(arrow.label ?? '');
@@ -80,6 +82,11 @@ export function ArrowDialog({ arrow, fromName, toName, isMaster, onSave, onDelet
             />
           )}
           <MapColorPicker value={color} onChange={setColor} />
+          {onAdjust && (
+            <Button variant="default" onClick={onAdjust}>
+              {t('maps.arrow.adjust')}
+            </Button>
+          )}
           {isMaster && (
             <Checkbox
               label={t('maps.masterOnlyArrow')}

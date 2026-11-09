@@ -739,6 +739,48 @@ async def test_a_dragged_label_keeps_its_place_and_a_place_outside_the_arrow_is_
     assert too_far.status_code == 422
 
 
+async def test_an_arrows_bend_is_kept_cleared_and_limited(
+    db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
+) -> None:
+    room = await _room(client, make_token)
+    relationship_map = await _map(client, room)
+    a, b = _text_card("A"), _text_card("B")
+    arrow = _arrow(a["id"], b["id"], "ally of")
+
+    saved = await _save(
+        client,
+        room,
+        relationship_map["id"],
+        room.master,
+        cards=[a, b],
+        arrows=[{**arrow, "bend": -85.5}],
+    )
+    assert saved.status_code == 200, saved.text
+    reloaded = await _get(client, room, relationship_map["id"], room.master)
+    assert reloaded["arrows"][0]["bend"] == -85.5
+
+    # No bend gives the automatic curve back.
+    cleared = await _save(
+        client,
+        room,
+        relationship_map["id"],
+        room.master,
+        cards=[a, b],
+        arrows=[{**arrow, "bend": None}],
+    )
+    assert cleared.json()["arrows"][0]["bend"] is None
+
+    too_far = await _save(
+        client,
+        room,
+        relationship_map["id"],
+        room.master,
+        cards=[a, b],
+        arrows=[{**arrow, "bend": 5001}],
+    )
+    assert too_far.status_code == 422
+
+
 async def test_reloading_keeps_every_place_group_and_arrow(
     db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
 ) -> None:

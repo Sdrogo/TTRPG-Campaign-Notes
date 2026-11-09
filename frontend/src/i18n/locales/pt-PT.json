@@ -1238,7 +1238,12 @@
       "none": "Só linha",
       "label": "Etiqueta",
       "labelTowards": "Etiqueta para {{name}}",
-      "delete": "Eliminar a relação"
+      "delete": "Eliminar a relação",
+      "adjust": "Ajustar o arco",
+      "bendHint": "Arrasta o ponto da seta para a curvar. Duplo clique para voltar ao arco automático.",
+      "resetBend": "Repor o arco",
+      "bendDone": "Concluído",
+      "bendHandle": "Curvar a seta"
     },
     "mention": {
       "button": "Mapa de menções",

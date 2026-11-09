@@ -42,6 +42,7 @@ from app.domain.geographic_maps import (
 )
 from app.domain.models import Document, DocumentImage, DocumentVisibility, Membership
 from app.domain.relationship_maps import (
+    MAX_BEND,
     MAX_LABEL_OFFSET,
     ArrowDirection,
     ArrowEnd,
@@ -189,6 +190,7 @@ class ArrowBody(BaseModel):
     reverse_label_offset: float | None = Field(
         default=None, ge=-MAX_LABEL_OFFSET, le=MAX_LABEL_OFFSET
     )
+    bend: float | None = Field(default=None, ge=-MAX_BEND, le=MAX_BEND)
     color: MapColor = MapColor.DEFAULT
     master_only: bool = False
 
@@ -376,6 +378,7 @@ def arrow_body(arrow: MapArrow) -> ArrowBody:
         reverse_label_position=arrow.reverse_label_position,
         label_offset=arrow.label_offset,
         reverse_label_offset=arrow.reverse_label_offset,
+        bend=arrow.bend,
         color=arrow.color,
         master_only=arrow.master_only,
     )
@@ -776,6 +779,7 @@ def _submitted_board(body: BoardRequest | BoardChangesRequest) -> Board:
                 reverse_label_position=arrow.reverse_label_position,
                 label_offset=arrow.label_offset,
                 reverse_label_offset=arrow.reverse_label_offset,
+                bend=arrow.bend,
                 color=arrow.color,
                 master_only=arrow.master_only,
             )

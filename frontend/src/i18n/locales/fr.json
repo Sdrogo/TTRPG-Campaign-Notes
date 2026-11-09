@@ -1238,7 +1238,12 @@
       "none": "Ligne seule",
       "label": "Étiquette",
       "labelTowards": "Étiquette vers {{name}}",
-      "delete": "Supprimer la relation"
+      "delete": "Supprimer la relation",
+      "adjust": "Régler l'arc",
+      "bendHint": "Faites glisser le point de la flèche pour la courber. Double-clic pour revenir à l'arc automatique.",
+      "resetBend": "Réinitialiser l'arc",
+      "bendDone": "Terminé",
+      "bendHandle": "Courber la flèche"
     },
     "mention": {
       "button": "Carte des mentions",
