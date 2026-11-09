@@ -22,15 +22,14 @@
 
 ## Decisions
 
-*Defaults proposed on 2026-11-09; the product owner answered the first seven
-open questions the same day (see Answered). Decisions 19-24 (presets) are
-new proposals, still to confirm.*
+*Defaults proposed on 2026-11-09; the product owner answered all eleven
+open questions the same day (see Answered).*
 
 1. **One legend per map.** Each free map (spec 28) stores its own meanings:
    a list of `color → meaning` pairs, at most one meaning per palette color
    (so at most 17). Maps are free boards (spec 28 Decision 1), so red can
    mean "Adversary" on one map and "Blood debt" on another. A Room can also
-   keep presets to fill a map's meanings in one go (Decisions 19-24).
+   keep presets that maps link to (Decisions 19-25).
 2. **A meaning** is plain text, 1-40 characters after trimming ("Avversario",
    "Interesse amoroso", "Debito di sangue"); written by the user, never
    translated. Emptying the field removes it. The `default` color (the
@@ -80,8 +79,9 @@ new proposals, still to confirm.*
     in questa mappa (N)" lists the saved meanings of unused colors (from a
     preset or from relations since removed), editable and removable, so
     nothing hidden is out of reach. The footer has "Applica preset", "Salva
-    come preset" (Decision 21), "Annulla" and "Salva"; "Salva" saves all the
-    meanings at once. Same meaning on two colors is allowed.
+    come preset" (Decision 23), "Annulla" and "Salva"; "Salva" saves all the
+    meanings at once. Same meaning on two colors is allowed. On a map linked
+    to a preset, the dialog follows Decision 22.
 11. **The relation dialog** (`ArrowDialog`) helps pick by meaning: each swatch
     of its color picker gets the meaning as tooltip ("Rosso: Avversario"),
     and under the picker one line shows the chosen color's meaning, or, for
@@ -125,73 +125,94 @@ new proposals, still to confirm.*
 
 19. **A preset** is a named set of `color → meaning` pairs (name 1-60
     characters, 1-17 meanings, same rules as Decision 2), kept by the
-    **Room**, so every map of the Room can use it ("Corte vampiri",
-    "Fazioni del porto"). At most 30 presets per Room.
-20. **Applying a preset** to a map ("Applica preset" in the legend dialog or
-    the empty legend, editors of the map): a list of the Room's presets, each
-    with its colored dots and meanings as a preview. Applying **copies** the
-    preset's meanings into the map: a color the preset has takes the
-    preset's meaning, a color the map has and the preset lacks keeps the
-    map's meaning. All the preset's meanings are saved, the unused ones
-    hidden by Decision 4, so drawing a relation in a color the preset covers
-    later adds that row to the legend by itself (product owner). If applying
-    would overwrite meanings that differ, the dialog says how many first.
-    The map keeps no link to the preset: editing the preset afterwards does
-    not change maps where it was applied (they can apply it again).
-21. **Saving a preset**: "Salva come preset" in the legend dialog saves all
-    the map's meanings (used and unused) as a new preset with a name, or
-    overwrites an existing one after a confirmation.
-22. **Managing presets** (rename, edit the meanings, delete): a "Preset"
-    tab or section reached from the legend dialog ("Gestisci preset"), a
-    list with the same meaning editor. Who: the **Master** (Room
-    Administrator) creates, edits and deletes presets; anyone who edits a
-    map may **apply** them (see Open question 8). Deleting a preset never
-    touches maps where it was applied.
-23. **Presets in duplication and export**: duplicating a Room copies its
-    presets; the Room JSON export (spec 40) writes them in an optional
-    `map_legend_presets` list, and import adds them to the Room (a name
-    already there gets " (2)"). No preset is created by the map import of a
-    single map.
-24. **Visibility**: presets are not secret; every member of the Room who
-    edits a map sees the list. Players who can't edit any map never see it.
+    **Room** (product owner), so every map of the Room can use it ("Corte
+    vampiri", "Fazioni del porto"). At most 30 presets per Room.
+20. **A map either has its own meanings or is linked to one preset**
+    (product owner: "resta collegato, un aggiornamento si ripercuote
+    ovunque"). A linked map shows the preset's meanings, read live: when
+    the preset changes, every map of the Room linked to it shows the new
+    meanings, pushed live to whoever has one of those maps open (spec
+    43/52). Decision 4 still applies: a linked map lists only the colors its
+    relations use, and drawing a relation in a color the preset covers adds
+    that row by itself. The legend panel and dialog name the preset
+    ("Preset: Corte vampiri").
+21. **Applying a preset** ("Applica preset" in the legend dialog or the
+    empty legend; anyone who edits the map): a list of the Room's presets,
+    each with its colored dots and meanings as a preview. Applying
+    **replaces** the map's meanings with the link to the preset (product
+    owner); when the map has meanings of its own, a warning says they will
+    be dropped ("I 4 significati di questa mappa verranno sostituiti").
+    Applying another preset moves the link.
+22. **Editing on a linked map**: the Master's "Salva" in the legend dialog
+    edits **the preset** itself, and the dialog says so ("Modifichi il
+    preset: cambia in tutte le N mappe collegate"). For any other editor the
+    meanings are read-only there. Anyone who edits the map can
+    **"Scollega"**: the map takes a copy of the preset's meanings as its own
+    and the link goes; from then on edits stay on that map.
+23. **Saving and managing presets** (Master only, product owner): "Salva come
+    preset" in the legend dialog turns the map's own meanings into a new
+    preset and links the map to it; "Gestisci preset" lists the Room's
+    presets (name, meanings, how many maps use it) to rename, edit or
+    delete. **Deleting** a preset never empties a map: each linked map
+    first gets a copy of the preset's meanings as its own, then the link
+    goes (one transaction).
+24. **Presets in duplication and export**: duplicating a Room copies its
+    presets and keeps each map's link pointing to the copy; the Room JSON
+    export (spec 40) writes them in an optional `map_legend_presets` list
+    and a linked map carries `legend_preset` (the preset's name); import
+    adds the presets to the Room (a name already there gets " (2)") and
+    restores the links. Duplicating a single map keeps its link (same
+    Room).
+25. **Visibility**: presets are not secret; every member who edits a map of
+    the Room sees the list. Players who can't edit any map never see it,
+    they only read the meanings on the maps they see.
 
 ## Design
 
 - **Migration** (new revision after `d4a8f2c6b9e1`):
-  - `relationship_maps.color_legend JSONB NULL`, a JSON object
-    `{"red": "Avversario", "green": "Alleato"}` (keys: palette color names;
-    values: meanings), unused colors included. `NULL` or `{}` means no
-    meanings.
   - `relationship_map_legend_presets` (`id`, `room_id` → `rooms`
-    `ON DELETE CASCADE`, `name` String(60), `entries` JSONB (same shape),
-    `created_at`, `updated_at`; unique `(room_id, name)`); RLS + deny policy
-    like the other tables. No user id is stored, so
-    `account_repo.erase_personal_rows` is unchanged.
+    `ON DELETE CASCADE`, `name` String(60), `entries` JSONB, a JSON object
+    `{"red": "Avversario", "green": "Alleato"}` (keys: palette color names;
+    values: meanings), `created_at`, `updated_at`; unique `(room_id,
+    name)`); RLS + deny policy like the other tables. No user id is stored,
+    so `account_repo.erase_personal_rows` is unchanged.
+  - On `relationship_maps`: `color_legend JSONB NULL` (the map's own
+    meanings, same shape, unused colors included; `NULL` or `{}` means
+    none) and `legend_preset_id UUID NULL` → the presets table `ON DELETE SET
+    NULL` (the delete endpoint copies the meanings first, Decision 23);
+    `CHECK (legend_preset_id IS NULL OR color_legend IS NULL)`, a map is
+    either linked or has its own.
   - Additive, so old code keeps working while it is applied. Validation
     (known colors, 1-40 characters, at most 17 keys) lives in the domain, not
     in a CHECK. To apply by hand on the staging database before the PR merges
     into `staging`, and on production before the release to `main` that
     ships it (progress tracker → Migrations and Releases). Reversible.
-- **Backend**: `RelationshipMapRow.color_legend`, the `RelationshipMap`
-  domain object and `MapDetailResponse` gain `color_legend: dict[MapColor,
-  str]` (empty when none; the client filters by the colors in use, Decision
-  4). Saving: `PUT` and `PATCH .../board` accept an optional `color_legend`
-  (omitted = unchanged, `{}` clears), under `get_editable_map` like any board
-  change (403 without edit rights, 409 on a non-free map). A domain function
-  cleans it (trim, drop empty values, reject unknown colors and over-long
-  meanings with a translated 422). Applying a preset is done client-side
-  (merge, then a board save), so it needs no endpoint of its own. Presets:
-  `GET/POST /rooms/{room_id}/map-legend-presets`, `PATCH/DELETE
-  .../{preset_id}` (list for anyone who may edit a map of the Room, writes
-  for the Master; 409 past 30 or on a duplicate name). `map_transfer`,
-  `room_copy` and the Room export/import carry meanings and presets
-  (optional keys; `SCHEMA_VERSION` unchanged).
+- **Backend**: `RelationshipMapRow.color_legend` and `.legend_preset_id`;
+  the `RelationshipMap` domain object and `MapDetailResponse` gain
+  `color_legend: dict[MapColor, str]` (the **effective** meanings: the
+  preset's when linked, else the map's own; empty when none; the client
+  filters by the colors in use, Decision 4) and `legend_preset: {id, name} |
+  None`. Saving: `PUT` and `PATCH .../board` accept an optional
+  `color_legend` (the map's own meanings: omitted = unchanged, `{}` clears;
+  refused with 409 while linked) and an optional `legend_preset_id`
+  (link to a preset of the same Room, else 404; `null` = "Scollega", which
+  copies the preset's meanings into `color_legend`), under
+  `get_editable_map` like any board change (403 without edit rights, 409 on
+  a non-free map). A domain function cleans meanings (trim, drop empty
+  values, reject unknown colors and over-long meanings with a translated
+  422). Presets: `GET/POST /rooms/{room_id}/map-legend-presets`,
+  `PATCH/DELETE .../{preset_id}` (list for anyone who may edit a map of the
+  Room, writes for the Master; 409 past 30 or on a duplicate name); a
+  `PATCH` of the entries calls `push_map` for every linked map so open
+  boards update live; `DELETE` copies the entries into the linked maps
+  first. `map_transfer`, `room_copy` and the Room export/import carry
+  meanings, presets and links (optional keys; `SCHEMA_VERSION` unchanged).
 - **Frontend**: `RelationshipMap.colorLegend` in `types/map.ts` and the API
   mapping in `lib/maps.ts`, plus `legendRows(map, visibleArrows)` (palette
   order, colors in use only); a `MapLegend` component (panel, chip, phone
   drawer) in a React Flow `Panel position="bottom-right"` inside
   `MapBoard`; `MapLegendDialog` (used colors, folded unused meanings,
-  preset actions); `LegendPresetsDialog` (pick, save, manage) with a
+  preset name, link and "Scollega"); `LegendPresetsDialog` (pick, save, manage) with a
   `useLegendPresets` query; `MapColorPicker` takes an optional `meanings`
   prop for the tooltips; `ArrowDialog` shows the meaning line; `MapArrow`
   takes a `faded` flag for the highlight. Strings under `maps.legend.*` in
@@ -199,7 +220,7 @@ new proposals, still to confirm.*
 - **Docs when built**: `ui-context.md` (Relationship maps: legend and
   presets), `architecture.md` (the column, the table, the JSON format), the
   progress tracker (migration chain and pending lists).
-- **Build units**: 68_1 migration and backend (meanings + presets API);
+- **Build units**: 68_1 migration and backend (meanings, presets API, links);
   68_2 legend panel, phone chip and drawer, legend dialog; 68_3 presets UI;
   68_4 relation dialog meanings and the highlight; 68_5
   export/import/duplicate, demo, docs.
@@ -212,18 +233,24 @@ new proposals, still to confirm.*
   rights gets 403, with "players can edit" on succeeds; a geographic or
   mention map refuses them (409). Presets: CRUD for the Master, 403 for a
   player writing, list hidden from members who can't edit any map, 409 at
-  31 or on a duplicate name, gone with the Room. Export writes meanings and
-  presets only when present; import accepts files with and without them,
-  renames a clashing preset and rejects bad values; Room and map
-  duplication copy them.
+  31 or on a duplicate name, gone with the Room. Links: linking returns the
+  preset's meanings and drops the map's own; own meanings are refused while
+  linked; "Scollega" copies them; a preset edit changes every linked map's
+  detail and pushes it; deleting a preset leaves each linked map its own
+  copy; a preset of another Room is 404. Export writes meanings, presets
+  and links only when present; import accepts files with and without them,
+  renames a clashing preset, restores links and rejects bad values; Room
+  duplication points links at the copied presets.
 - Frontend: `legendRows` keeps palette order and only colors used by the
   relations the viewer sees; a new relation in a preset color adds its row;
   `MapLegend` hides itself for viewers when empty and shows the `+` chip
   for editors; fold state is remembered and survives a `localStorage` that
   throws; the phone chip opens the drawer; the dialog lists used colors,
-  folds the unused meanings, saves all at once; applying a preset merges
-  (preset wins on shared colors) and warns before overwriting; saving and
-  managing presets; `ArrowDialog` shows the meaning and the "Modifica
+  folds the unused meanings, saves all at once; applying a preset links it
+  and warns before dropping the map's own meanings; on a linked map the
+  Master's save edits the preset (with the "N maps" notice) and other
+  editors see read-only meanings and "Scollega"; saving and managing
+  presets; `ArrowDialog` shows the meaning and the "Modifica
   legenda" link only to editors; a click on a row fades the other colors
   and a second click, the empty board or `Esc` clears it.
 - Frontend CI's 100% branch coverage and `tsc -b` hold; backend 100%.
@@ -234,22 +261,16 @@ new proposals, still to confirm.*
 2. Card and group colors: **no**, groups already have a title that explains
    them.
 3. Highlight by meaning: **yes**.
-4. Per map or per Room: **per map, with presets** (Decisions 19-24).
+4. Per map or per Room: **per map, with presets** (Decisions 19-25).
 5. Editing from a phone: **no**.
 6. Desktop panel open by default when it has rows: **yes**.
 7. Meanings of unused colors: **not shown**. Only colors the map uses
    appear; a preset's unused colors are filtered out, and drawing a
    relation in a color the preset covers adds it to the legend (Decision 4,
    20).
-
-## Open questions on presets (proposed defaults in bold)
-
-8. Who creates, edits and deletes presets? **The Master only; whoever edits
-   a map may apply them.**
-9. Presets belong to the **Room** (shared by its maps, copied with it), or
-   to the user (reusable across all their Rooms)? **Room.**
-10. Applying a preset to a map that already has meanings: **merge, the
-    preset wins on shared colors** (with a warning), or replace everything?
-11. Should a map stay **linked** to its preset, so editing the preset updates
-    every map that uses it? **No, a one-time copy** (simpler, and a map can
-    diverge); re-apply to update.
+8. Presets: **the Master** creates, edits and deletes them; whoever edits
+   a map may apply them.
+9. Presets **belong to the Room**.
+10. Applying a preset **replaces** the map's meanings, with a warning.
+11. A map **stays linked** to its preset: editing the preset updates every
+    map of the Room that uses it (Decisions 20-23).

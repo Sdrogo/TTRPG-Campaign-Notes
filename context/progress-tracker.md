@@ -251,9 +251,10 @@ image search, read aloud, GDPR (10-01 → 10-10). See the two older archives.
   per relation color on each free map, with an on-screen legend of the
   colors in use (desktop panel bottom-right, phone chip and drawer),
   editing with the same rights as moving a card, highlight by meaning, and
-  Room presets of meanings to apply to maps. Questions 1-7 answered
-  2026-11-09; 4 preset questions open. Next the mock-up, then the build.
-  One migration (`relationship_maps.color_legend` + presets table).
+  Room presets that maps stay linked to (Master manages them). All 11
+  questions answered 2026-11-09. Next the mock-up, then the build. One
+  migration (`relationship_maps.color_legend`, `legend_preset_id`, presets
+  table).
 - **Two small tickets, not written yet**: default Tags in the creator's UI
   language (decided 2026-10-03), and a read-only members list for every
   member (the setup page stays Administrator-only).
