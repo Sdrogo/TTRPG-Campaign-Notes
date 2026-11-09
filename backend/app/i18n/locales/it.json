@@ -226,7 +226,9 @@
         "groupTitle": "titolo del gruppo",
         "placeName": "nome",
         "subtitle": "sottotitolo",
-        "note": "nota"
+        "note": "nota",
+        "legendMeaning": "significato",
+        "presetName": "nome del preset"
       },
       "invalidPlane": "Il piano deve essere largo e alto da 100 a 20.000 unità, e ce l'ha solo una mappa geografica",
       "planeTooSmall": "Con quel piano una parte della mappa resterebbe fuori",
@@ -235,7 +237,13 @@
       "placeNameRequired": "Una zona o un luogo senza Documento ha bisogno di un nome",
       "tooManyAreas": "Una mappa può avere al massimo {max} zone",
       "tooManyPins": "Una mappa può avere al massimo {max} luoghi",
-      "tooManyLinks": "Una mappa può avere al massimo {max} legami"
+      "tooManyLinks": "Una mappa può avere al massimo {max} legami",
+      "presetNameRequired": "Il preset deve avere un nome",
+      "presetEmpty": "Il preset deve avere almeno un significato",
+      "presetNameTaken": "Un altro preset di questa room ha già quel nome",
+      "tooManyPresets": "Una room può avere al massimo {max} preset",
+      "presetNotFound": "Preset non trovato",
+      "notPresetManager": "Solo il Master può modificare i preset della room"
     },
     "mapImport": {
       "invalidFile": "Il file non è una mappa che l'App sa leggere (controlla il campo \"{field}\")",

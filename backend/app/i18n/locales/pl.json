@@ -226,7 +226,9 @@
         "groupTitle": "tytuł grupy",
         "placeName": "nazwa",
         "subtitle": "podtytuł",
-        "note": "notatka"
+        "note": "notatka",
+        "legendMeaning": "znaczenie",
+        "presetName": "nazwa presetu"
       },
       "invalidPlane": "Płaszczyzna musi mieć od 100 do 20 000 jednostek szerokości i wysokości, a ma ją tylko mapa geograficzna",
       "planeTooSmall": "Przy takiej płaszczyźnie część mapy znalazłaby się poza nią",
@@ -235,7 +237,13 @@
       "placeNameRequired": "Obszar lub pinezka bez Dokumentu wymaga nazwy",
       "tooManyAreas": "Mapa może mieć najwyżej {max} obszarów",
       "tooManyPins": "Mapa może mieć najwyżej {max} pinezek",
-      "tooManyLinks": "Mapa może mieć najwyżej {max} połączeń"
+      "tooManyLinks": "Mapa może mieć najwyżej {max} połączeń",
+      "presetNameRequired": "Preset musi mieć nazwę",
+      "presetEmpty": "Preset musi mieć co najmniej jedno znaczenie",
+      "presetNameTaken": "Inny preset tego pokoju ma już tę nazwę",
+      "tooManyPresets": "Pokój może mieć najwyżej {max} presetów",
+      "presetNotFound": "Nie znaleziono presetu",
+      "notPresetManager": "Tylko Mistrz może zmieniać presety pokoju"
     },
     "mapImport": {
       "invalidFile": "Plik nie jest mapą, którą Aplikacja potrafi odczytać (sprawdź pole \"{field}\")",

@@ -79,6 +79,13 @@ export function LinkedMapPanel({
           tags={[]}
           onChange={ignoreBoardChange}
           height={PANEL_HEIGHT}
+          // A small board: the legend is a chip (spec 68 Decision 16).
+          legend={{
+            mapId: map.id,
+            meanings: map.colorLegend,
+            presetName: map.legendPreset?.name ?? null,
+            compact: true,
+          }}
         />
       )}
       {unlink.error && (

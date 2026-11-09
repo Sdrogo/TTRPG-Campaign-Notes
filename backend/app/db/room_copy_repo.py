@@ -10,7 +10,7 @@ from datetime import datetime
 from sqlalchemy import insert, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.db import clocks_repo, room_sections_repo
+from app.db import clocks_repo, map_legends_repo, room_sections_repo
 from app.db.map_transfer_repo import insert_maps, load_room_maps
 from app.db.models import (
     DocumentImageRow,
@@ -145,6 +145,7 @@ async def load_source(session: AsyncSession, room_id: uuid.UUID) -> RoomSource |
         maps=await load_room_maps(session, room_id),
         sections=tuple(await room_sections_repo.list_sections_with_blocks(session, room_id)),
         clock_setup=await clocks_repo.load_setup(session, room_id),
+        legend_presets=tuple(await map_legends_repo.list_presets(session, room_id)),
     )
 
 
@@ -251,6 +252,8 @@ async def insert_copy(session: AsyncSession, plan: RoomCopyPlan, now: datetime) 
                 for b in plan.backlinks
             ],
         )
+    # Presets first: the copied maps link to them (spec 68).
+    await map_legends_repo.insert_presets(session, plan.legend_presets)
     await insert_maps(session, plan.maps, owner, now)
     await room_sections_repo.insert_sections(session, plan.sections)
     if plan.clock_setup is not None:

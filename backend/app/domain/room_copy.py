@@ -14,6 +14,7 @@ from datetime import datetime
 from app.domain.clocks import ClockSetup, copy_setup
 from app.domain.errors import DomainError
 from app.domain.geographic_maps import Area, GeoBoard, Link, LinkEnd, Pin
+from app.domain.map_legends import LegendPreset
 from app.domain.mention_maps import mention_card_id
 from app.domain.mentions import (
     MentionKind,
@@ -120,6 +121,7 @@ class RoomSource:
     maps: tuple[SourceMap, ...] = ()
     sections: tuple[Section, ...] = ()
     clock_setup: ClockSetup | None = None
+    legend_presets: tuple[LegendPreset, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -181,6 +183,7 @@ class RoomCopyPlan:
     maps: tuple[SourceMap, ...] = ()
     sections: tuple[Section, ...] = ()
     clock_setup: ClockSetup | None = None
+    legend_presets: tuple[LegendPreset, ...] = ()
 
 
 def ensure_can_duplicate(requester: Membership) -> None:
@@ -267,6 +270,9 @@ def plan_room_copy(source: RoomSource, requester: Membership, suffix: str) -> Ro
         for image in document.images
         if image.id is not None
     }
+    # Spec 68 Decision 24: the relation color presets, the maps' links
+    # pointing at the copies.
+    preset_ids = {preset.id: uuid.uuid4() for preset in source.legend_presets}
 
     documents: list[PlannedCopyDocument] = []
     backlinks: list[PlannedBacklink] = []
@@ -319,7 +325,9 @@ def plan_room_copy(source: RoomSource, requester: Membership, suffix: str) -> Ro
         documents=tuple(documents),
         backlinks=tuple(backlinks),
         maps=tuple(
-            copy_map(source_map, new_room_id, requester.user_id, document_ids, image_ids)
+            copy_map(
+                source_map, new_room_id, requester.user_id, document_ids, image_ids, preset_ids
+            )
             for source_map in source.maps
             # A mention map lives with its Document, always in the copy.
             if source_map.map.source_document_id is None
@@ -331,6 +339,10 @@ def plan_room_copy(source: RoomSource, requester: Membership, suffix: str) -> Ro
         clock_setup=None
         if source.clock_setup is None
         else copy_setup(source.clock_setup, new_room_id),
+        legend_presets=tuple(
+            replace(preset, id=preset_ids[preset.id], room_id=new_room_id)
+            for preset in source.legend_presets
+        ),
     )
 
 
@@ -340,12 +352,15 @@ def copy_map(
     creator: uuid.UUID,
     documents: Mapping[uuid.UUID, uuid.UUID],
     images: Mapping[uuid.UUID, uuid.UUID],
+    presets: Mapping[uuid.UUID, uuid.UUID] | None = None,
 ) -> SourceMap:
     """A map of the copy (spec 40 Decisions 1 to 4): fresh ids for the map
     and everything on it, Documents and chosen images re-pointed to their
     copies, `creator` as its creator, Selective turned Private. A background
     keeps naming the same Storage object. Anything that points at a Document
-    the copy doesn't hold is left out, with the arrows or links touching it."""
+    the copy doesn't hold is left out, with the arrows or links touching it.
+    A link to a relation color preset (spec 68) follows `presets`, the
+    presets' copies (the copy holds every preset of the Room)."""
     old = source.map
     map_id = uuid.uuid4()
     center = old.source_document_id
@@ -356,6 +371,9 @@ def copy_map(
         created_by=creator,
         visibility=_copy_level(old.visibility),
         source_document_id=None if center is None else documents[center],
+        legend_preset_id=(presets or {}).get(old.legend_preset_id)
+        if old.legend_preset_id is not None
+        else None,
     )
     group_ids = {group.id: uuid.uuid4() for group in source.board.groups}
     card_ids: dict[uuid.UUID, uuid.UUID] = {}

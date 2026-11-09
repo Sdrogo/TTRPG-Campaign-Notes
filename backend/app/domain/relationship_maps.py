@@ -164,7 +164,9 @@ class RelationshipMap:
     `geographic` map (spec 38) has a flat plane of `plane_width` by
     `plane_height` units and may have a stored background image. With
     `players_can_edit` every member who sees it edits its board (spec 42);
-    `revision` counts its writes (Decision 7)."""
+    `revision` counts its writes (Decision 7). A free map's relation colors
+    mean `color_legend`, its own, or the Room preset `legend_preset_id` it
+    is linked to (spec 68 Decision 20), never both."""
 
     id: uuid.UUID
     room_id: uuid.UUID
@@ -182,6 +184,8 @@ class RelationshipMap:
     background_path: str | None = None
     players_can_edit: bool = False
     revision: int = 0
+    color_legend: Mapping[MapColor, str] = field(default_factory=dict)
+    legend_preset_id: uuid.UUID | None = None
 
 
 @dataclass(frozen=True)

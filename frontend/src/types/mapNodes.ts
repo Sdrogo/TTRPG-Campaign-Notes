@@ -32,6 +32,8 @@ export type MapArrowData = {
   bend: number | null;
   /** Whether the arrow's bend handle is showing (spec 67). */
   bending: boolean;
+  /** Whether a legend row highlights another color, so the arrow steps back (spec 68 Decision 9). */
+  faded?: boolean;
   onEdit: (id: string) => void;
   /**
    * The bend handle was dropped: the arrow now bends this far to the right
