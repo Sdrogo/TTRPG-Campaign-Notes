@@ -815,3 +815,14 @@ def test_a_markdown_document_without_an_id_is_not_matched_by_name() -> None:
     document = plan_import(files, _context(existing={room.id: room})).documents[0]
 
     assert document.existing_id is None and not document.matched_by_name
+
+
+def test_a_replace_of_a_name_match_the_importer_does_not_manage_is_refused() -> None:
+    room = ExistingDocument(uuid.uuid4(), False, frozenset(), "Strahd")
+    files = _files(_document("Strahd", source_id=str(uuid.uuid4())))
+    context = _context(existing={room.id: room})
+
+    document = plan_import(files, context).documents[0]
+    assert (document.matched_by_name, document.can_replace) == (True, False)
+    with pytest.raises(ImportCannotReplaceError):
+        plan_import(files, context, ImportChoices(replace=frozenset({"0:0"})))
