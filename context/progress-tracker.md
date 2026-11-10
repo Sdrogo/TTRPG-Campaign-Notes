@@ -117,6 +117,13 @@ One line per unit, dates 2026, newest first. Spec files live in
 `context/feature/`; details in the archives and in `architecture.md`.
 "no mig." = no migration.
 
+### 2026-10-12 → 11-10
+
+- **69, Same-name Documents on import** (product owner, 2026-11-10): when a
+  file Document's id matches nothing, it is matched to the Room Document
+  with the same name and offered Copy/Replace (Copy default, "Replace all"
+  button), one target per file Document; no mig.
+
 ### 2026-10-12 → 11-05
 
 - **Rename a Room** (11-07, no mig.): `PATCH /rooms/{id}` takes an optional `name`, the Administrators' (403 otherwise; trimmed, blank is 422 like creation). Settings tab has a Room name card. All 12 UI/backend locales.

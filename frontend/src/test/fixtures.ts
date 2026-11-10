@@ -283,6 +283,7 @@ export function rawImportPreviewDocument(overrides: Record<string, unknown> = {}
     tag_names: ['PNG'],
     existing_document_id: null,
     can_replace: false,
+    matched_by_name: false,
     warnings: [],
     ...overrides,
   };

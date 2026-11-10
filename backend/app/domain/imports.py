@@ -10,7 +10,7 @@ its ids only link objects inside the file, and spot a Document of the file
 that still exists here (Decision 5)."""
 
 import uuid
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Callable, Collection, Mapping, Sequence
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import StrEnum
@@ -227,6 +227,7 @@ class PlannedDocument:
     existing_id: uuid.UUID | None
     can_replace: bool
     replaces: bool
+    matched_by_name: bool = False
 
 
 @dataclass(frozen=True)
@@ -311,12 +312,9 @@ def validate_files(files: Sequence[ImportFile], max_documents: int = MAX_DOCUMEN
                 )
 
 
-def _existing_for(document: ImportDocument, context: ImportContext) -> ExistingDocument | None:
+def _by_id(document: ImportDocument, context: ImportContext) -> ExistingDocument | None:
     """The Document of the Room the file's id points at, when the importer
-    sees it (Decision 5); for an Obsidian note (spec 65), the one the importer
-    sees that has the same name."""
-    if document.match_by_name:
-        return _by_name(context, document.name)
+    sees it (Decision 5)."""
     if document.source_id is None:
         return None
     try:
@@ -325,14 +323,55 @@ def _existing_for(document: ImportDocument, context: ImportContext) -> ExistingD
         return None
 
 
-def _by_name(context: ImportContext, name: str) -> ExistingDocument | None:
+def _by_name(
+    context: ImportContext, name: str, taken: Collection[uuid.UUID] = ()
+) -> ExistingDocument | None:
     """The Document of the Room, among those the importer sees, named `name`
-    (case and edge spaces ignored); the first by id if several, so the same
-    plan is made at preview and at import. A Document the importer can't see is
-    never in `context.existing`, so it is never matched or hinted at."""
+    (case and edge spaces ignored) and not in `taken`; the first by id if
+    several, so the same plan is made at preview and at import. A Document the
+    importer can't see is never in `context.existing`, so it is never matched
+    or hinted at."""
     wanted = fold(name)
-    found = [d for d in context.existing.values() if d.name and fold(d.name) == wanted]
+    found = [
+        d
+        for d in context.existing.values()
+        if d.name and fold(d.name) == wanted and d.id not in taken
+    ]
     return min(found, key=lambda d: str(d.id)) if found else None
+
+
+def _match_existing(
+    files: Sequence[ImportFile], context: ImportContext
+) -> dict[str, tuple[ExistingDocument, bool]]:
+    """For every Document of the files (selected or not, so unticking one
+    never changes another's match) the Document of the Room it could replace,
+    and whether the match is by name only (spec 69). The file's id wins; else
+    the Room Document with the same name (spec 65 notes match by name alone).
+    A Room Document is offered to at most one file Document: id matches claim
+    theirs first, then names in file order."""
+    entries = [
+        (document_key(fi, di), document)
+        for fi, file in enumerate(files)
+        for di, document in enumerate(file.documents)
+    ]
+    matches: dict[str, tuple[ExistingDocument, bool]] = {}
+    taken: set[uuid.UUID] = set()
+    for key, document in entries:
+        if document.match_by_name:
+            continue
+        found = _by_id(document, context)
+        if found is not None and found.id not in taken:
+            matches[key] = (found, False)
+            taken.add(found.id)
+    for key, document in entries:
+        # A Markdown file has no id of its own: it stays a Copy (spec 69).
+        if key in matches or (document.source_id is None and not document.match_by_name):
+            continue
+        found = _by_name(context, document.name, taken)
+        if found is not None:
+            matches[key] = (found, True)
+            taken.add(found.id)
+    return matches
 
 
 class _TagBook:
@@ -445,11 +484,12 @@ def plan_import(
 
     # The Documents' ids first: a mention of one is re-pointed to its new (or
     # replaced) id, only inside the file it is in.
+    matches = _match_existing(files, context)
     ids: dict[str, uuid.UUID] = {}
     replaced: dict[str, ExistingDocument] = {}
     targets: dict[tuple[int, str], tuple[uuid.UUID, str]] = {}
     for fi, key, document in chosen:
-        existing = _existing_for(document, context)
+        existing = matches[key][0] if key in matches else None
         if existing is not None and key in choices.replace:
             if not existing.can_manage:
                 raise ImportCannotReplaceError("errors.import.cannotReplace", name=document.name)
@@ -483,6 +523,7 @@ def plan_import(
             document,
             ids[key],
             replaced.get(key),
+            matches.get(key),
             tags[key],
             context,
             book,
@@ -630,6 +671,7 @@ def _plan_document(
     document: ImportDocument,
     document_id: uuid.UUID,
     replacing: ExistingDocument | None,
+    matched: tuple[ExistingDocument, bool] | None,
     resolved_tags: tuple[list[uuid.UUID], list[str]],
     context: ImportContext,
     book: _TagBook,
@@ -691,7 +733,7 @@ def _plan_document(
         (i for i in document.images if i.source_id is None or i.source_id not in kept),
         key=lambda image: not image.is_favorite,
     )
-    existing = _existing_for(document, context)
+    existing = matched[0] if matched else None
     return PlannedDocument(
         key=key,
         file_name=file.name,
@@ -708,6 +750,7 @@ def _plan_document(
         existing_id=existing.id if existing else None,
         can_replace=bool(existing and existing.can_manage),
         replaces=replacing is not None,
+        matched_by_name=bool(matched and matched[1]),
     )
 
 

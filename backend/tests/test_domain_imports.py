@@ -768,3 +768,61 @@ def test_a_job_payload_without_subtitles_still_reads() -> None:
     assert file_from_json(payload) == parsed
     del payload["documents"][0]["subtitle"]
     assert file_from_json(payload).documents[0].subtitle is None
+
+
+def _room_doc(name: str) -> ExistingDocument:
+    document_id = uuid.uuid4()
+    return ExistingDocument(document_id, True, frozenset(), name)
+
+
+def test_a_document_with_a_new_id_is_matched_by_name_after_a_duplication() -> None:
+    copy = _room_doc("  strahd ")
+    files = _files(_document("Strahd", source_id=str(uuid.uuid4())))
+    context = _context(existing={copy.id: copy})
+
+    document = plan_import(files, context).documents[0]
+
+    assert (document.existing_id, document.matched_by_name, document.replaces) == (
+        copy.id,
+        True,
+        False,
+    )
+    replaced = plan_import(files, context, ImportChoices(replace=frozenset({document.key})))
+    assert replaced.documents[0].replaces and replaced.documents[0].id == copy.id
+
+
+def test_the_id_wins_over_the_name_and_a_room_document_is_offered_once() -> None:
+    by_id = _room_doc("Other name")
+    by_name = _room_doc("Strahd")
+    files = _files(
+        _document("Strahd", source_id=str(uuid.uuid4())),
+        _document("Strahd", source_id=str(by_id.id)),
+        _document("Strahd", source_id=str(uuid.uuid4())),
+    )
+    context = _context(existing={by_id.id: by_id, by_name.id: by_name})
+
+    first, second, third = plan_import(files, context).documents
+
+    assert (second.existing_id, second.matched_by_name) == (by_id.id, False)
+    assert (first.existing_id, first.matched_by_name) == (by_name.id, True)
+    assert third.existing_id is None
+
+
+def test_a_markdown_document_without_an_id_is_not_matched_by_name() -> None:
+    room = _room_doc("Strahd")
+    files = _files(_document("Strahd", source_id=None))
+
+    document = plan_import(files, _context(existing={room.id: room})).documents[0]
+
+    assert document.existing_id is None and not document.matched_by_name
+
+
+def test_a_replace_of_a_name_match_the_importer_does_not_manage_is_refused() -> None:
+    room = ExistingDocument(uuid.uuid4(), False, frozenset(), "Strahd")
+    files = _files(_document("Strahd", source_id=str(uuid.uuid4())))
+    context = _context(existing={room.id: room})
+
+    document = plan_import(files, context).documents[0]
+    assert (document.matched_by_name, document.can_replace) == (True, False)
+    with pytest.raises(ImportCannotReplaceError):
+        plan_import(files, context, ImportChoices(replace=frozenset({"0:0"})))

@@ -998,6 +998,7 @@
       "applyAll": "Apply to all",
       "copyAll": "Copy all",
       "replaceAll": "Replace all",
+      "byName": "Same name, different id",
       "cannotReplace": "Only an Owner of the Document (or the Master) can replace it",
       "choice": "What to do with {{name}}"
     },

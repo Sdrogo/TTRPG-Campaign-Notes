@@ -980,6 +980,7 @@
       "applyAll": "应用于全部",
       "copyAll": "全部复制",
       "replaceAll": "全部替换",
+      "byName": "名称相同,ID 不同",
       "cannotReplace": "只有文档的 Owner（或 Master）可以替换它",
       "choice": "如何处理 {{name}}"
     },

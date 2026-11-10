@@ -77,8 +77,9 @@ class ImportWarningResponse(BaseModel):
 
 class PreviewDocumentResponse(BaseModel):
     """A Document found in the files. `key` names it in the import request.
-    `existing_document_id` is the Document of the Room the file's id points at
-    (the importer sees it); `can_replace` whether they manage it, so Replace is
+    `existing_document_id` is the Document of the Room the file's id points at,
+    else the one with the same name (`matched_by_name`, spec 69), when the
+    importer sees it; `can_replace` whether they manage it, so Replace is
     offered only then."""
 
     key: str
@@ -89,6 +90,7 @@ class PreviewDocumentResponse(BaseModel):
     tag_names: list[str]
     existing_document_id: uuid.UUID | None
     can_replace: bool
+    matched_by_name: bool
     warnings: list[ImportWarningResponse]
 
 
@@ -360,6 +362,7 @@ def _preview_document(
         tag_names=[tag_names[str(tag_id)] for tag_id in document.tag_ids],
         existing_document_id=document.existing_id,
         can_replace=document.can_replace,
+        matched_by_name=document.matched_by_name,
         warnings=[_warning(w.code, w.count, w.names) for w in document.warnings],
     )
 
