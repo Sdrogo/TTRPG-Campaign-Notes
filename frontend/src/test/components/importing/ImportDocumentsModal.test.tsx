@@ -248,7 +248,11 @@ describe('ImportDocumentsModal (spec 27)', () => {
   it('asks Copy or Replace for Documents that already exist, Replace only where allowed', async () => {
     api.preview = rawImportPreview({
       documents: [
-        rawImportPreviewDocument({ existing_document_id: 'doc-1', can_replace: true }),
+        rawImportPreviewDocument({
+          existing_document_id: 'doc-1',
+          can_replace: true,
+          matched_by_name: true,
+        }),
         rawImportPreviewDocument({
           key: '0:1',
           name: 'La Cripta',
@@ -269,6 +273,8 @@ describe('ImportDocumentsModal (spec 27)', () => {
     expect(screen.queryByRole('radiogroup', { name: 'Cosa fare con Nuovo' })).not.toBeInTheDocument();
     const cancello = screen.getByRole('radiogroup', { name: 'Cosa fare con Il Cancello' });
     expect(within(cancello).getByRole('radio', { name: 'Copia' })).toBeChecked();
+    // Matched by name only (spec 69): the reason is shown, and only for that one.
+    expect(screen.getAllByText('Stesso nome, id diverso')).toHaveLength(1);
     const cripta = screen.getByRole('radiogroup', { name: 'Cosa fare con La Cripta' });
     expect(within(cripta).getByRole('radio', { name: 'Sostituisci' })).toBeDisabled();
     expect(

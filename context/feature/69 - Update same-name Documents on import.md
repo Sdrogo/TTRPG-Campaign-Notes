@@ -74,3 +74,19 @@
 2. Should the Replace default be pre-selected for name-only matches, to save
    clicks after a duplication? (Default: no, Copy stays the default; use
    "Replace all".)
+
+## Answers (product owner, 2026-11-10)
+
+1. Name fallback for **all** imports: yes.
+2. Copy stays the default; the "Replace all" button of the choices step is
+   the one-click way to update everything (kept, no change).
+
+## Built (2026-11-10)
+
+- `imports.py::_match_existing` computes each file Document's match once for
+  the whole file set (so unticking a Document never changes another's):
+  id matches claim first, then name matches (file order), each Room Document
+  offered to one file Document only. Markdown without an id stays Copy.
+- `matched_by_name` on `PlannedDocument` and `PreviewDocumentResponse`; the
+  choices step shows "Same name, different id" (`documentImport.existing.byName`,
+  all 10 languages). No migration, no new endpoint.

@@ -980,6 +980,7 @@
       "applyAll": "すべてに適用",
       "copyAll": "すべてコピー",
       "replaceAll": "すべて置き換え",
+      "byName": "同じ名前、異なるID",
       "cannotReplace": "置き換えられるのは、ドキュメントのOwner(またはMaster)だけです",
       "choice": "{{name}}の扱い"
     },

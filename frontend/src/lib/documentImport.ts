@@ -44,6 +44,8 @@ export interface ImportPreviewDocument {
   existingDocumentId: string | null;
   /** Whether Replace is offered: the importer manages that Document. */
   canReplace: boolean;
+  /** The match is by name only: the file's id points at nothing in the Room (spec 69). */
+  matchedByName: boolean;
   warnings: ImportWarning[];
 }
 
@@ -211,6 +213,7 @@ export interface RawImportPreviewDocument {
   tag_names: string[];
   existing_document_id: string | null;
   can_replace: boolean;
+  matched_by_name?: boolean;
   warnings: RawImportWarning[];
 }
 
@@ -277,6 +280,7 @@ export function toImportPreview(raw: RawImportPreview): ImportPreview {
       tagNames: document.tag_names,
       existingDocumentId: document.existing_document_id,
       canReplace: document.can_replace,
+      matchedByName: document.matched_by_name ?? false,
       warnings: document.warnings,
     })),
     matchedTags: raw.matched_tags,
