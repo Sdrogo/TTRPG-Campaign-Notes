@@ -998,6 +998,7 @@
       "applyAll": "Auf alle anwenden",
       "copyAll": "Alle kopieren",
       "replaceAll": "Alle ersetzen",
+      "byName": "Gleicher Name, andere ID",
       "cannotReplace": "Nur ein Owner des Dokuments (oder der Master) kann es ersetzen",
       "choice": "Was soll mit {{name}} geschehen"
     },

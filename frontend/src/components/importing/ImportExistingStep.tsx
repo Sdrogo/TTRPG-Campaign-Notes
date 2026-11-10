@@ -56,6 +56,11 @@ export function ImportExistingStep({
               <Text size="sm" style={{ overflowWrap: 'anywhere' }}>
                 {document.name}
               </Text>
+              {document.matchedByName && (
+                <Text size="xs" c="dimmed">
+                  {t('documentImport.existing.byName')}
+                </Text>
+              )}
               {!document.canReplace && (
                 <Text size="xs" c="dimmed">
                   {t('documentImport.existing.cannotReplace')}

@@ -59,6 +59,7 @@ describe('toImportPreview', () => {
       tagNames: ['PNG'],
       existingDocumentId: 'doc-9',
       canReplace: true,
+      matchedByName: false,
       warnings: [{ code: 'comments_dropped', count: 3, names: [] }],
     });
     expect(preview.matchedTags).toEqual(['PNG']);
