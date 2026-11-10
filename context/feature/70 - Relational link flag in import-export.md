@@ -72,3 +72,17 @@
    heading), or stay plain? (Default: stay plain.)
 3. Also fix the History restore (deleted Note comes back flagged)? (Default:
    no, a separate ticket if wanted.)
+
+## Answers (product owner, 2026-11-10)
+
+1. Yes: a silent file keeps the flag of the Room's same-title Note on a Replace.
+2. OK: Markdown stays plain.
+3. No: the History restore is left as it is.
+
+## Built (2026-11-10)
+
+- Export: `relational_link` per Note (`NoteJson`, `SCHEMA_VERSION` 6).
+- Import: `ImportNote.relational_link` (None when absent, also in the job
+  payload), `PlannedNote.relational_link`, written by `imports_repo`.
+- Replace: `ExistingDocument.relational_titles` loaded in
+  `load_import_context` for the Documents the importer manages.

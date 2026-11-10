@@ -119,6 +119,7 @@ One line per unit, dates 2026, newest first. Spec files live in
 
 ### 2026-10-12 → 11-10
 
+- **70, Relational link flag in import-export** (product owner, 2026-11-10): the JSON export (schema 6) carries each Note's flag, the import reads it, and a Replace with a silent file keeps the Room's flag by Note title; Markdown stays plain; no mig.
 - **69, Same-name Documents on import** (product owner, 2026-11-10): when a
   file Document's id matches nothing, it is matched to the Room Document
   with the same name and offered Copy/Replace (Copy default, "Replace all"

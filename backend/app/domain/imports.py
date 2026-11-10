@@ -128,6 +128,10 @@ class ExistingDocument:
     can_manage: bool
     image_ids: frozenset[str]
     name: str = ""
+    # The folded titles of the Notes flagged as Relational links, one entry
+    # per Note (spec 70); a Replace keeps the flag of a Note the file doesn't
+    # speak about.
+    relational_titles: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -185,6 +189,7 @@ class PlannedNote:
     title: str
     text: str
     visibility: DocumentVisibility
+    relational_link: bool = False
 
 
 @dataclass(frozen=True)
@@ -705,11 +710,20 @@ def _plan_document(
         selective = False  # a replaced Document keeps its own level
     selective_count = int(selective)
     notes = []
+    # A Replace deletes the Notes, so the flags of the ones the file doesn't
+    # state are carried over by title, each old Note once (spec 70).
+    old_flagged = list(replacing.relational_titles) if replacing is not None else []
     for note in document.notes:
         note_level, note_selective = _level(note.visibility, context)
         selective_count += note_selective
+        flag = note.relational_link
+        if flag is None:
+            folded = fold(note.title)
+            flag = folded in old_flagged
+            if flag:
+                old_flagged.remove(folded)
         notes.append(
-            PlannedNote(new_id(), note.title.strip(), _render(note.text, resolve), note_level)
+            PlannedNote(new_id(), note.title.strip(), _render(note.text, resolve), note_level, flag)
         )
 
     warnings: list[ImportWarning] = []

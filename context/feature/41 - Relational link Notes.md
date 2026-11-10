@@ -49,8 +49,8 @@ defaults picked the same day, to confirm in the PR.
    flagged as Relational links count, so an empty map explains itself.
 7. **Copies**: duplicating a Room (spec 33) keeps each Note's flag. Restoring
    a deleted Note from the History brings it back unflagged. The JSON
-   export/import (spec 27, 40) does not carry the flag (*proposed*; a later
-   ticket if wanted).
+   export/import (spec 27, 40) does not carry the flag (*proposed*; later
+   done by spec 70).
 8. **Not in scope**: flagging descriptions or Comments, a flag per mention,
    a filter on the free maps of spec 28 (they are drawn by hand).
 

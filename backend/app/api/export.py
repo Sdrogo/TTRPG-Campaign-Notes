@@ -128,6 +128,7 @@ class NoteJson(BaseModel):
     position: int
     visibility: str
     selective_user_ids: list[uuid.UUID] | None
+    relational_link: bool = False
 
 
 class CommentJson(BaseModel):
