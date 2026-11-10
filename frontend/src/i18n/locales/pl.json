@@ -1034,6 +1034,7 @@
       "applyAll": "Zastosuj do wszystkich",
       "copyAll": "Kopiuj wszystkie",
       "replaceAll": "Zastąp wszystkie",
+      "byName": "Ta sama nazwa, inny identyfikator",
       "cannotReplace": "Dokument może zastąpić tylko jego Owner (lub Master)",
       "choice": "Co zrobić z {{name}}"
     },

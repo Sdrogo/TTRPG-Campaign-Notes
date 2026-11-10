@@ -49,9 +49,8 @@
 
 ## Design
 
-- Backend: `_existing_for` falls back to `_by_name` when the id gives no match;
-  `plan_import` skips a target already taken by another file Document
-  (Decision 3); the preview adds `matched_by_name: bool` to each Document
+- Backend: `_match_existing` matches each file Document once for the whole file
+  set (id first, then `_by_name`, each target taken once: Decision 3); the preview adds `matched_by_name: bool` to each Document
   (`api/imports.py` schema, `lib/documentImport.ts`).
 - Frontend: `ImportExistingStep` shows the hint for `matchedByName`; en/it
   strings added.
@@ -89,4 +88,4 @@
   offered to one file Document only. Markdown without an id stays Copy.
 - `matched_by_name` on `PlannedDocument` and `PreviewDocumentResponse`; the
   choices step shows "Same name, different id" (`documentImport.existing.byName`,
-  all 10 languages). No migration, no new endpoint.
+  all 12 languages). No migration, no new endpoint.
