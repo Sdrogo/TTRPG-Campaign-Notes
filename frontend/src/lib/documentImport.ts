@@ -213,7 +213,7 @@ export interface RawImportPreviewDocument {
   tag_names: string[];
   existing_document_id: string | null;
   can_replace: boolean;
-  matched_by_name?: boolean;
+  matched_by_name: boolean;
   warnings: RawImportWarning[];
 }
 
@@ -280,7 +280,7 @@ export function toImportPreview(raw: RawImportPreview): ImportPreview {
       tagNames: document.tag_names,
       existingDocumentId: document.existing_document_id,
       canReplace: document.can_replace,
-      matchedByName: document.matched_by_name ?? false,
+      matchedByName: document.matched_by_name,
       warnings: document.warnings,
     })),
     matchedTags: raw.matched_tags,
