@@ -109,16 +109,18 @@ character Document. Not every round of questions is about creating the PC.
     one stays the rule. Existing steps don't change.
 11. **No Name question, no Player's Document.** Subtitle, Description and Note
     fill the Document the Name question names, so without one they can't be
-    picked: the editor offers only "Nuovo Documento" and "Resta qui"
-    (`none`), and the backend answers 422 for the others. The Tag of the
+    picked: the editor offers only "Nuovo Documento" and "Non nel Documento"
+    (`none`, existing), and the backend answers 422 for the others. The Tag of the
     Players' Documents select is hidden then (the creation switch stays, for
     "Nuovo Documento").
-12. **"Nuovo Documento" questions still work without a Name** (Q6): the
+12. **"Nuovo Documento" questions still work without a Name** (Q6). As
+    today, such a Document is standalone, not linked to the PC (the
+    question's Tag, the Player as Owner, no Notes or character data). The
     Player's button reads "Crea i miei Documenti" and the Master's "Crea i
     Documenti di tutti" counts the Players with an unmade "Nuovo Documento"
     answer; each makes only those Documents (409 when there is nothing to
     make). With a Name question nothing changes.
-13. **A list with only "Resta qui" questions** makes no Documents at all: no
+13. **A list with only "Non nel Documento" questions** makes no Documents at all: no
     create buttons and no "Rispondi alla domanda sul nome" hint; the
     answers stay in the step (to read at the table, reveal, and now edit).
 14. **The editor's first question** of an empty list stays Name (the common
@@ -136,7 +138,7 @@ Open questions:
    their Documents (proposed, Decision 12), or should such a step make no
    Documents at all?
 7. Should the first question of an empty list still default to Name
-   (proposed), or to "Resta qui"?
+   (proposed), or to "Non nel Documento"?
 
 ## Answers (product owner, 2026-11-12)
 

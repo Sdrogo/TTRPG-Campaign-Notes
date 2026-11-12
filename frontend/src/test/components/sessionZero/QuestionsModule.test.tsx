@@ -154,6 +154,7 @@ describe('QuestionsBoard for the Master', () => {
     await user.tab();
     expect(act).toHaveBeenLastCalledWith(
       boardWrites.saveAnswersFor('m-q', 'user-2', [{ questionId: 'q-desc', body: 'Barovia' }]),
+      expect.any(Function),
     );
   });
 
@@ -173,6 +174,7 @@ describe('QuestionsBoard for the Master', () => {
       () =>
         expect(act).toHaveBeenLastCalledWith(
           boardWrites.saveAnswersFor('m-q', 'user-2', [{ questionId: 'q-name', body: 'Ireena Kolyana' }]),
+          expect.any(Function),
         ),
       { timeout: ANSWER_SAVE_DELAY_MS * 3 },
     );
@@ -180,6 +182,7 @@ describe('QuestionsBoard for the Master', () => {
     await user.tab();
     expect(act).toHaveBeenLastCalledWith(
       boardWrites.saveAnswersFor('m-q', 'user-2', [{ questionId: 'q-note', body: '' }]),
+      expect.any(Function),
     );
   });
 
@@ -288,6 +291,7 @@ describe('QuestionsBoard for a Player', () => {
     await user.tab();
     expect(act).toHaveBeenLastCalledWith(
       boardWrites.saveAnswers('m-q', [{ questionId: 'q-name', body: 'Ireena Kolyana', notePrivate: false }]),
+      expect.any(Function),
     );
     await user.tab();
     expect(act).toHaveBeenCalledTimes(1);
@@ -297,6 +301,7 @@ describe('QuestionsBoard for a Player', () => {
       () =>
         expect(act).toHaveBeenLastCalledWith(
           boardWrites.saveAnswers('m-q', [{ questionId: 'q-desc', body: 'Barovia', notePrivate: false }]),
+          expect.any(Function),
         ),
       { timeout: ANSWER_SAVE_DELAY_MS * 3 },
     );
@@ -304,6 +309,7 @@ describe('QuestionsBoard for a Player', () => {
     await user.click(screen.getByRole('checkbox', { name: 'Privata' }));
     expect(act).toHaveBeenLastCalledWith(
       boardWrites.saveAnswers('m-q', [{ questionId: 'q-note', body: '', notePrivate: true }]),
+      expect.any(Function),
     );
   });
 
@@ -314,6 +320,7 @@ describe('QuestionsBoard for a Player', () => {
     cleanup();
     expect(act).toHaveBeenLastCalledWith(
       boardWrites.saveAnswers('m-q', [{ questionId: 'q-sub', body: 'Sposa', notePrivate: false }]),
+      expect.any(Function),
     );
   });
 
@@ -383,11 +390,11 @@ describe('QuestionsBoard for a Player', () => {
 describe('The Player\'s form and the Master\'s edits', () => {
   const mine = (questionId: string, body: string) => answer(questionId, body, { user_id: 'user-1', mine: true });
 
-  function Live({ act }: { act: () => void }) {
+  function Live({ act }: { act: ReturnType<typeof vi.fn> }) {
     const [answers, setAnswers] = useState([mine('q-name', 'Ireena'), mine('q-desc', 'Barovia')]);
     const raw = toSessionZero(rawSessionZero(questionsBoard({ answers })) as RawSessionZero);
     const module = shownModule(raw, null);
-    const value = { board: viewOf(raw, module), module, members, act, busy: false, writable: true, glowing: new Set<string>() };
+    const value = { board: viewOf(raw, module), module, members, act: act as never, busy: false, writable: true, glowing: new Set<string>() };
     return (
       <BoardContext.Provider value={value}>
         <QuestionsBoard roomId="room-1" tags={tags} />
@@ -399,7 +406,7 @@ describe('The Player\'s form and the Master\'s edits', () => {
   }
 
   it('shows the new text in fields the Player is not typing in', async () => {
-    const act = vi.fn();
+    const act = vi.fn((_write: unknown, onDone?: () => void) => onDone?.());
     renderWithProviders(<Live act={act} />);
     const user = userEvent.setup();
     // The Player changed their name and left the field (sent)...
@@ -412,5 +419,19 @@ describe('The Player\'s form and the Master\'s edits', () => {
     screen.getByRole('button', { name: 'Il Master modifica' }).click();
     expect(await screen.findByDisplayValue('Ireena Kolyana')).toBeInTheDocument();
     expect(description).toHaveValue('Barovia e oltre');
+  });
+
+  it('keeps what the Player sent until their save is stored', async () => {
+    // The Player's save is still on its way when the Master's edit arrives.
+    const act = vi.fn();
+    renderWithProviders(<Live act={act} />);
+    const user = userEvent.setup();
+    const name = screen.getByRole('textbox', { name: 'Come ti chiami?' });
+    await user.type(name, '!');
+    await user.tab();
+    expect(act).toHaveBeenCalledTimes(1);
+    screen.getByRole('button', { name: 'Il Master modifica' }).click();
+    expect(await screen.findByDisplayValue('Vallaki')).toBeInTheDocument();
+    expect(name).toHaveValue('Ireena!');
   });
 });

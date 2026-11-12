@@ -258,13 +258,14 @@ function AnswersByPlayer({
                       saved={answers}
                       editable
                       privacyEditable={false}
-                      save={(changed) =>
+                      save={(changed, onSaved) =>
                         act(
                           boardWrites.saveAnswersFor(
                             module.id,
                             userId,
                             changed.map(({ questionId, body }) => ({ questionId, body })),
                           ),
+                          onSaved,
                         )
                       }
                     />
@@ -399,7 +400,7 @@ function AnswerForm({ module, step, editable }: Omit<StepProps, 'roomId'>) {
         saved={saved}
         editable={editable}
         privacyEditable
-        save={(answers) => act(boardWrites.saveAnswers(module.id, answers))}
+        save={(answers, onSaved) => act(boardWrites.saveAnswers(module.id, answers), onSaved)}
       />
     </Stack>
   );
@@ -412,7 +413,8 @@ interface AnswerFieldsProps {
   editable: boolean;
   /** Whether the Private tick of a Note answer can change (the Player's choice only, spec 70 Decision 3). */
   privacyEditable: boolean;
-  save: (answers: (LocalAnswer & { questionId: string })[]) => void;
+  /** Sends the answers; `onSaved` runs once they are stored. */
+  save: (answers: (LocalAnswer & { questionId: string })[], onSaved: () => void) => void;
 }
 
 /**
@@ -427,13 +429,23 @@ function AnswerFields({ questions, saved, editable, privacyEditable, save }: Ans
   const [local, setLocal] = useState<Record<string, LocalAnswer>>({});
   const pending = useRef<Record<string, LocalAnswer>>({});
   const focused = useRef<string | null>(null);
+  // Fields whose text is on its way, by how many saves carry it.
+  const sending = useRef<Record<string, number>>({});
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   const flush = () => {
     clearTimeout(timer.current);
     const answers = Object.entries(pending.current).map(([questionId, answer]) => ({ questionId, ...answer }));
     pending.current = {};
-    if (answers.length > 0) save(answers);
+    if (answers.length === 0) return;
+    const ids = answers.map((answer) => answer.questionId);
+    for (const id of ids) sending.current[id] = (sending.current[id] ?? 0) + 1;
+    save(answers, () => {
+      for (const id of ids) {
+        sending.current[id] -= 1;
+        if (sending.current[id] === 0) delete sending.current[id];
+      }
+    });
   };
   // What is still unsent goes when the fields do (another step, another page).
   const latestFlush = useRef(flush);
@@ -443,13 +455,16 @@ function AnswerFields({ questions, saved, editable, privacyEditable, save }: Ans
   useEffect(() => () => latestFlush.current(), []);
 
   // When the stored answers change (someone else's edit, or ours coming
-  // back), fields nobody is typing in and with nothing left to send show
-  // them again.
+  // back), fields nobody is typing in, with nothing left to send and
+  // nothing on its way show them again.
   const savedSignature = JSON.stringify([...saved.values()].map((answer) => [answer.questionId, answer.body, answer.notePrivate]));
   useEffect(() => {
     setLocal((previous) => {
       const kept = Object.fromEntries(
-        Object.entries(previous).filter(([questionId]) => questionId === focused.current || questionId in pending.current),
+        Object.entries(previous).filter(
+          ([questionId]) =>
+            questionId === focused.current || questionId in pending.current || questionId in sending.current,
+        ),
       );
       return Object.keys(kept).length === Object.keys(previous).length ? previous : kept;
     });
