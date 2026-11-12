@@ -1535,10 +1535,13 @@
       "private": "私密",
       "openMine": "打开你的文档",
       "createMine": "创建我的文档",
+      "createMineExtras": "创建我的文档",
       "masterCreates": "主持人会为你创建文档。",
+      "masterCreatesExtras": "主持人会创建你的文档。",
       "nameFirst": "回答名字问题后即可创建你的文档。",
       "everyone": "所有人的回答",
       "autosave": "回答会在输入时保存；只有你和主持人能看到。",
+      "masterEdits": "编辑会在输入时保存，玩家会立即看到。",
       "number": "问题 {{number}}",
       "question": "问题",
       "hint": "提示（可选）",
@@ -1563,7 +1566,8 @@
       },
       "problems": {
         "empty": "每个问题都需要文字。",
-        "oneName": "必须正好有一个名称问题。",
+        "oneName": "最多一个名称问题。",
+        "needsName": "副标题、描述和笔记需要一个名称问题。",
         "oneSubtitle": "副标题问题最多一个。",
         "documents": "“新文档”问题最多 {{max}} 个。"
       },
