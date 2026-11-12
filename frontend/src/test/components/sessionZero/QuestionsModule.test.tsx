@@ -184,11 +184,13 @@ describe('QuestionsBoard for the Master', () => {
   });
 
   it('only reads the answers while previewing the Room as a member', async () => {
-    const { user } = renderQuestions({ board: master({ answers: [answer('q-name', 'Ireena')] }), writable: false });
+    const board = master({ answers: [answer('q-name', 'Ireena'), answer('q-note', 'Un segreto', { note_private: true })] });
+    const { user } = renderQuestions({ board, writable: false });
     await user.click(screen.getByRole('button', { name: /Bianca/ }));
     expect(screen.queryByRole('textbox', { name: 'Come ti chiami?' })).not.toBeInTheDocument();
     expect(screen.getByText('Ireena')).toBeInTheDocument();
-    expect(screen.getAllByText('—')).toHaveLength(4);
+    expect(screen.getByText('Un segreto? · Privata')).toBeInTheDocument();
+    expect(screen.getAllByText('—')).toHaveLength(3);
   });
 });
 
@@ -473,6 +475,16 @@ describe('A step without a Name question', () => {
     });
     expect(screen.getByText('Il Master creerà i tuoi Documenti.')).toBeInTheDocument();
     cleanup();
+    // Already made: nothing left to say.
+    renderQuestions({
+      board: questionsBoard({
+        questions: noName,
+        answers: [answer('q-npc', 'Arik', { user_id: 'user-1', mine: true })],
+        documents: [{ user_id: 'user-1', question_id: 'q-npc', document_id: 'doc-3', mine: true }],
+      }),
+    });
+    expect(screen.queryByText(/creerà/)).not.toBeInTheDocument();
+    cleanup();
     renderQuestions({ board: questionsBoard({ questions: noName.slice(0, 1) }) });
     expect(screen.queryByText(/creerà/)).not.toBeInTheDocument();
     expect(screen.queryByText(/nome/)).not.toBeInTheDocument();
@@ -507,5 +519,13 @@ describe('A step without a Name question', () => {
       boardWrites.setQuestions('m-q', [{ id: null, body: 'Chi ti cerca?', hint: '', target: 'none', tagId: null }]),
       expect.any(Function),
     );
+  });
+
+  it('adds a question that fills no Document to a list without a Name question', async () => {
+    const { user } = renderQuestions({ board: questionsBoard({ questions: noName }, { can_manage: true }) });
+    await user.click(screen.getByRole('button', { name: 'Modifica domande' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Modifica domande' });
+    await user.click(within(dialog).getByRole('button', { name: 'Aggiungi domanda' }));
+    expect(within(dialog).getAllByRole('combobox', { name: 'Dove va la risposta' })[2]).toHaveValue('Non nel Documento');
   });
 });

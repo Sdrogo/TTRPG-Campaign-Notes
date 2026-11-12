@@ -554,7 +554,7 @@ function AnswerFields({ questions, saved, editable, privacyEditable, save }: Ans
             focused.current = question.id;
           },
           onBlur: () => {
-            if (focused.current === question.id) focused.current = null;
+            focused.current = null;
             flush();
           },
         };
