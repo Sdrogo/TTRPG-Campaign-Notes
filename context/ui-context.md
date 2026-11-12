@@ -1139,7 +1139,16 @@ a grid of as many columns as fit. Rows highlight `--bg-raised` on hover.
   "Create everyone's Documents (N)", a dimmed line on who reads the
   answers, and a separated accordion, one item per Player ("2/5
   answered"), with each answer (dimmed "—" when missing) and "Open the
-  Document". "Edit questions" is an `xl` dialog (full screen on a
+  Document". Since spec 70 the Master's accordion shows each Player's
+  answers as the Player's own fields (editable, autosaved, the Private tick
+  disabled) under a dimmed "Your edits are saved as you type..." line,
+  also in a closed session; read-only only in a "View as" preview. In
+  both forms a field nobody is typing in follows the stored answer.
+  Without a Name question (spec 70) the Master's Tag select is hidden,
+  "Create everyone's Documents" only shows when a "New Document" question
+  exists, the editor disables Subtitle, Description and Note (a new
+  question defaults to "Not in the Document"), and a Player gets "Create
+  my Documents" (or "The Master will create your Documents."). "Edit questions" is an `xl` dialog (full screen on a
   phone) that a click outside doesn't close; closing it with unsaved
   changes (×, Esc, Cancel) swaps the buttons for "You have unsaved
   changes." with "Keep editing" and "Discard" (red light): one bordered block per

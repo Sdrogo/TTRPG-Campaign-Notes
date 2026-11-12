@@ -17,6 +17,7 @@ from app.api.session_zero import (
     _answer,
     _begin_write,
     _domain_error,
+    _module_or_404,
     _open_module,
     _push,
     _shared,
@@ -51,15 +52,20 @@ from app.domain.session_zero_questions import (
     AnswerDocument,
     CreationDisabledError,
     DocumentExistsError,
+    DraftExtra,
     InvalidAnswerError,
+    NothingToCreateError,
     Question,
     QuestionSpec,
     QuestionTarget,
     clean_answer,
     clean_questions,
     draft_documents,
+    draft_extras,
     ensure_can_answer,
     ensure_questions_module,
+    has_documents_to_make,
+    makes_main_document,
     may_create,
 )
 from app.i18n.dependencies import LocaleDep
@@ -237,12 +243,7 @@ async def save_answers(
         questions = {
             q.id: q for q in await session_zero_questions_repo.list_questions(session, [module.id])
         }
-        cleaned: list[tuple[Question, str, bool]] = []
-        for answer in body.answers:
-            question = questions.get(answer.question_id)
-            if question is None:
-                raise InvalidAnswerError("errors.sessionZero.questionNotFound")
-            cleaned.append((question, clean_answer(question, answer.body), answer.note_private))
+        cleaned = _cleaned_answers(questions, body.answers)
     except DomainError as exc:
         raise _domain_error(exc, locale) from exc
     now = datetime.now(UTC)
@@ -258,6 +259,66 @@ async def save_answers(
         )
     if cleaned:
         await _answers_changed(session, write, module, write.viewer.user_id)
+    return await _answer(session, room_id, write, locale)
+
+
+def _cleaned_answers(
+    questions: dict[uuid.UUID, Question], answers: list[AnswerBody]
+) -> list[tuple[Question, str, bool]]:
+    """Each answer with its question, its text cleaned to fit (422 for an
+    unknown question or a text too long)."""
+    cleaned: list[tuple[Question, str, bool]] = []
+    for answer in answers:
+        question = questions.get(answer.question_id)
+        if question is None:
+            raise InvalidAnswerError("errors.sessionZero.questionNotFound")
+        cleaned.append((question, clean_answer(question, answer.body), answer.note_private))
+    return cleaned
+
+
+@router.put("/modules/{module_id}/answers/{user_id}")
+async def save_player_answers(
+    room_id: uuid.UUID,
+    module_id: uuid.UUID,
+    user_id: uuid.UUID,
+    body: AnswersBody,
+    current_user: CurrentUserDep,
+    session: SessionDep,
+    locale: LocaleDep,
+) -> SessionZeroResponse:
+    """Spec 70: the Master writes, changes or clears some of a Player's
+    answers, also in a closed session (Decision 8). The Private tick of a
+    Note answer stays the Player's: the stored one is kept (Decision 3).
+    404 for someone who isn't a Player of the Room."""
+    write = await _begin_write(session, room_id, uuid.UUID(current_user.id), locale)
+    try:
+        ensure_master(write.viewer.role)
+        module = _module_or_404(write, module_id, locale)
+        ensure_questions_module(module.kind)
+    except DomainError as exc:
+        raise _domain_error(exc, locale) from exc
+    members = await rooms_repo.list_memberships(session, room_id)
+    if not any(m.user_id == user_id and m.role is RoomRole.PLAYER for m in members):
+        raise http_error(status.HTTP_404_NOT_FOUND, "errors.sessionZero.playerNotFound", locale)
+    questions = {
+        q.id: q for q in await session_zero_questions_repo.list_questions(session, [module.id])
+    }
+    try:
+        cleaned = _cleaned_answers(questions, body.answers)
+    except DomainError as exc:
+        raise _domain_error(exc, locale) from exc
+    stored = {
+        a.question_id: a.note_private
+        for a in await session_zero_questions_repo.list_answers(session, list(questions))
+        if a.user_id == user_id
+    }
+    now = datetime.now(UTC)
+    for question, text, _ in cleaned:
+        await session_zero_questions_repo.save_answer(
+            session, room_id, question.id, user_id, text, stored.get(question.id, False), now
+        )
+    if cleaned:
+        await _answers_changed(session, write, module, user_id)
     return await _answer(session, room_id, write, locale)
 
 
@@ -303,12 +364,19 @@ async def _create_documents(
     yet (Public, its question's Tag, the Player its Owner)."""
     room_id = write.viewer.room_id
     actor_id = write.viewer.user_id
-    if any(link.user_id == player_id and link.question_id is None for link in links):
-        raise DocumentExistsError("errors.sessionZero.documentExists")
     mine = {a.question_id: a for a in answers if a.user_id == player_id}
     made = {link.question_id for link in links if link.user_id == player_id and link.question_id}
-    draft = draft_documents(questions, mine, made)
     now = datetime.now(UTC)
+    if not makes_main_document(questions):
+        # Spec 70 Decision 12: no Name question, only the standalone ones.
+        extras = draft_extras(questions, mine, made)
+        if not extras:
+            raise NothingToCreateError("errors.sessionZero.nothingToCreate")
+        await _create_extras(session, write, module, extras, player_id, now)
+        return
+    if any(link.user_id == player_id and link.question_id is None for link in links):
+        raise DocumentExistsError("errors.sessionZero.documentExists")
+    draft = draft_documents(questions, mine, made)
     try:
         plan = plan_new_document(
             room_id,
@@ -346,7 +414,22 @@ async def _create_documents(
     await session_zero_questions_repo.add_answer_document(
         session, room_id, AnswerDocument(module.id, player_id, None, plan.document.id), now
     )
-    for extra in draft.extras:
+    await _create_extras(session, write, module, draft.extras, player_id, now)
+
+
+async def _create_extras(
+    session: AsyncSession,
+    write: _Write,
+    module: Module,
+    extras: list[DraftExtra],
+    player_id: uuid.UUID,
+    now: datetime,
+) -> None:
+    """A Public Document per "New Document" answer, standalone: its
+    question's Tag, the Player its Owner (Decision 11)."""
+    room_id = write.viewer.room_id
+    actor_id = write.viewer.user_id
+    for extra in extras:
         extra_plan = plan_new_document(
             room_id, extra.name, extra.description, DocumentVisibility.ROOM, player_id
         )
@@ -415,8 +498,10 @@ async def create_everyone_documents(
     locale: LocaleDep,
 ) -> SessionZeroResponse:
     """Spec 47 Decision 11: the Master makes the Document of every Player
-    who answered the Name question and has none yet, whatever the Room's
-    D-13 setting; nobody to make it for changes nothing."""
+    who answered the Name question and has none yet (in a step with no Name
+    question, the "New Document" answers not made yet, spec 70 Decision
+    12), whatever the Room's D-13 setting; nobody to make it for changes
+    nothing."""
     write = await _begin_write(session, room_id, uuid.UUID(current_user.id), locale)
     try:
         ensure_master(write.viewer.role)
@@ -424,15 +509,20 @@ async def create_everyone_documents(
     except DomainError as exc:
         raise _domain_error(exc, locale) from exc
     questions, answers, links = await _module_answers(session, module)
-    name_id = next((q.id for q in questions if q.target is QuestionTarget.NAME), None)
-    with_document = {link.user_id for link in links if link.question_id is None}
     players = [
         m.user_id
         for m in await rooms_repo.list_memberships(session, room_id)
         if m.role is RoomRole.PLAYER
     ]
-    named = {a.user_id for a in answers if a.question_id == name_id}
-    todo = [p for p in players if p in named and p not in with_document]
+    todo = [
+        p
+        for p in players
+        if has_documents_to_make(
+            questions,
+            {a.question_id: a for a in answers if a.user_id == p},
+            [link for link in links if link.user_id == p],
+        )
+    ]
     for player_id in todo:
         await _create_documents(
             session, write, module, questions, answers, links, player_id, locale
