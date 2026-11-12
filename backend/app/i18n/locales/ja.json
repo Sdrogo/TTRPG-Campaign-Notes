@@ -307,6 +307,7 @@
       "questionOrder": "各質問を1回ずつ、そのIDとともに指定してください",
       "answerTooLong": "回答は最大{max}文字です",
       "questionNotFound": "質問が見つかりません",
+      "playerNotFound": "プレイヤーが見つかりません",
       "notQuestionsModule": "質問ステップでのみ使えます",
       "masterDoesNotAnswer": "質問はマスターが書き、プレイヤーが答えます",
       "nameAnswerMissing": "先に名前の質問に答えてください",

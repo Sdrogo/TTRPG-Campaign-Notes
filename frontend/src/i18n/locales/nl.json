@@ -1584,6 +1584,7 @@
       "nameFirst": "Beantwoord de vraag over de naam om je Document te maken.",
       "everyone": "Ieders antwoorden",
       "autosave": "Antwoorden worden opgeslagen terwijl je typt; alleen jij en de Master zien ze.",
+      "masterEdits": "Je wijzigingen worden opgeslagen terwijl je typt. De speler ziet ze meteen.",
       "number": "Vraag {{number}}",
       "question": "Vraag",
       "hint": "Hint (optioneel)",

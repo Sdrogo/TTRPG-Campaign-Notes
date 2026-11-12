@@ -1584,6 +1584,7 @@
       "nameFirst": "Answer the name question to create your Document.",
       "everyone": "Everyone's answers",
       "autosave": "Answers save as you type; only you and the Master see them.",
+      "masterEdits": "Your edits are saved as you type. The Player sees them at once.",
       "number": "Question {{number}}",
       "question": "Question",
       "hint": "Hint (optional)",

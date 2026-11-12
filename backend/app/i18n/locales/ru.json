@@ -307,6 +307,7 @@
       "questionOrder": "Укажите каждый вопрос один раз, с его id",
       "answerTooLong": "Ответ — не больше {max} символов",
       "questionNotFound": "Вопрос не найден",
+      "playerNotFound": "Игрок не найден",
       "notQuestionsModule": "Это работает только на этапе «Вопросы»",
       "masterDoesNotAnswer": "Мастер пишет вопросы, игроки отвечают",
       "nameAnswerMissing": "Сначала ответьте на вопрос об имени",

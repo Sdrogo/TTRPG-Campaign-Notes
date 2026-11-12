@@ -307,6 +307,7 @@
       "questionOrder": "Podaj każde pytanie raz, z jego id",
       "answerTooLong": "Odpowiedź ma najwyżej {max} znaków",
       "questionNotFound": "Nie znaleziono pytania",
+      "playerNotFound": "Nie znaleziono gracza",
       "notQuestionsModule": "Działa tylko na etapie Pytania",
       "masterDoesNotAnswer": "Master pisze pytania; gracze na nie odpowiadają",
       "nameAnswerMissing": "Najpierw odpowiedz na pytanie o nazwę",

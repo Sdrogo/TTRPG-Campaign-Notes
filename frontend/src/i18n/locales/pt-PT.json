@@ -1586,6 +1586,7 @@
       "nameFirst": "Responde à pergunta do nome para criar o teu Documento.",
       "everyone": "As respostas de todos",
       "autosave": "As respostas são guardadas enquanto escreves; só tu e o Mestre as veem.",
+      "masterEdits": "As tuas alterações são guardadas enquanto escreves. O jogador vê-as logo.",
       "number": "Pergunta {{number}}",
       "question": "Pergunta",
       "hint": "Dica (opcional)",

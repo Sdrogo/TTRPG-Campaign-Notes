@@ -17,6 +17,7 @@ from app.api.session_zero import (
     _answer,
     _begin_write,
     _domain_error,
+    _module_or_404,
     _open_module,
     _push,
     _shared,
@@ -237,12 +238,7 @@ async def save_answers(
         questions = {
             q.id: q for q in await session_zero_questions_repo.list_questions(session, [module.id])
         }
-        cleaned: list[tuple[Question, str, bool]] = []
-        for answer in body.answers:
-            question = questions.get(answer.question_id)
-            if question is None:
-                raise InvalidAnswerError("errors.sessionZero.questionNotFound")
-            cleaned.append((question, clean_answer(question, answer.body), answer.note_private))
+        cleaned = _cleaned_answers(questions, body.answers)
     except DomainError as exc:
         raise _domain_error(exc, locale) from exc
     now = datetime.now(UTC)
@@ -258,6 +254,66 @@ async def save_answers(
         )
     if cleaned:
         await _answers_changed(session, write, module, write.viewer.user_id)
+    return await _answer(session, room_id, write, locale)
+
+
+def _cleaned_answers(
+    questions: dict[uuid.UUID, Question], answers: list[AnswerBody]
+) -> list[tuple[Question, str, bool]]:
+    """Each answer with its question, its text cleaned to fit (422 for an
+    unknown question or a text too long)."""
+    cleaned: list[tuple[Question, str, bool]] = []
+    for answer in answers:
+        question = questions.get(answer.question_id)
+        if question is None:
+            raise InvalidAnswerError("errors.sessionZero.questionNotFound")
+        cleaned.append((question, clean_answer(question, answer.body), answer.note_private))
+    return cleaned
+
+
+@router.put("/modules/{module_id}/answers/{user_id}")
+async def save_player_answers(
+    room_id: uuid.UUID,
+    module_id: uuid.UUID,
+    user_id: uuid.UUID,
+    body: AnswersBody,
+    current_user: CurrentUserDep,
+    session: SessionDep,
+    locale: LocaleDep,
+) -> SessionZeroResponse:
+    """Spec 70: the Master writes, changes or clears some of a Player's
+    answers, also in a closed session (Decision 8). The Private tick of a
+    Note answer stays the Player's: the stored one is kept (Decision 3).
+    404 for someone who isn't a Player of the Room."""
+    write = await _begin_write(session, room_id, uuid.UUID(current_user.id), locale)
+    try:
+        ensure_master(write.viewer.role)
+        module = _module_or_404(write, module_id, locale)
+        ensure_questions_module(module.kind)
+    except DomainError as exc:
+        raise _domain_error(exc, locale) from exc
+    members = await rooms_repo.list_memberships(session, room_id)
+    if not any(m.user_id == user_id and m.role is RoomRole.PLAYER for m in members):
+        raise http_error(status.HTTP_404_NOT_FOUND, "errors.sessionZero.playerNotFound", locale)
+    questions = {
+        q.id: q for q in await session_zero_questions_repo.list_questions(session, [module.id])
+    }
+    try:
+        cleaned = _cleaned_answers(questions, body.answers)
+    except DomainError as exc:
+        raise _domain_error(exc, locale) from exc
+    stored = {
+        a.question_id: a.note_private
+        for a in await session_zero_questions_repo.list_answers(session, list(questions))
+        if a.user_id == user_id
+    }
+    now = datetime.now(UTC)
+    for question, text, _ in cleaned:
+        await session_zero_questions_repo.save_answer(
+            session, room_id, question.id, user_id, text, stored.get(question.id, False), now
+        )
+    if cleaned:
+        await _answers_changed(session, write, module, user_id)
     return await _answer(session, room_id, write, locale)
 
 

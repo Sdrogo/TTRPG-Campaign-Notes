@@ -307,6 +307,7 @@
       "questionOrder": "Indica cada pergunta uma só vez, com o seu id",
       "answerTooLong": "Uma resposta tem no máximo {max} caracteres",
       "questionNotFound": "Pergunta não encontrada",
+      "playerNotFound": "Jogador não encontrado",
       "notQuestionsModule": "Só funciona numa etapa de Perguntas",
       "masterDoesNotAnswer": "O Mestre escreve as perguntas; os jogadores respondem",
       "nameAnswerMissing": "Responde primeiro à pergunta do nome",

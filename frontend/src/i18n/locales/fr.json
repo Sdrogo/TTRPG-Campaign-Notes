@@ -1586,6 +1586,7 @@
       "nameFirst": "Répondez à la question du nom pour créer votre Document.",
       "everyone": "Les réponses de tous",
       "autosave": "Les réponses s'enregistrent pendant la saisie ; seuls vous et le Maître les voyez.",
+      "masterEdits": "Tes modifications sont enregistrées pendant la saisie. Le joueur les voit aussitôt.",
       "number": "Question {{number}}",
       "question": "Question",
       "hint": "Indice (facultatif)",

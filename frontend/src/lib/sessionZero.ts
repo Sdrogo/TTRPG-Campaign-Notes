@@ -612,6 +612,12 @@ export const boardWrites = {
       })),
     },
   }),
+  /** Spec 70: the Master writes, changes or clears a Player's answers (the Private tick stays theirs). */
+  saveAnswersFor: (id: string, userId: string, answers: { questionId: string; body: string }[]): BoardWrite => ({
+    path: `/modules/${id}/answers/${userId}`,
+    method: 'PUT',
+    json: { answers: answers.map((answer) => ({ question_id: answer.questionId, body: answer.body })) },
+  }),
   /** Decision 10: every member reads every answer, or only their own again. */
   revealAnswers: (id: string, revealed: boolean): BoardWrite => ({
     path: `/modules/${id}/reveal`,

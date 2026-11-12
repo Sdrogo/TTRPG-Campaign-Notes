@@ -307,6 +307,7 @@
       "questionOrder": "Noem elke vraag één keer, met haar eigen id",
       "answerTooLong": "Een antwoord heeft hoogstens {max} tekens",
       "questionNotFound": "Vraag niet gevonden",
+      "playerNotFound": "Speler niet gevonden",
       "notQuestionsModule": "Dit werkt alleen in een Vragen-stap",
       "masterDoesNotAnswer": "De Master schrijft de vragen; de spelers beantwoorden ze",
       "nameAnswerMissing": "Beantwoord eerst de naamvraag",

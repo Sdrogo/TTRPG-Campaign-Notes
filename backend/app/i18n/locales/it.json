@@ -307,6 +307,7 @@
       "questionOrder": "Elenca ogni domanda una sola volta, con il suo id",
       "answerTooLong": "Una risposta ha al massimo {max} caratteri",
       "questionNotFound": "Domanda non trovata",
+      "playerNotFound": "Player non trovato",
       "notQuestionsModule": "Funziona solo su una tappa Domande",
       "masterDoesNotAnswer": "Il Master scrive le domande; rispondono i Player",
       "nameAnswerMissing": "Rispondi prima alla domanda del nome",

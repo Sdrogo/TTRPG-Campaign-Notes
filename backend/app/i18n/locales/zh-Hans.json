@@ -307,6 +307,7 @@
       "questionOrder": "每个问题只列一次，并带上其 id",
       "answerTooLong": "回答最多 {max} 个字符",
       "questionNotFound": "未找到问题",
+      "playerNotFound": "未找到玩家",
       "notQuestionsModule": "仅适用于问题步骤",
       "masterDoesNotAnswer": "主持人写问题，玩家回答",
       "nameAnswerMissing": "请先回答名称问题",

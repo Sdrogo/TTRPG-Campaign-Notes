@@ -307,6 +307,7 @@
       "questionOrder": "List each question once, with its own id",
       "answerTooLong": "An answer has at most {max} characters",
       "questionNotFound": "Question not found",
+      "playerNotFound": "Player not found",
       "notQuestionsModule": "This only works on a Questions step",
       "masterDoesNotAnswer": "The Master writes the questions; the Players answer them",
       "nameAnswerMissing": "Answer the name question first",

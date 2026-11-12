@@ -1584,6 +1584,7 @@
       "nameFirst": "Rispondi alla domanda sul nome per creare il tuo Documento.",
       "everyone": "Le risposte di tutti",
       "autosave": "Le risposte si salvano mentre scrivi; le vedete solo tu e il Master.",
+      "masterEdits": "Le modifiche si salvano mentre scrivi. Il Player le vede subito.",
       "number": "Domanda {{number}}",
       "question": "Domanda",
       "hint": "Suggerimento (facoltativo)",

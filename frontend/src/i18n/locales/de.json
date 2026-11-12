@@ -1584,6 +1584,7 @@
       "nameFirst": "Beantworte die Frage nach dem Namen, um dein Dokument zu erstellen.",
       "everyone": "Die Antworten aller",
       "autosave": "Antworten werden beim Tippen gespeichert; nur du und der Master sehen sie.",
+      "masterEdits": "Deine Änderungen werden beim Tippen gespeichert. Der Spieler sieht sie sofort.",
       "number": "Frage {{number}}",
       "question": "Frage",
       "hint": "Hinweis (optional)",

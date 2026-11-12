@@ -307,6 +307,7 @@
       "questionOrder": "Nenne jede Frage einmal, mit ihrer eigenen ID",
       "answerTooLong": "Eine Antwort hat höchstens {max} Zeichen",
       "questionNotFound": "Frage nicht gefunden",
+      "playerNotFound": "Spieler nicht gefunden",
       "notQuestionsModule": "Das geht nur in einer Fragen-Etappe",
       "masterDoesNotAnswer": "Der Master schreibt die Fragen; die Spieler beantworten sie",
       "nameAnswerMissing": "Beantworte zuerst die Namensfrage",

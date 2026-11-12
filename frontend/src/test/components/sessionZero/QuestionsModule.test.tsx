@@ -1,8 +1,13 @@
 import { cleanup, screen, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { useState } from 'react';
 import { Route, Routes } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
 import { ANSWER_SAVE_DELAY_MS, QuestionsBoard } from '../../../components/sessionZero/QuestionsModule';
-import { boardWrites } from '../../../lib/sessionZero';
+import { BoardContext } from '../../../components/sessionZero/boardContext';
+import { boardWrites, shownModule, toSessionZero, viewOf, type RawSessionZero } from '../../../lib/sessionZero';
+import { rawSessionZero } from '../../fixtures';
+import { renderWithProviders } from '../../utils';
 import type { Tag } from '../../../types/tag';
 import { members, renderBoard } from './harness';
 
@@ -109,9 +114,9 @@ describe('QuestionsBoard for the Master', () => {
 
     await user.click(screen.getByRole('button', { name: /Bianca/ }));
     expect(screen.getByText('2/5 risposte')).toBeInTheDocument();
-    expect(screen.getByText('Ireena')).toBeInTheDocument();
-    expect(screen.getByText('Un segreto? · Privata')).toBeInTheDocument();
-    expect(screen.getAllByText('—')).toHaveLength(3);
+    // Spec 70: the Master's view of the answers is editable in place.
+    expect(await screen.findByRole('textbox', { name: 'Come ti chiami?' })).toHaveValue('Ireena');
+    expect(screen.getByRole('checkbox', { name: 'Privata' })).toBeChecked();
     expect(screen.getByText('Apri il Documento').closest('a')).toHaveAttribute('href', '/rooms/room-1/documents/doc-9');
 
     await user.click(screen.getByRole('button', { name: 'Rivela le risposte' }));
@@ -138,11 +143,52 @@ describe('QuestionsBoard for the Master', () => {
     expect(screen.getByText('Nessun Player nella Stanza.')).toBeInTheDocument();
   });
 
-  it('only shows a closed session\'s questions and answers', () => {
-    renderQuestions({ board: master({}, { rounds: closed }) });
+  it('only shows a closed session\'s questions, but still edits its answers', async () => {
+    const { act, user } = renderQuestions({ board: master({ answers: [answer('q-name', 'Ireena')] }, { rounds: closed }) });
     expect(screen.queryByRole('button', { name: 'Modifica domande' })).not.toBeInTheDocument();
     expect(screen.queryByRole('switch')).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Rivela le risposte' })).not.toBeInTheDocument();
+    // Spec 70 Decision 8: the Master fixes a past session's answers too.
+    await user.click(screen.getByRole('button', { name: /Bianca/ }));
+    await user.type(await screen.findByRole('textbox', { name: 'Da dove vieni?' }), 'Barovia');
+    await user.tab();
+    expect(act).toHaveBeenLastCalledWith(
+      boardWrites.saveAnswersFor('m-q', 'user-2', [{ questionId: 'q-desc', body: 'Barovia' }]),
+    );
+  });
+
+  // Spec 70: the Master writes, changes and clears a Player's answers; the Private tick stays theirs.
+  it('edits a Player\'s answers in place, saved as they type', async () => {
+    const board = master({ answers: [answer('q-name', 'Ireena'), answer('q-note', 'Un segreto', { note_private: true })] });
+    const { act, user } = renderQuestions({ board });
+    await user.click(screen.getByRole('button', { name: /Bianca/ }));
+    expect(screen.getByText('Le modifiche si salvano mentre scrivi. Il Player le vede subito.')).toBeInTheDocument();
+    expect(await screen.findByRole('checkbox', { name: 'Privata' })).toBeDisabled();
+
+    const name = screen.getByRole('textbox', { name: 'Come ti chiami?' });
+    await user.clear(name);
+    await user.type(name, 'Ireena Kolyana');
+    expect(act).not.toHaveBeenCalled();
+    await vi.waitFor(
+      () =>
+        expect(act).toHaveBeenLastCalledWith(
+          boardWrites.saveAnswersFor('m-q', 'user-2', [{ questionId: 'q-name', body: 'Ireena Kolyana' }]),
+        ),
+      { timeout: ANSWER_SAVE_DELAY_MS * 3 },
+    );
+    await user.clear(screen.getByRole('textbox', { name: 'Un segreto?' }));
+    await user.tab();
+    expect(act).toHaveBeenLastCalledWith(
+      boardWrites.saveAnswersFor('m-q', 'user-2', [{ questionId: 'q-note', body: '' }]),
+    );
+  });
+
+  it('only reads the answers while previewing the Room as a member', async () => {
+    const { user } = renderQuestions({ board: master({ answers: [answer('q-name', 'Ireena')] }), writable: false });
+    await user.click(screen.getByRole('button', { name: /Bianca/ }));
+    expect(screen.queryByRole('textbox', { name: 'Come ti chiami?' })).not.toBeInTheDocument();
+    expect(screen.getByText('Ireena')).toBeInTheDocument();
+    expect(screen.getAllByText('—')).toHaveLength(4);
   });
 });
 
@@ -329,5 +375,42 @@ describe('QuestionsBoard for a Player', () => {
     expect(screen.queryByRole('button', { name: /Carlo/ })).not.toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: /Bianca/ }));
     expect(screen.getByText('Ismark')).toBeInTheDocument();
+  });
+});
+
+// Spec 70 Decision 6: the Master's edits reach the Player's open form, but
+// never a field the Player is typing in.
+describe('The Player\'s form and the Master\'s edits', () => {
+  const mine = (questionId: string, body: string) => answer(questionId, body, { user_id: 'user-1', mine: true });
+
+  function Live({ act }: { act: () => void }) {
+    const [answers, setAnswers] = useState([mine('q-name', 'Ireena'), mine('q-desc', 'Barovia')]);
+    const raw = toSessionZero(rawSessionZero(questionsBoard({ answers })) as RawSessionZero);
+    const module = shownModule(raw, null);
+    const value = { board: viewOf(raw, module), module, members, act, busy: false, writable: true, glowing: new Set<string>() };
+    return (
+      <BoardContext.Provider value={value}>
+        <QuestionsBoard roomId="room-1" tags={tags} />
+        <button type="button" onClick={() => setAnswers([mine('q-name', 'Ireena Kolyana'), mine('q-desc', 'Vallaki')])}>
+          Il Master modifica
+        </button>
+      </BoardContext.Provider>
+    );
+  }
+
+  it('shows the new text in fields the Player is not typing in', async () => {
+    const act = vi.fn();
+    renderWithProviders(<Live act={act} />);
+    const user = userEvent.setup();
+    // The Player changed their name and left the field (sent)...
+    await user.type(screen.getByRole('textbox', { name: 'Come ti chiami?' }), '!');
+    await user.tab();
+    expect(act).toHaveBeenCalledTimes(1);
+    // ...and is typing in "Da dove vieni?" when the Master's edit arrives.
+    const description = screen.getByRole('textbox', { name: 'Da dove vieni?' });
+    await user.type(description, ' e oltre');
+    screen.getByRole('button', { name: 'Il Master modifica' }).click();
+    expect(await screen.findByDisplayValue('Ireena Kolyana')).toBeInTheDocument();
+    expect(description).toHaveValue('Barovia e oltre');
   });
 });

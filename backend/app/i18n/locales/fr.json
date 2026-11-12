@@ -307,6 +307,7 @@
       "questionOrder": "Indique chaque question une seule fois, avec son id",
       "answerTooLong": "Une réponse fait au plus {max} caractères",
       "questionNotFound": "Question introuvable",
+      "playerNotFound": "Joueur introuvable",
       "notQuestionsModule": "Cela ne marche que sur une étape Questions",
       "masterDoesNotAnswer": "Le MJ écrit les questions ; les joueurs y répondent",
       "nameAnswerMissing": "Réponds d’abord à la question du nom",

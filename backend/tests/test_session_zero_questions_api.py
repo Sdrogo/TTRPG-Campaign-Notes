@@ -641,3 +641,193 @@ async def test_answers_reach_only_their_readers_streams(
 async def test_no_modules_read_no_rows(db_session: AsyncSession) -> None:
     assert await session_zero_questions_repo.list_questions(db_session, []) == []
     assert await session_zero_questions_repo.list_answer_documents(db_session, []) == []
+
+
+async def _edit_answers(
+    client: AsyncClient,
+    room: _Room,
+    module_id: str,
+    player: _Member,
+    answers: list[dict[str, Any]],
+    member: _Member | None = None,
+) -> Any:
+    return await client.put(
+        f"{room.url}/modules/{module_id}/answers/{player.id}",
+        json={"answers": answers},
+        headers=(member or room.master).headers,
+    )
+
+
+async def test_the_master_edits_a_players_answers(
+    db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
+) -> None:
+    """Spec 70 Decisions 3, 4 and 7: the Master changes, writes and clears a
+    Player's answers; the Private tick stays the Player's; the Document
+    already made doesn't change."""
+    room, module = await _with_questions(client, make_token)
+    questions = module["questions"]
+    name, desc, note = questions[0]["id"], questions[2]["id"], questions[4]["id"]
+    await _answer(
+        client,
+        room,
+        room.player,
+        module["id"],
+        [
+            {"question_id": name, "body": "Ireena"},
+            {"question_id": note, "body": "A secret", "note_private": True},
+        ],
+    )
+    made = await client.post(
+        f"{room.url}/modules/{module['id']}/documents", headers=room.player.headers
+    )
+    assert made.status_code == 200, made.text
+    document_id = _questions(made.json())["documents"][0]["document_id"]
+
+    edited = await _edit_answers(
+        client,
+        room,
+        module["id"],
+        room.player,
+        [
+            {"question_id": name, "body": "  Ireena\n Kolyana "},
+            # A field the Player left empty; `note_private` is ignored.
+            {"question_id": desc, "body": "Barovia", "note_private": True},
+            {"question_id": note, "body": "A darker secret", "note_private": False},
+        ],
+    )
+    assert edited.status_code == 200, edited.text
+    mine = {
+        a["question_id"]: a for a in _questions(await _get(client, room, room.player))["answers"]
+    }
+    assert mine[name]["body"] == "Ireena Kolyana"
+    assert (mine[desc]["body"], mine[desc]["note_private"]) == ("Barovia", False)
+    assert (mine[note]["body"], mine[note]["note_private"]) == ("A darker secret", True)
+    assert (await _document(client, room, room.player, document_id))["name"] == "Ireena"
+
+    # An empty answer is cleared; nothing to save changes nothing.
+    cleared = await _edit_answers(
+        client, room, module["id"], room.player, [{"question_id": desc, "body": " "}]
+    )
+    assert desc not in {a["question_id"] for a in _questions(cleared.json())["answers"]}
+    assert (await _edit_answers(client, room, module["id"], room.player, [])).status_code == 200
+    # The other Player's answers are untouched and still hidden from them.
+    other = _questions(await _get(client, room, room.other_player))
+    assert other["answers"] == []
+
+    # The Player's own save takes their answer back.
+    await _answer(client, room, room.player, module["id"], [{"question_id": name, "body": "Ire"}])
+    master = _questions(await _get(client, room, room.master))
+    assert {a["body"] for a in master["answers"] if a["question_id"] == name} == {"Ire"}
+
+
+async def test_only_the_master_edits_and_only_a_players_answers(
+    db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
+) -> None:
+    """Spec 70 Decision 4: 403 for a Player, 404 for someone who isn't a
+    Player of the Room, 422 for answers that break the rules or a step that
+    isn't a Questions one."""
+    room, board = await _room(client, make_token, "questions", "retro")
+    module_id = _questions(board)["id"]
+    board = await _set_questions(client, room, module_id, [{"body": "Name", "target": "name"}])
+    name = _questions(board)["questions"][0]["id"]
+    answer = [{"question_id": name, "body": "Ezmerelda"}]
+
+    player = await _edit_answers(client, room, module_id, room.other_player, answer, room.player)
+    assert player.status_code == 403
+    stranger = _new_member(make_token)
+    for target in (room.master, stranger):
+        missing = await _edit_answers(client, room, module_id, target, answer)
+        assert missing.status_code == 404, target
+    for bad in (
+        [{"question_id": str(uuid.uuid4()), "body": "?"}],
+        [{"question_id": name, "body": "x" * 201}],
+    ):
+        response = await _edit_answers(client, room, module_id, room.player, bad)
+        assert response.status_code == 422, bad
+    retro = next(m["id"] for m in board["modules"] if m["kind"] == "retro")
+    not_questions = await _edit_answers(client, room, retro, room.player, answer)
+    assert not_questions.status_code == 422
+    unknown = await _edit_answers(client, room, str(uuid.uuid4()), room.player, answer)
+    assert unknown.status_code == 404
+
+
+async def test_the_master_edits_a_closed_sessions_answers(
+    db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
+) -> None:
+    """Spec 70 Decision 8: a closed session's answers stay the Master's to
+    fix, while the Player's own form there is read-only."""
+    room, board = await _room(client, make_token, "questions")
+    module_id = _questions(board)["id"]
+    board = await _set_questions(client, room, module_id, [{"body": "Name", "target": "name"}])
+    name = _questions(board)["questions"][0]["id"]
+    await _answer(client, room, room.player, module_id, [{"question_id": name, "body": "Ezm"}])
+    next_session = await client.post(f"{room.url}/rounds", json={}, headers=room.master.headers)
+    assert next_session.status_code == 200, next_session.text
+
+    fix = [{"question_id": name, "body": "Ezmerelda"}]
+    own = await client.put(
+        f"{room.url}/modules/{module_id}/answers",
+        json={"answers": fix},
+        headers=room.player.headers,
+    )
+    assert own.status_code == 409
+    edited = await _edit_answers(client, room, module_id, room.player, fix)
+    assert edited.status_code == 200, edited.text
+    old_round = next_session.json()["rounds"][0]["id"]
+    old = await client.get(room.url, params={"round_id": old_round}, headers=room.player.headers)
+    assert [a["body"] for a in _questions(old.json())["answers"]] == ["Ezmerelda"]
+
+
+async def test_the_master_edits_answers_in_a_sections_questions_tool(
+    db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
+) -> None:
+    """Spec 70: the standalone Questions tool of a Section (spec 60) works
+    the same way."""
+    room, _ = await _room(client, make_token, "retro")
+    section = await client.post(
+        f"/rooms/{room.id}/sections", json={"title": "Village"}, headers=room.master.headers
+    )
+    tools = f"/rooms/{room.id}/sections/{section.json()['id']}/tools"
+    added = await client.post(tools, json={"kind": "questions"}, headers=room.master.headers)
+    assert added.status_code == 201, added.text
+    module_id = added.json()["blocks"][-1]["module_id"]
+    await client.put(
+        f"{tools}/{module_id}/visible", json={"visible": True}, headers=room.master.headers
+    )
+    await _set_questions(client, room, module_id, [{"body": "Name", "target": "name"}])
+    (tool,) = (await client.get(tools, headers=room.master.headers)).json()["tools"]
+    name = tool["module"]["questions"]["questions"][0]["id"]
+
+    edited = await _edit_answers(
+        client, room, module_id, room.player, [{"question_id": name, "body": "Rictavio"}]
+    )
+    assert edited.status_code == 200, edited.text
+    (tool,) = (await client.get(tools, headers=room.player.headers)).json()["tools"]
+    assert [a["body"] for a in tool["module"]["questions"]["answers"]] == ["Rictavio"]
+
+
+async def test_the_masters_edit_reaches_only_the_players_and_masters_streams(
+    db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
+) -> None:
+    """Spec 70 Decision 6: an unrevealed edit is news for its Player and
+    the Masters only."""
+    room, module = await _with_questions(client, make_token)
+    room_id = uuid.UUID(room.id)
+    streams = {
+        member.id: broker.subscribe(room_id, uuid.UUID(member.id))
+        for member in (room.master, room.player, room.other_player)
+    }
+    try:
+        edited = await _edit_answers(
+            client,
+            room,
+            module["id"],
+            room.player,
+            [{"question_id": module["questions"][0]["id"], "body": "Ireena"}],
+        )
+        assert edited.status_code == 200, edited.text
+        heard = {user: not stream.queue.empty() for user, stream in streams.items()}
+        assert heard == {room.master.id: True, room.player.id: True, room.other_player.id: False}
+    finally:
+        for stream in streams.values():
+            broker.unsubscribe(stream)

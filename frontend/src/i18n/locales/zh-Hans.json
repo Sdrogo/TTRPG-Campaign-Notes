@@ -1539,6 +1539,7 @@
       "nameFirst": "回答名字问题后即可创建你的文档。",
       "everyone": "所有人的回答",
       "autosave": "回答会在输入时保存；只有你和主持人能看到。",
+      "masterEdits": "编辑会在输入时保存，玩家会立即看到。",
       "number": "问题 {{number}}",
       "question": "问题",
       "hint": "提示（可选）",

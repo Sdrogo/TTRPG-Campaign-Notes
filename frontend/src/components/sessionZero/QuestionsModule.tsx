@@ -106,7 +106,7 @@ function QuestionLine({ question, index, tags }: { question: Question; index: nu
 /** The Master's side: settings, the questions, and every Player's answers. */
 function MasterQuestions({ roomId, tags, module, step, editable }: StepProps & { tags: Tag[] }) {
   const { t } = useTranslation();
-  const { act, busy, members } = useBoard();
+  const { act, busy, members, writable } = useBoard();
   const [editing, setEditing] = useState(false);
   const tagSelectId = useId();
   const players = members.filter((member) => member.role === 'player');
@@ -189,7 +189,13 @@ function MasterQuestions({ roomId, tags, module, step, editable }: StepProps & {
           <Text size="xs" c="dimmed">
             {step.answersRevealed ? t('sessionZero.questions.revealedHint') : t('sessionZero.questions.privateHint')}
           </Text>
-          <AnswersByPlayer roomId={roomId} step={step} userIds={players.map((player) => player.userId)} />
+          <AnswersByPlayer
+            roomId={roomId}
+            module={module}
+            step={step}
+            userIds={players.map((player) => player.userId)}
+            canEdit={writable}
+          />
         </Stack>
       )}
       {editing && <QuestionsEditor module={module} step={step} tags={tags} onClose={() => setEditing(false)} />}
@@ -198,9 +204,22 @@ function MasterQuestions({ roomId, tags, module, step, editable }: StepProps & {
 }
 
 /** One row per Player: how many questions they answered, their answers and their Document. */
-function AnswersByPlayer({ roomId, step, userIds }: { roomId: string; step: QuestionsStep; userIds: string[] }) {
+function AnswersByPlayer({
+  roomId,
+  module,
+  step,
+  userIds,
+  canEdit = false,
+}: {
+  roomId: string;
+  module: SessionZeroModule;
+  step: QuestionsStep;
+  userIds: string[];
+  /** The Master edits the answers in place (spec 70), in an open or closed session. */
+  canEdit?: boolean;
+}) {
   const { t } = useTranslation();
-  const { members } = useBoard();
+  const { act, members } = useBoard();
   if (userIds.length === 0) {
     return (
       <Text size="sm" c="dimmed">
@@ -229,9 +248,32 @@ function AnswersByPlayer({ roomId, step, userIds }: { roomId: string; step: Ques
             </Accordion.Control>
             <Accordion.Panel>
               <Stack gap="xs">
-                {step.questions.map((question) => (
-                  <ReadAnswer key={question.id} question={question} answer={answers.get(question.id)} />
-                ))}
+                {canEdit ? (
+                  <>
+                    <Text size="xs" c="dimmed">
+                      {t('sessionZero.questions.masterEdits')}
+                    </Text>
+                    <AnswerFields
+                      questions={step.questions}
+                      saved={answers}
+                      editable
+                      privacyEditable={false}
+                      save={(changed) =>
+                        act(
+                          boardWrites.saveAnswersFor(
+                            module.id,
+                            userId,
+                            changed.map(({ questionId, body }) => ({ questionId, body })),
+                          ),
+                        )
+                      }
+                    />
+                  </>
+                ) : (
+                  step.questions.map((question) => (
+                    <ReadAnswer key={question.id} question={question} answer={answers.get(question.id)} />
+                  ))
+                )}
                 {document && (
                   <Button
                     component={Link}
@@ -333,41 +375,89 @@ function PlayerQuestions({ roomId, module, step, editable }: StepProps) {
           <Title order={3} fz="h5">
             {t('sessionZero.questions.everyone')}
           </Title>
-          <AnswersByPlayer roomId={roomId} step={step} userIds={others} />
+          <AnswersByPlayer roomId={roomId} module={module} step={step} userIds={others} />
         </Stack>
       )}
     </Stack>
   );
 }
 
-/**
- * The Player's answers, one field per question; changes are sent once
- * typing pauses, when a field is left, and when the form goes away. What
- * they typed stays on screen whatever the boards answer.
- */
+/** The Player's own answers, saved as they type (Decision 10). */
 function AnswerForm({ module, step, editable }: Omit<StepProps, 'roomId'>) {
   const { t } = useTranslation();
   const { act } = useBoard();
+  const saved = new Map(step.answers.filter((answer) => answer.mine).map((answer) => [answer.questionId, answer]));
+  return (
+    <Stack gap="sm">
+      {editable && (
+        <Text size="xs" c="dimmed">
+          {t('sessionZero.questions.autosave')}
+        </Text>
+      )}
+      <AnswerFields
+        questions={step.questions}
+        saved={saved}
+        editable={editable}
+        privacyEditable
+        save={(answers) => act(boardWrites.saveAnswers(module.id, answers))}
+      />
+    </Stack>
+  );
+}
+
+interface AnswerFieldsProps {
+  questions: Question[];
+  /** The stored answers, by question id. */
+  saved: Map<string, Answer>;
+  editable: boolean;
+  /** Whether the Private tick of a Note answer can change (the Player's choice only, spec 70 Decision 3). */
+  privacyEditable: boolean;
+  save: (answers: (LocalAnswer & { questionId: string })[]) => void;
+}
+
+/**
+ * One field per question; changes are sent once typing pauses, when a field
+ * is left, and when the fields go away. What was typed stays on screen
+ * while it is being typed or sent; a field nobody is typing in follows the
+ * stored answer, so the Master's edits reach the Player's open form (spec 70
+ * Decision 6).
+ */
+function AnswerFields({ questions, saved, editable, privacyEditable, save }: AnswerFieldsProps) {
+  const { t } = useTranslation();
   const [local, setLocal] = useState<Record<string, LocalAnswer>>({});
   const pending = useRef<Record<string, LocalAnswer>>({});
+  const focused = useRef<string | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   const flush = () => {
     clearTimeout(timer.current);
     const answers = Object.entries(pending.current).map(([questionId, answer]) => ({ questionId, ...answer }));
     pending.current = {};
-    if (answers.length > 0) act(boardWrites.saveAnswers(module.id, answers));
+    if (answers.length > 0) save(answers);
   };
-  // What is still unsent goes when the form does (another step, another page).
+  // What is still unsent goes when the fields do (another step, another page).
   const latestFlush = useRef(flush);
   useEffect(() => {
     latestFlush.current = flush;
   });
   useEffect(() => () => latestFlush.current(), []);
 
+  // When the stored answers change (someone else's edit, or ours coming
+  // back), fields nobody is typing in and with nothing left to send show
+  // them again.
+  const savedSignature = JSON.stringify([...saved.values()].map((answer) => [answer.questionId, answer.body, answer.notePrivate]));
+  useEffect(() => {
+    setLocal((previous) => {
+      const kept = Object.fromEntries(
+        Object.entries(previous).filter(([questionId]) => questionId === focused.current || questionId in pending.current),
+      );
+      return Object.keys(kept).length === Object.keys(previous).length ? previous : kept;
+    });
+  }, [savedSignature]);
+
   const valueOf = (question: Question): LocalAnswer => {
-    const saved = step.answers.find((answer) => answer.mine && answer.questionId === question.id);
-    return local[question.id] ?? { body: saved?.body ?? '', notePrivate: saved?.notePrivate ?? false };
+    const stored = saved.get(question.id);
+    return local[question.id] ?? { body: stored?.body ?? '', notePrivate: stored?.notePrivate ?? false };
   };
   const change = (question: Question, value: LocalAnswer, now = false) => {
     setLocal((previous) => ({ ...previous, [question.id]: value }));
@@ -379,19 +469,20 @@ function AnswerForm({ module, step, editable }: Omit<StepProps, 'roomId'>) {
 
   return (
     <Stack gap="sm">
-      {editable && (
-        <Text size="xs" c="dimmed">
-          {t('sessionZero.questions.autosave')}
-        </Text>
-      )}
-      {step.questions.map((question) => {
+      {questions.map((question) => {
         const value = valueOf(question);
         const field = {
           label: question.body,
           description: question.hint ?? undefined,
           value: value.body,
           readOnly: !editable,
-          onBlur: flush,
+          onFocus: () => {
+            focused.current = question.id;
+          },
+          onBlur: () => {
+            if (focused.current === question.id) focused.current = null;
+            flush();
+          },
         };
         const where = t(`sessionZero.questions.goesTo.${question.target}`);
         return (
@@ -421,7 +512,7 @@ function AnswerForm({ module, step, editable }: Omit<StepProps, 'roomId'>) {
                     size="xs"
                     label={t('sessionZero.questions.private')}
                     checked={value.notePrivate}
-                    disabled={!editable}
+                    disabled={!editable || !privacyEditable}
                     onChange={(event) => change(question, { ...value, notePrivate: event.currentTarget.checked }, true)}
                   />
                 )}
