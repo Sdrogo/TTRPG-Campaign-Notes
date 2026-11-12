@@ -416,17 +416,24 @@ export interface QuestionDraft {
   tagId: string | null;
 }
 
+/** What fills the Document the Name question names (spec 70 Decision 11). */
+export const MAIN_DOCUMENT_TARGETS: QuestionTarget[] = ['subtitle', 'description', 'note'];
+
 /**
  * What stops the Master's list from saving (Decision 9), as a translation
- * key: exactly one Name question once there are any, at most one Subtitle,
- * at most `MAX_DOCUMENT_QUESTIONS` "New Document" ones, none without text.
+ * key: at most one Name question (none is fine, spec 70 Decision 10), and
+ * Subtitle, Description and Note only with one; at most one Subtitle, at
+ * most `MAX_DOCUMENT_QUESTIONS` "New Document" ones, none without text.
  */
 export function questionsProblem(
   questions: QuestionDraft[],
-): `sessionZero.questions.problems.${'empty' | 'oneName' | 'oneSubtitle' | 'documents'}` | null {
+): `sessionZero.questions.problems.${'empty' | 'oneName' | 'needsName' | 'oneSubtitle' | 'documents'}` | null {
   const count = (target: QuestionTarget) => questions.filter((question) => question.target === target).length;
   if (questions.some((question) => !question.body.trim())) return 'sessionZero.questions.problems.empty';
-  if (questions.length > 0 && count('name') !== 1) return 'sessionZero.questions.problems.oneName';
+  if (count('name') > 1) return 'sessionZero.questions.problems.oneName';
+  if (count('name') === 0 && questions.some((question) => MAIN_DOCUMENT_TARGETS.includes(question.target))) {
+    return 'sessionZero.questions.problems.needsName';
+  }
   if (count('subtitle') > 1) return 'sessionZero.questions.problems.oneSubtitle';
   if (count('document') > MAX_DOCUMENT_QUESTIONS) return 'sessionZero.questions.problems.documents';
   return null;

@@ -1670,7 +1670,9 @@
       "private": "Prywatna",
       "openMine": "Otwórz swój Dokument",
       "createMine": "Utwórz mój Dokument",
+      "createMineExtras": "Utwórz moje Dokumenty",
       "masterCreates": "Mistrz utworzy twój Dokument.",
+      "masterCreatesExtras": "Master utworzy twoje Dokumenty.",
       "nameFirst": "Odpowiedz na pytanie o nazwę, aby utworzyć swój Dokument.",
       "everyone": "Odpowiedzi wszystkich",
       "autosave": "Odpowiedzi zapisują się podczas pisania; widzisz je tylko ty i Mistrz.",
@@ -1699,7 +1701,8 @@
       },
       "problems": {
         "empty": "Każde pytanie potrzebuje tekstu.",
-        "oneName": "Potrzebne jest dokładnie jedno pytanie o Nazwę.",
+        "oneName": "Najwyżej jedno pytanie o nazwę.",
+        "needsName": "Podtytuł, Opis i Notatka wymagają pytania o nazwę.",
         "oneSubtitle": "Najwyżej jedno pytanie o Podtytuł.",
         "documents": "Najwyżej {{max}} pytań „Nowy Dokument”."
       },

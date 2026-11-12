@@ -831,3 +831,87 @@ async def test_the_masters_edit_reaches_only_the_players_and_masters_streams(
     finally:
         for stream in streams.values():
             broker.unsubscribe(stream)
+
+
+async def test_a_step_without_a_name_question(
+    db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
+) -> None:
+    """Spec 70 Decisions 10-13: a list may have no Name question; then
+    Subtitle, Description and Note can't be picked, there is no Player's
+    Document, and "New Document" answers make standalone Documents only."""
+    room, board = await _room(client, make_token, "questions")
+    module_id = _questions(board)["id"]
+    url = f"{room.url}/modules/{module_id}/questions"
+    for target in ("subtitle", "description", "note"):
+        bad = await client.put(
+            url,
+            json={"questions": [{"body": "?", "target": target}]},
+            headers=room.master.headers,
+        )
+        assert bad.status_code == 422, target
+        assert "Name question" in bad.json()["detail"]
+
+    # Only "Not in the Document" questions: nothing to make, ever.
+    only_talk = await _set_questions(
+        client, room, module_id, [{"body": "Favourite snack?", "target": "none"}]
+    )
+    snack = _questions(only_talk)["questions"][0]["id"]
+    mine = await _answer(
+        client, room, room.player, module_id, [{"question_id": snack, "body": "Crisps"}]
+    )
+    assert _questions(mine)["can_create"] is False
+    assert _questions(await _get(client, room, room.master))["creatable"] == 0
+    nothing = await client.post(
+        f"{room.url}/modules/{module_id}/documents", headers=room.player.headers
+    )
+    assert nothing.status_code == 409
+    assert "New Document" in nothing.json()["detail"]
+
+    # A "New Document" question makes a standalone Document per answer.
+    tags = await _tags(client, room)
+    board = await _set_questions(
+        client,
+        room,
+        module_id,
+        [
+            {"id": snack, "body": "Favourite snack?", "target": "none"},
+            {"body": "Name an NPC", "target": "document", "tag_id": tags["NPC"]},
+        ],
+    )
+    npc = _questions(board)["questions"][1]["id"]
+    mine = await _answer(
+        client,
+        room,
+        room.player,
+        module_id,
+        [{"question_id": npc, "body": "Old Bonegrinder\nA mill on the hill"}],
+    )
+    assert _questions(mine)["can_create"] is True
+    await _answer(
+        client, room, room.other_player, module_id, [{"question_id": npc, "body": "Arik"}]
+    )
+    assert _questions(await _get(client, room, room.master))["creatable"] == 2
+
+    made = await client.post(
+        f"{room.url}/modules/{module_id}/documents", headers=room.player.headers
+    )
+    assert made.status_code == 200, made.text
+    links = _questions(made.json())["documents"]
+    assert [link["question_id"] for link in links] == [npc]
+    document = await _document(client, room, room.player, links[0]["document_id"])
+    assert document["name"] == "Old Bonegrinder"
+    assert document["played_by"] is None
+    assert document["tag_ids"] == [tags["NPC"]]
+    assert _questions(made.json())["can_create"] is False
+    again = await client.post(
+        f"{room.url}/modules/{module_id}/documents", headers=room.player.headers
+    )
+    assert again.status_code == 409
+
+    # The Master makes what is left: the other Player's.
+    everyone = await client.post(
+        f"{room.url}/modules/{module_id}/documents/all", headers=room.master.headers
+    )
+    assert everyone.status_code == 200, everyone.text
+    final = _questions(everyone.json())
+    assert len(final["documents"]) == 2 and final["creatable"] == 0

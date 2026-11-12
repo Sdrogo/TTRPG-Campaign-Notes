@@ -1535,7 +1535,9 @@
       "private": "비공개",
       "openMine": "내 문서 열기",
       "createMine": "내 문서 만들기",
+      "createMineExtras": "내 문서 만들기",
       "masterCreates": "마스터가 문서를 만들어 줍니다.",
+      "masterCreatesExtras": "마스터가 당신의 문서를 만듭니다.",
       "nameFirst": "이름 질문에 답하면 문서를 만들 수 있습니다.",
       "everyone": "모두의 답변",
       "autosave": "답변은 입력하는 동안 저장되며, 나와 마스터만 볼 수 있습니다.",
@@ -1564,7 +1566,8 @@
       },
       "problems": {
         "empty": "모든 질문에 내용이 필요합니다.",
-        "oneName": "이름 질문은 정확히 하나여야 합니다.",
+        "oneName": "이름 질문은 최대 하나입니다.",
+        "needsName": "부제·설명·노트에는 이름 질문이 필요합니다.",
         "oneSubtitle": "부제 질문은 하나까지입니다.",
         "documents": "\"새 문서\" 질문은 {{max}}개까지입니다."
       },

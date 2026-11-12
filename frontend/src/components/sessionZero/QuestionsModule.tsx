@@ -31,6 +31,7 @@ import {
   MAX_QUESTIONS,
   MAX_QUESTION_LENGTH,
   MAX_SUBTITLE_ANSWER_LENGTH,
+  MAIN_DOCUMENT_TARGETS,
   QUESTION_TARGETS,
   boardWrites,
   questionsProblem,
@@ -110,6 +111,9 @@ function MasterQuestions({ roomId, tags, module, step, editable }: StepProps & {
   const [editing, setEditing] = useState(false);
   const tagSelectId = useId();
   const players = members.filter((member) => member.role === 'player');
+  // Spec 70 Decisions 11-13: the Players' own Documents need a Name question; "New Document" ones don't.
+  const hasName = step.questions.some((question) => question.target === 'name');
+  const makesDocuments = hasName || step.questions.some((question) => question.target === 'document');
   const tagOptions = tags.map((tag) => ({ value: tag.id, label: tag.name }));
   return (
     <Stack gap="md">
@@ -121,22 +125,24 @@ function MasterQuestions({ roomId, tags, module, step, editable }: StepProps & {
           </Title>
           {editable && (
             <>
-              <Group gap={6} wrap="nowrap">
-                <Text component="label" htmlFor={tagSelectId} size="xs" fw={500}>
-                  {t('sessionZero.questions.tag')}
-                </Text>
-                <Select
-                  id={tagSelectId}
-                  size="xs"
-                  w={140}
-                  placeholder={t('sessionZero.questions.noTag')}
-                  clearable
-                  data={tagOptions}
-                  value={step.tagId}
-                  disabled={busy}
-                  onChange={(value) => act(boardWrites.setQuestionsTag(module.id, value))}
-                />
-              </Group>
+              {hasName && (
+                <Group gap={6} wrap="nowrap">
+                  <Text component="label" htmlFor={tagSelectId} size="xs" fw={500}>
+                    {t('sessionZero.questions.tag')}
+                  </Text>
+                  <Select
+                    id={tagSelectId}
+                    size="xs"
+                    w={140}
+                    placeholder={t('sessionZero.questions.noTag')}
+                    clearable
+                    data={tagOptions}
+                    value={step.tagId}
+                    disabled={busy}
+                    onChange={(value) => act(boardWrites.setQuestionsTag(module.id, value))}
+                  />
+                </Group>
+              )}
               <Switch
                 size="sm"
                 label={t('sessionZero.questions.bypass')}
@@ -176,13 +182,17 @@ function MasterQuestions({ roomId, tags, module, step, editable }: StepProps & {
                 >
                   {step.answersRevealed ? t('sessionZero.questions.hide') : t('sessionZero.questions.reveal')}
                 </Button>
-                <Button
-                  size="compact-sm"
-                  disabled={busy || step.creatable === 0}
-                  onClick={() => act(boardWrites.createEveryoneDocuments(module.id))}
-                >
-                  {t('sessionZero.questions.createAll', { count: step.creatable })}
-                </Button>
+                {makesDocuments && (
+                  <Button
+                    size="compact-sm"
+                    disabled={busy || step.creatable === 0}
+                    onClick={() => act(boardWrites.createEveryoneDocuments(module.id))}
+                  >
+                    {t('sessionZero.questions.createAll', {
+                      count: step.creatable,
+                    })}
+                  </Button>
+                )}
               </Group>
             )}
           </Group>
@@ -242,7 +252,10 @@ function AnswersByPlayer({
                   {displayNameFor(members, userId)}
                 </Text>
                 <Text size="xs" c="dimmed">
-                  {t('sessionZero.questions.answered', { count: answers.size, total: step.questions.length })}
+                  {t('sessionZero.questions.answered', {
+                    count: answers.size,
+                    total: step.questions.length,
+                  })}
                 </Text>
               </Group>
             </Accordion.Control>
@@ -258,14 +271,16 @@ function AnswersByPlayer({
                       saved={answers}
                       editable
                       privacyEditable={false}
-                      save={(changed, onSaved) =>
+                      save={(changed) =>
                         act(
                           boardWrites.saveAnswersFor(
                             module.id,
                             userId,
-                            changed.map(({ questionId, body }) => ({ questionId, body })),
+                            changed.map(({ questionId, body }) => ({
+                              questionId,
+                              body,
+                            })),
                           ),
-                          onSaved,
                         )
                       }
                     />
@@ -328,6 +343,13 @@ function PlayerQuestions({ roomId, module, step, editable }: StepProps) {
   const mine = step.documents.find((link) => link.mine && link.questionId === null);
   const nameQuestion = step.questions.find((question) => question.target === 'name');
   const named = step.answers.some((answer) => answer.mine && answer.questionId === nameQuestion?.id);
+  // Spec 70 Decision 12: with no Name question, only standalone "New Document" ones are made.
+  const unmadeExtra = step.questions.some(
+    (question) =>
+      question.target === 'document' &&
+      step.answers.some((answer) => answer.mine && answer.questionId === question.id) &&
+      !step.documents.some((link) => link.mine && link.questionId === question.id),
+  );
   const others = members
     .filter((member) => member.role === 'player')
     .map((member) => member.userId)
@@ -338,7 +360,10 @@ function PlayerQuestions({ roomId, module, step, editable }: StepProps) {
       const made = next.modules
         .find((candidate) => candidate.id === module.id)
         ?.questions?.documents.find((link) => link.mine && link.questionId === null);
-      if (made) navigate(`/rooms/${roomId}/documents/${made.documentId}`, { state: backState });
+      if (made)
+        navigate(`/rooms/${roomId}/documents/${made.documentId}`, {
+          state: backState,
+        });
     });
 
   if (step.questions.length === 0) {
@@ -354,23 +379,45 @@ function PlayerQuestions({ roomId, module, step, editable }: StepProps) {
         {t('sessionZero.questions.title')}
       </Title>
       <AnswerForm module={module} step={step} editable={editable} />
-      <Group gap="sm">
-        {mine ? (
-          <Button component={Link} to={`/rooms/${roomId}/documents/${mine.documentId}`} state={backState} variant="light">
-            {t('sessionZero.questions.openMine')}
-          </Button>
-        ) : step.canCreate && editable ? (
-          <Button disabled={busy} onClick={create}>
-            {t('sessionZero.questions.createMine')}
-          </Button>
+      {!nameQuestion ? (
+        step.canCreate && editable ? (
+          <Group gap="sm">
+            <Button disabled={busy} onClick={() => act(boardWrites.createMyDocument(module.id))}>
+              {t('sessionZero.questions.createMineExtras')}
+            </Button>
+          </Group>
         ) : (
-          editable && (
+          editable &&
+          unmadeExtra && (
             <Text size="sm" c="dimmed">
-              {named ? t('sessionZero.questions.masterCreates') : t('sessionZero.questions.nameFirst')}
+              {t('sessionZero.questions.masterCreatesExtras')}
             </Text>
           )
-        )}
-      </Group>
+        )
+      ) : (
+        <Group gap="sm">
+          {mine ? (
+            <Button
+              component={Link}
+              to={`/rooms/${roomId}/documents/${mine.documentId}`}
+              state={backState}
+              variant="light"
+            >
+              {t('sessionZero.questions.openMine')}
+            </Button>
+          ) : step.canCreate && editable ? (
+            <Button disabled={busy} onClick={create}>
+              {t('sessionZero.questions.createMine')}
+            </Button>
+          ) : (
+            editable && (
+              <Text size="sm" c="dimmed">
+                {named ? t('sessionZero.questions.masterCreates') : t('sessionZero.questions.nameFirst')}
+              </Text>
+            )
+          )}
+        </Group>
+      )}
       {step.answersRevealed && others.length > 0 && (
         <Stack gap="xs">
           <Title order={3} fz="h5">
@@ -400,10 +447,19 @@ function AnswerForm({ module, step, editable }: Omit<StepProps, 'roomId'>) {
         saved={saved}
         editable={editable}
         privacyEditable
-        save={(answers, onSaved) => act(boardWrites.saveAnswers(module.id, answers), onSaved)}
+        save={(answers) => act(boardWrites.saveAnswers(module.id, answers))}
       />
     </Stack>
   );
+}
+
+/** An answer as the server compares it: spaces collapsed, ends trimmed, and the Private tick. */
+function comparable(answer: { body: string; notePrivate: boolean }): string {
+  return `${answer.body.split(/\s+/).join(' ').trim()}|${answer.notePrivate}`;
+}
+
+function storedText(answer: Answer | undefined): string {
+  return answer ? comparable(answer) : comparable({ body: '', notePrivate: false });
 }
 
 interface AnswerFieldsProps {
@@ -413,8 +469,7 @@ interface AnswerFieldsProps {
   editable: boolean;
   /** Whether the Private tick of a Note answer can change (the Player's choice only, spec 70 Decision 3). */
   privacyEditable: boolean;
-  /** Sends the answers; `onSaved` runs once they are stored. */
-  save: (answers: (LocalAnswer & { questionId: string })[], onSaved: () => void) => void;
+  save: (answers: (LocalAnswer & { questionId: string })[]) => void;
 }
 
 /**
@@ -429,8 +484,8 @@ function AnswerFields({ questions, saved, editable, privacyEditable, save }: Ans
   const [local, setLocal] = useState<Record<string, LocalAnswer>>({});
   const pending = useRef<Record<string, LocalAnswer>>({});
   const focused = useRef<string | null>(null);
-  // Fields whose text is on its way, by how many saves carry it.
-  const sending = useRef<Record<string, number>>({});
+  // Fields whose text was sent: what was stored when it was, and what was sent.
+  const sent = useRef<Record<string, { before: string; text: string }>>({});
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   const flush = () => {
@@ -438,14 +493,10 @@ function AnswerFields({ questions, saved, editable, privacyEditable, save }: Ans
     const answers = Object.entries(pending.current).map(([questionId, answer]) => ({ questionId, ...answer }));
     pending.current = {};
     if (answers.length === 0) return;
-    const ids = answers.map((answer) => answer.questionId);
-    for (const id of ids) sending.current[id] = (sending.current[id] ?? 0) + 1;
-    save(answers, () => {
-      for (const id of ids) {
-        sending.current[id] -= 1;
-        if (sending.current[id] === 0) delete sending.current[id];
-      }
-    });
+    for (const answer of answers) {
+      sent.current[answer.questionId] = { before: storedText(saved.get(answer.questionId)), text: comparable(answer) };
+    }
+    save(answers);
   };
   // What is still unsent goes when the fields do (another step, another page).
   const latestFlush = useRef(flush);
@@ -454,25 +505,33 @@ function AnswerFields({ questions, saved, editable, privacyEditable, save }: Ans
   });
   useEffect(() => () => latestFlush.current(), []);
 
-  // When the stored answers change (someone else's edit, or ours coming
-  // back), fields nobody is typing in, with nothing left to send and
-  // nothing on its way show them again.
-  const savedSignature = JSON.stringify([...saved.values()].map((answer) => [answer.questionId, answer.body, answer.notePrivate]));
+  // When the stored answers change, fields nobody is typing in and with
+  // nothing left to send show them again. A sent field waits until its own
+  // stored answer changes (our save stored, or someone else's edit since):
+  // no callback is needed, so a failed or overlapping save never pins it.
   useEffect(() => {
     setLocal((previous) => {
       const kept = Object.fromEntries(
-        Object.entries(previous).filter(
-          ([questionId]) =>
-            questionId === focused.current || questionId in pending.current || questionId in sending.current,
-        ),
+        Object.entries(previous).filter(([questionId]) => {
+          if (questionId === focused.current || questionId in pending.current) return true;
+          const mark = sent.current[questionId];
+          if (mark && storedText(saved.get(questionId)) === mark.before && mark.before !== mark.text) return true;
+          delete sent.current[questionId];
+          return false;
+        }),
       );
       return Object.keys(kept).length === Object.keys(previous).length ? previous : kept;
     });
-  }, [savedSignature]);
+  }, [saved]);
 
   const valueOf = (question: Question): LocalAnswer => {
     const stored = saved.get(question.id);
-    return local[question.id] ?? { body: stored?.body ?? '', notePrivate: stored?.notePrivate ?? false };
+    return (
+      local[question.id] ?? {
+        body: stored?.body ?? '',
+        notePrivate: stored?.notePrivate ?? false,
+      }
+    );
   };
   const change = (question: Question, value: LocalAnswer, now = false) => {
     setLocal((previous) => ({ ...previous, [question.id]: value }));
@@ -507,7 +566,12 @@ function AnswerFields({ questions, saved, editable, privacyEditable, save }: Ans
                 <TextInput
                   {...field}
                   maxLength={question.target === 'name' ? MAX_NAME_ANSWER_LENGTH : MAX_SUBTITLE_ANSWER_LENGTH}
-                  onChange={(event) => change(question, { ...value, body: event.currentTarget.value })}
+                  onChange={(event) =>
+                    change(question, {
+                      ...value,
+                      body: event.currentTarget.value,
+                    })
+                  }
                 />
               ) : (
                 <Textarea
@@ -515,7 +579,12 @@ function AnswerFields({ questions, saved, editable, privacyEditable, save }: Ans
                   autosize
                   minRows={2}
                   maxLength={MAX_ANSWER_LENGTH}
-                  onChange={(event) => change(question, { ...value, body: event.currentTarget.value })}
+                  onChange={(event) =>
+                    change(question, {
+                      ...value,
+                      body: event.currentTarget.value,
+                    })
+                  }
                 />
               )}
               <Group justify="space-between" gap="xs">
@@ -581,7 +650,9 @@ function QuestionsEditor({
   );
   const [initial] = useState(() => draftSignature(rows));
   const [leaving, setLeaving] = useState(false);
-  const phone = useMediaQuery('(max-width: 48em)', false, { getInitialValueInEffect: false });
+  const phone = useMediaQuery('(max-width: 48em)', false, {
+    getInitialValueInEffect: false,
+  });
   const problem = questionsProblem(rows);
   // Unsaved questions are only dropped once the Master says so.
   const close = () => (draftSignature(rows) === initial ? onClose() : setLeaving(true));
@@ -594,10 +665,29 @@ function QuestionsEditor({
       return next;
     });
   const add = () => {
-    const target = rows.some((row) => row.target === 'name') ? 'description' : 'name';
-    setRows([...rows, { key: nextKey.current++, id: null, body: '', hint: '', target, tagId: null }]);
+    // An empty list starts with the Name question; without one, a new
+    // question can't fill a Document (spec 70 Decisions 11 and 14).
+    const target = rows.length === 0 ? 'name' : rows.some((row) => row.target === 'name') ? 'description' : 'none';
+    setRows([
+      ...rows,
+      {
+        key: nextKey.current++,
+        id: null,
+        body: '',
+        hint: '',
+        target,
+        tagId: null,
+      },
+    ]);
   };
-  const targets = QUESTION_TARGETS.map((value) => ({ value, label: t(`sessionZero.questions.targets.${value}`) }));
+  const named = rows.some((row) => row.target === 'name');
+  // Without a Name question, Subtitle, Description and Note have no Document to fill (spec 70 Decision 11).
+  const targetsFor = (current: QuestionDraft['target']) =>
+    QUESTION_TARGETS.map((value) => ({
+      value,
+      label: t(`sessionZero.questions.targets.${value}`),
+      disabled: !named && value !== current && MAIN_DOCUMENT_TARGETS.includes(value),
+    }));
   const tagOptions = tags.map((tag) => ({ value: tag.id, label: tag.name }));
 
   return (
@@ -672,9 +762,13 @@ function QuestionsEditor({
                   size="xs"
                   label={t('sessionZero.questions.target')}
                   allowDeselect={false}
-                  data={targets}
+                  data={targetsFor(row.target)}
                   value={row.target}
-                  onChange={(value) => update(row.key, { target: value as QuestionDraft['target'] })}
+                  onChange={(value) =>
+                    update(row.key, {
+                      target: value as QuestionDraft['target'],
+                    })
+                  }
                 />
                 {row.target === 'document' && (
                   <Select

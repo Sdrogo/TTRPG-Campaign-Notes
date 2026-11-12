@@ -98,7 +98,7 @@ Estimate: backend ~45 min, frontend ~1.5 h, on the same PR into `staging`.
 - Context docs (architecture, ui-context) and the progress tracker updated;
   backend and frontend suites green.
 
-## Addition: the Name question becomes optional (proposed, to confirm)
+## Addition: the Name question becomes optional (confirmed 2026-11-12)
 
 Product owner, 2026-11-12: today a list of questions must have exactly one
 Name question (`clean_questions`, 422 `oneNameQuestion`; the editor's
@@ -133,12 +133,11 @@ and refuses `subtitle`/`description`/`note` without a Name;
 extras only in that case; frontend `questionsProblem`, the target select
 and the labels follow. No migration.
 
-Open questions:
-6. Without a Name question, should "Nuovo Documento" questions still create
-   their Documents (proposed, Decision 12), or should such a step make no
-   Documents at all?
-7. Should the first question of an empty list still default to Name
-   (proposed), or to "Non nel Documento"?
+Answers (product owner, 2026-11-12): "Resta qui" was only a name for the
+existing "Non nel Documento" target (no new target). Q6: yes, a "Nuovo
+Documento" is a standalone Document, never linked to the PC, with or
+without a Name question (the Name answer only names the PC Document).
+Q7: go-ahead on the proposal (an empty list starts with Name).
 
 ## Answers (product owner, 2026-11-12)
 
@@ -147,3 +146,21 @@ Open questions:
 3. The Master can also write empty answers: ok.
 4. Inline editing (autosave) instead of a dialog.
 5. The Master can also edit the answers of closed sessions.
+
+## Built (2026-11-12, PR #320, no migration)
+
+- Master edits: `PUT .../modules/{m}/answers/{user_id}`
+  (`save_player_answers`); frontend `AnswerFields` shared by the Player's
+  form and the Master's accordion (autosave; a field being typed or sent
+  keeps its text, others follow the stored answer; a sent field waits until
+  its own stored answer changes, with no save callback, so a failed or
+  overlapping save never pins it).
+- Optional Name: `clean_questions` (at most one Name, `needsNameQuestion`),
+  `makes_main_document`, `draft_extras`, `has_documents_to_make` (drives
+  `can_create`, `creatable` and "for everyone"), `NothingToCreateError`
+  (409 `nothingToCreate`). Frontend `questionsProblem` (`needsName`), the
+  editor disables Subtitle/Description/Note without a Name question and a new
+  question after a list without one defaults to "Non nel Documento"; the
+  Player's button reads "Crea i miei Documenti" (or "Il Master creerà i tuoi
+  Documenti."); the Master's Tag select hides without a Name question and
+  "Crea i Documenti di tutti" hides when nothing can be made.
