@@ -236,6 +236,11 @@ image search, read aloud, GDPR (10-01 → 10-10). See the two older archives.
 
 ## Next Up
 
+- **70, Master edits Players' answers** (product owner, 2026-11-12): the
+  Master edits any Player's answers in the Session 0 Questions step and the
+  Section Questions tool (dialog with Save, "Modificata dal Master" marker).
+  Ticket written, waiting for Andrea's answers to Q1-Q5 before building; one
+  migration expected (`session_zero_answers.edited_by_master`).
 - **66, Back arrow navigation** (product owner, 2026-11-09): ticket
   confirmed (Q1 yes, Q2 scroll yes / edit mode no, Q3 label stays
   "Indietro") and built on PR #313: every Room link carries the trail, the
