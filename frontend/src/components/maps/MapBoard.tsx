@@ -19,6 +19,7 @@ import '@xyflow/react/dist/style.css';
 import { Box, Button, Group, Text } from '@mantine/core';
 import { useMediaQuery } from '@mantine/hooks';
 import { BoundingBoxIcon, FileTextIcon, PlusIcon } from '@phosphor-icons/react';
+import { useFillHeight } from '../../hooks/useFillHeight';
 import { useTranslation } from 'react-i18next';
 import {
   DEFAULT_CARD_SIZE,
@@ -133,12 +134,15 @@ function BoardCanvas({
   onChange,
   mode = 'free',
   onSelectDocument,
-  height = 'calc(100dvh - 190px)',
+  height: heightProp,
   legend,
 }: MapBoardProps) {
   const { t } = useTranslation();
   const flow = useReactFlow<MapNode, MapEdge>();
   const wrapper = useRef<HTMLDivElement>(null);
+  // Down to the bottom of the screen, unless the page gives a height.
+  const fill = useFillHeight(wrapper, heightProp === undefined);
+  const height = heightProp ?? fill;
   const [editing, setEditing] = useState<Editing>(null);
   const [addOpened, setAddOpened] = useState(false);
   // The arrow whose bend handle is showing (spec 67).

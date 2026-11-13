@@ -122,6 +122,8 @@ One line per unit, dates 2026, newest first. Spec files live in
 - **Map split pane fits the screen** (11-13, bugfix, no mig.): on map pages
   the side pane is bounded to the map column (`SplitView fitRight`,
   `--split-pane-max-height`), so opening a Document no longer adds a page scroll.
+  Full-page boards measure their height (`useFillHeight`) instead of a fixed
+  `100dvh - 190px`, so no empty band under the map.
 - **69, Same-name Documents on import** (product owner, 2026-11-10): when a
   file Document's id matches nothing, it is matched to the Room Document
   with the same name and offered Copy/Replace (Copy default, "Replace all"
