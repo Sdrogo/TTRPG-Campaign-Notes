@@ -93,6 +93,8 @@ export function PageLayout({
         {roomId ? (
           <SplitView
             left={body}
+            // A map page fits the screen: the pane scrolls inside the map's height, never the page.
+            fitRight={allowEmptySide}
             right={(sideId || (allowEmptySide && sideId === '')) && wide ? pane(sideId || null) : null}
           />
         ) : (
