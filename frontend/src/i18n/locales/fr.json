@@ -1582,10 +1582,13 @@
       "private": "Privée",
       "openMine": "Ouvrir votre Document",
       "createMine": "Créer mon Document",
+      "createMineExtras": "Créer mes Documents",
       "masterCreates": "Le Maître créera votre Document.",
+      "masterCreatesExtras": "Le MJ créera tes Documents.",
       "nameFirst": "Répondez à la question du nom pour créer votre Document.",
       "everyone": "Les réponses de tous",
       "autosave": "Les réponses s'enregistrent pendant la saisie ; seuls vous et le Maître les voyez.",
+      "masterEdits": "Tes modifications sont enregistrées pendant la saisie. Le joueur les voit aussitôt.",
       "number": "Question {{number}}",
       "question": "Question",
       "hint": "Indice (facultatif)",
@@ -1610,7 +1613,8 @@
       },
       "problems": {
         "empty": "Chaque question a besoin d'un texte.",
-        "oneName": "Il faut exactement une question pour le Nom.",
+        "oneName": "Au plus une question Nom.",
+        "needsName": "Sous-titre, Description et Note demandent une question Nom.",
         "oneSubtitle": "Au plus une question pour le Sous-titre.",
         "documents": "Au plus {{max}} questions « Nouveau Document »."
       },

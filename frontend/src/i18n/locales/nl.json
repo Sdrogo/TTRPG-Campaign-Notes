@@ -1580,10 +1580,13 @@
       "private": "Privé",
       "openMine": "Je Document openen",
       "createMine": "Mijn Document maken",
+      "createMineExtras": "Mijn Documenten maken",
       "masterCreates": "De Master maakt je Document.",
+      "masterCreatesExtras": "De Master maakt je Documenten.",
       "nameFirst": "Beantwoord de vraag over de naam om je Document te maken.",
       "everyone": "Ieders antwoorden",
       "autosave": "Antwoorden worden opgeslagen terwijl je typt; alleen jij en de Master zien ze.",
+      "masterEdits": "Je wijzigingen worden opgeslagen terwijl je typt. De speler ziet ze meteen.",
       "number": "Vraag {{number}}",
       "question": "Vraag",
       "hint": "Hint (optioneel)",
@@ -1608,7 +1611,8 @@
       },
       "problems": {
         "empty": "Elke vraag heeft een tekst nodig.",
-        "oneName": "Er moet precies één vraag voor de Naam zijn.",
+        "oneName": "Hoogstens één Naamvraag.",
+        "needsName": "Ondertitel, Beschrijving en Notitie hebben een Naamvraag nodig.",
         "oneSubtitle": "Hoogstens één vraag voor de Ondertitel.",
         "documents": "Hoogstens {{max}} vragen ‘Nieuw Document’."
       },

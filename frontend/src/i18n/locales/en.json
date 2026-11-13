@@ -1580,10 +1580,13 @@
       "private": "Private",
       "openMine": "Open your Document",
       "createMine": "Create my Document",
+      "createMineExtras": "Create my Documents",
       "masterCreates": "The Master will create your Document.",
+      "masterCreatesExtras": "The Master will create your Documents.",
       "nameFirst": "Answer the name question to create your Document.",
       "everyone": "Everyone's answers",
       "autosave": "Answers save as you type; only you and the Master see them.",
+      "masterEdits": "Your edits are saved as you type. The Player sees them at once.",
       "number": "Question {{number}}",
       "question": "Question",
       "hint": "Hint (optional)",
@@ -1608,7 +1611,8 @@
       },
       "problems": {
         "empty": "Every question needs a text.",
-        "oneName": "Exactly one question must be for the Name.",
+        "oneName": "At most one Name question.",
+        "needsName": "Subtitle, Description and Note need a Name question.",
         "oneSubtitle": "At most one question for the Subtitle.",
         "documents": "At most {{max}} \"New Document\" questions."
       },

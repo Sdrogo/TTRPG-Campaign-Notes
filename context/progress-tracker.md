@@ -120,6 +120,11 @@ One line per unit, dates 2026, newest first. Spec files live in
 ### 2026-10-12 → 11-10
 
 - **70, Relational link flag in import-export** (product owner, 2026-11-10): the JSON export (schema 6) carries each Note's flag, the import reads it, and a Replace with a silent file keeps the Room's flag by Note title; Markdown stays plain; no mig.
+- **Map split pane fits the screen** (11-13, bugfix, no mig.): on map pages
+  the side pane is bounded to the map column (`SplitView fitRight`,
+  `--split-pane-max-height`), so opening a Document no longer adds a page scroll.
+  Full-page boards measure their height (`useFillHeight`) instead of a fixed
+  `100dvh - 190px`, so no empty band under the map.
 - **69, Same-name Documents on import** (product owner, 2026-11-10): when a
   file Document's id matches nothing, it is matched to the Room Document
   with the same name and offered Copy/Replace (Copy default, "Replace all"
@@ -237,6 +242,13 @@ image search, read aloud, GDPR (10-01 → 10-10). See the two older archives.
 
 ## Next Up
 
+- **70, Master edits Players' answers** (product owner, 2026-11-12): the
+  Master edits any Player's answers inline (autosave) in the Session 0
+  Questions step, open or closed, and the Section Questions tool. Ticket
+  answered 2026-11-12 (no marker, no migration); built on PR #320
+  (`PUT .../modules/{m}/answers/{user_id}`, shared `AnswerFields`). Decisions
+  10-14 (Name question optional, standalone "Nuovo Documento") confirmed and
+  built on the same PR. No migration.
 - **66, Back arrow navigation** (product owner, 2026-11-09): ticket
   confirmed (Q1 yes, Q2 scroll yes / edit mode no, Q3 label stays
   "Indietro") and built on PR #313: every Room link carries the trail, the

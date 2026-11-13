@@ -54,7 +54,7 @@ function PickedPane({ roomId, documentId, onClose }: { roomId: string; documentI
       style={{
         position: 'sticky',
         top: 0,
-        maxHeight: '100dvh',
+        maxHeight: 'var(--split-pane-max-height, 100dvh)',
         overflowY: 'auto',
       }}
     >

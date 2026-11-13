@@ -140,6 +140,11 @@ class DocumentExistsError(DomainError):
     """One Document per Player per Questions module (Decision 11)."""
 
 
+class NothingToCreateError(DomainError):
+    """Spec 70 Decision 12: a step with no Name question makes only "New
+    Document" Documents, and the Player has none left to make."""
+
+
 class CreationDisabledError(DomainError):
     """The Room doesn't let Players create Documents (D-13) and the module
     keeps that rule (Q7)."""
@@ -149,12 +154,61 @@ def _clean_text(value: str | None) -> str:
     return (value or "").strip()
 
 
+# What fills the Document the Name question names (spec 70 Decision 11).
+_MAIN_DOCUMENT_TARGETS = (QuestionTarget.SUBTITLE, QuestionTarget.DESCRIPTION, QuestionTarget.NOTE)
+
+
+def makes_main_document(questions: Sequence[Question]) -> bool:
+    """Spec 70 Decision 11: only a step with a Name question makes the
+    Player's own Document."""
+    return any(q.target is QuestionTarget.NAME for q in questions)
+
+
+def draft_extras(
+    questions: Sequence[Question],
+    answers: Mapping[uuid.UUID, Answer],
+    existing_extras: Collection[uuid.UUID] = (),
+) -> list[DraftExtra]:
+    """Decision 11: a Document of its own for each answered "New Document"
+    question not made yet, standalone (not linked to the Player's own
+    Document): the answer's first line names it, the rest describes it."""
+    extras: list[DraftExtra] = []
+    for q in questions:
+        answer = answers.get(q.id)
+        if q.target is not QuestionTarget.DOCUMENT or answer is None or not answer.body.strip():
+            continue
+        if q.id in existing_extras:
+            continue
+        name, description = _first_line(answer.body)
+        extras.append(DraftExtra(q.id, name, description, q.tag_id))
+    return extras
+
+
+def has_documents_to_make(
+    questions: Sequence[Question],
+    answers: Mapping[uuid.UUID, Answer],
+    links: Collection[AnswerDocument],
+) -> bool:
+    """Whether a Player's answers (`answers` by question id) and the
+    Documents already made from them (`links`, theirs) leave something to
+    make: their own Document once the Name question is answered, or, in a
+    step with no Name question, a "New Document" answer (spec 70
+    Decision 12)."""
+    if makes_main_document(questions):
+        name_id = next(q.id for q in questions if q.target is QuestionTarget.NAME)
+        named = name_id in answers and bool(answers[name_id].body.strip())
+        return named and not any(link.question_id is None for link in links)
+    made = {link.question_id for link in links if link.question_id is not None}
+    return bool(draft_extras(questions, answers, made))
+
+
 def clean_questions(specs: Sequence[QuestionSpec]) -> list[QuestionSpec]:
     """Decision 9: up to `MAX_QUESTIONS`, each with a text up to
-    `MAX_QUESTION_LENGTH` and an optional hint; exactly one Name question
-    (once there are any), at most one Subtitle, at most
-    `MAX_DOCUMENT_QUESTIONS` "New Document" ones. Tags are only kept on
-    those."""
+    `MAX_QUESTION_LENGTH` and an optional hint; at most one Name question
+    (spec 70 Decision 10: none is fine), at most one Subtitle, at most
+    `MAX_DOCUMENT_QUESTIONS` "New Document" ones. Subtitle, Description and
+    Note fill the Document the Name question names, so they need one
+    (Decision 11). Tags are only kept on "New Document" questions."""
     if len(specs) > MAX_QUESTIONS:
         raise InvalidQuestionsError("errors.sessionZero.tooManyQuestions", max=MAX_QUESTIONS)
     cleaned: list[QuestionSpec] = []
@@ -172,8 +226,10 @@ def clean_questions(specs: Sequence[QuestionSpec]) -> list[QuestionSpec]:
         tag_id = spec.tag_id if spec.target is QuestionTarget.DOCUMENT else None
         cleaned.append(QuestionSpec(spec.id, body, hint, spec.target, tag_id))
     targets = [spec.target for spec in cleaned]
-    if cleaned and targets.count(QuestionTarget.NAME) != 1:
+    if targets.count(QuestionTarget.NAME) > 1:
         raise InvalidQuestionsError("errors.sessionZero.oneNameQuestion")
+    if QuestionTarget.NAME not in targets and any(t in _MAIN_DOCUMENT_TARGETS for t in targets):
+        raise InvalidQuestionsError("errors.sessionZero.needsNameQuestion")
     if targets.count(QuestionTarget.SUBTITLE) > 1:
         raise InvalidQuestionsError("errors.sessionZero.oneSubtitleQuestion")
     if targets.count(QuestionTarget.DOCUMENT) > MAX_DOCUMENT_QUESTIONS:
@@ -265,14 +321,7 @@ def draft_documents(
         for q in questions
         if q.target is QuestionTarget.NOTE and q.id in texts
     ]
-    extras: list[DraftExtra] = []
-    for q in questions:
-        if q.target is not QuestionTarget.DOCUMENT or q.id not in texts:
-            continue
-        if q.id in existing_extras:
-            continue
-        name, description = _first_line(texts[q.id])
-        extras.append(DraftExtra(q.id, name, description, q.tag_id))
+    extras = draft_extras(questions, answers, existing_extras)
     return DocumentDraft(
         name=texts[name_question.id],
         subtitle=subtitle,

@@ -129,9 +129,11 @@ from app.domain.session_zero_questions import (
     InvalidQuestionsError,
     MasterDoesNotAnswerError,
     NameAnswerMissingError,
+    NothingToCreateError,
     NotQuestionsModuleError,
     QuestionTarget,
     can_read_answer,
+    has_documents_to_make,
     may_create,
 )
 from app.domain.visibility import is_document_visible
@@ -178,6 +180,7 @@ _STATUS_FOR: dict[type[DomainError], int] = {
     MasterDoesNotAnswerError: status.HTTP_403_FORBIDDEN,
     NameAnswerMissingError: status.HTTP_409_CONFLICT,
     DocumentExistsError: status.HTTP_409_CONFLICT,
+    NothingToCreateError: status.HTTP_409_CONFLICT,
     CreationDisabledError: status.HTTP_403_FORBIDDEN,
     NotDdiModuleError: status.HTTP_422_UNPROCESSABLE_CONTENT,
     NoDdiDocumentError: status.HTTP_409_CONFLICT,
@@ -982,10 +985,16 @@ async def _questions_responses(
         questions = [q for q in all_questions if q.module_id == module.id]
         ids = {q.id for q in questions}
         answers = [a for a in all_answers if a.question_id in ids]
-        name_id = next((q.id for q in questions if q.target is QuestionTarget.NAME), None)
-        named = {a.user_id for a in answers if a.question_id == name_id}
         documents = [link for link in links if link.module_id == module.id]
-        with_document = {link.user_id for link in documents if link.question_id is None}
+        to_make = {
+            user_id
+            for user_id in players | {viewer.user_id}
+            if has_documents_to_make(
+                questions,
+                {a.question_id: a for a in answers if a.user_id == user_id},
+                [link for link in documents if link.user_id == user_id],
+            )
+        }
         allowed = room is not None and may_create(
             viewer.role, room.players_can_create_documents, module.players_bypass_creation_rule
         )
@@ -1026,12 +1035,8 @@ async def _questions_responses(
                 for link in documents
                 if master or module.answers_revealed or link.user_id == viewer.user_id
             ],
-            can_create=open_
-            and not master
-            and allowed
-            and viewer.user_id in named
-            and viewer.user_id not in with_document,
-            creatable=len((named & players) - with_document) if master and open_ else 0,
+            can_create=open_ and not master and allowed and viewer.user_id in to_make,
+            creatable=len(to_make & players) if master and open_ else 0,
         )
     return responses
 

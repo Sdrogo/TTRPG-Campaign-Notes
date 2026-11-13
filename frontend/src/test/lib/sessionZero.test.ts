@@ -251,11 +251,13 @@ describe('questionsProblem', () => {
     ({ id: null, body, hint: '', target, tagId: null }) as Parameters<typeof questionsProblem>[0][number];
 
   // Spec 47 Decision 9.
-  it('wants text, one Name, at most one Subtitle and five New Documents', () => {
+  it('wants text, at most one Name, at most one Subtitle and five New Documents', () => {
     expect(questionsProblem([])).toBeNull();
     expect(questionsProblem([question('name'), question('subtitle'), question('none')])).toBeNull();
     expect(questionsProblem([question('name', ' ')])).toBe('sessionZero.questions.problems.empty');
-    expect(questionsProblem([question('note')])).toBe('sessionZero.questions.problems.oneName');
+    // Spec 70: no Name question is fine, but then nothing fills a Document of the Player's.
+    expect(questionsProblem([question('none'), question('document')])).toBeNull();
+    expect(questionsProblem([question('note')])).toBe('sessionZero.questions.problems.needsName');
     expect(questionsProblem([question('name'), question('name')])).toBe('sessionZero.questions.problems.oneName');
     expect(questionsProblem([question('name'), question('subtitle'), question('subtitle')])).toBe(
       'sessionZero.questions.problems.oneSubtitle',
