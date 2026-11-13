@@ -33,6 +33,19 @@ describe('SplitView (spec 37 Decision 3)', () => {
     expect(screen.getByText('Thorn')).toBeInTheDocument();
   });
 
+  it('bounds the right pane to the left one with fitRight, so a map page never scrolls', () => {
+    renderWithProviders(<SplitView fitRight left={<p>Mappa</p>} right={<p>Thorn</p>} />);
+    const holder = screen.getByText('Thorn').parentElement!;
+    expect(holder.style.position).toBe('absolute');
+    expect(holder.style.getPropertyValue('--split-pane-max-height')).toBe('100%');
+    expect(holder.parentElement!.style.position).toBe('relative');
+  });
+
+  it('lets the right pane grow with the page without fitRight', () => {
+    renderWithProviders(<SplitView left={<p>Mappa</p>} right={<p>Thorn</p>} />);
+    expect(screen.getByText('Thorn').parentElement!.style.position).toBe('');
+  });
+
   it('fits a width remembered on a wider screen, without forgetting it', () => {
     window.localStorage.setItem(SPLIT_STORAGE_KEY, '0.9');
     renderWithProviders(<SplitView left={<p>Mappa</p>} right={<p>Thorn</p>} />);

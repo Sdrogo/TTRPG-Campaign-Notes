@@ -13,8 +13,23 @@ const DIVIDER_WIDTH = 8;
  * With no `right`, the left pane takes the whole width alone. It stays the
  * same element either way, so opening or closing the right pane never
  * remounts what the left one shows (a map keeps its zoom, spec 58).
+ * With `fitRight`, the right pane takes the left one's height and no more
+ * (`--split-pane-max-height`, read by the panes).
  */
-export function SplitView({ left, right = null }: { left: ReactNode; right?: ReactNode }) {
+export function SplitView({
+  left,
+  right = null,
+  fitRight = false,
+}: {
+  left: ReactNode;
+  right?: ReactNode;
+  /**
+   * The right pane is never taller than the left one and scrolls inside it:
+   * on a page that fits the screen (a map page) opening the pane must not
+   * make the whole page scroll.
+   */
+  fitRight?: boolean;
+}) {
   const { t } = useTranslation();
   const container = useRef<HTMLDivElement>(null);
   // What the viewer chose, kept as is; what is shown is fitted to the current
@@ -101,9 +116,24 @@ export function SplitView({ left, right = null }: { left: ReactNode; right?: Rea
               }}
             />
           </Box>
-          <Box pl={8} style={{ flex: 1, minWidth: 0 }}>
-            {right}
-          </Box>
+          {fitRight ? (
+            <Box style={{ flex: 1, minWidth: 0, position: 'relative' }}>
+              <Box
+                pl={8}
+                style={{
+                  position: 'absolute',
+                  inset: 0,
+                  ['--split-pane-max-height' as string]: '100%',
+                }}
+              >
+                {right}
+              </Box>
+            </Box>
+          ) : (
+            <Box pl={8} style={{ flex: 1, minWidth: 0 }}>
+              {right}
+            </Box>
+          )}
         </>
       )}
     </Box>
