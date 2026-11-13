@@ -44,7 +44,8 @@ from app.domain.visibility import (
 # 2 since spec 28_0 added a Document's `subtitle`; 3 since spec 40 added the
 # Room's `maps`; 4 since spec 56 added the landing page's `sections`; 5 since
 # spec 61 added the clocks (`clock_rules`, `clock_templates`, `clocks`,
-# `clock_groups`). The import reads 1 to 5.
+# `clock_groups`); 6 since spec 71 added each Note's `relational_link`.
+# The import reads 1 to 6.
 SCHEMA_VERSION = 6
 
 # Shown for a member with no display name: emails are never exported

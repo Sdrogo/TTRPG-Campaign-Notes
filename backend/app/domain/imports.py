@@ -129,7 +129,7 @@ class ExistingDocument:
     image_ids: frozenset[str]
     name: str = ""
     # The folded titles of the Notes flagged as Relational links, one entry
-    # per Note (spec 70); a Replace keeps the flag of a Note the file doesn't
+    # per Note (spec 71); a Replace keeps the flag of a Note the file doesn't
     # speak about.
     relational_titles: tuple[str, ...] = ()
 
@@ -711,7 +711,7 @@ def _plan_document(
     selective_count = int(selective)
     notes = []
     # A Replace deletes the Notes, so the flags of the ones the file doesn't
-    # state are carried over by title, each old Note once (spec 70).
+    # state are carried over by title, each old Note once (spec 71).
     old_flagged = list(replacing.relational_titles) if replacing is not None else []
     for note in document.notes:
         note_level, note_selective = _level(note.visibility, context)

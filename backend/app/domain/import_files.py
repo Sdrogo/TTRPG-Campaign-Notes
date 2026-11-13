@@ -64,7 +64,7 @@ class ImportNote:
     title: str
     text: Text
     visibility: str | None
-    # Spec 70: None when the file doesn't say (older exports, Markdown).
+    # Spec 71: None when the file doesn't say (older exports, Markdown).
     relational_link: bool | None = None
 
 
@@ -624,7 +624,7 @@ def file_from_json(data: dict[str, Any]) -> ImportFile:
                 visibility=d["visibility"],
                 tag_names=tuple(d["tag_names"]),
                 notes=tuple(
-                    # The fourth entry is absent from the payload of a job queued before spec 70.
+                    # The fourth entry is absent from the payload of a job queued before spec 71.
                     ImportNote(n[0], _text_from_json(n[1]), n[2], n[3] if len(n) > 3 else None)
                     for n in d["notes"]
                 ),

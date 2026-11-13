@@ -2831,7 +2831,7 @@ async def test_the_relational_link_flag_travels_through_export_copy_and_replace(
         n["title"]: n["id"] == flagged["id"] for n in before["notes"]
     }
 
-    # Replace with a file that says nothing (an export made before spec 70):
+    # Replace with a file that says nothing (an export made before spec 71):
     # the Room's flag follows the Note by title.
     silent = json.loads(exported)
     for note in silent["documents"][0]["notes"]:

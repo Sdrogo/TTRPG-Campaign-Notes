@@ -1,4 +1,4 @@
-# 70 - Relational link flag in import-export
+# 71 - Relational link flag in import-export
 
 ## Goals
 
