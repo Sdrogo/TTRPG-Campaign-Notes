@@ -325,4 +325,15 @@ on staging.
 - Also fixed on the way: staging's frontend suite was red on
   `useFillHeight` (one session removed the null-ref guard while another added
   the test for it); the guard is back, so both branches are covered.
+- **72_3** (2026-11-14): the product owner's walk-through on the staging
+  Preview found no violation from the app itself; the only reports came from
+  the Vercel Toolbar that Vercel injects in Preview deployments
+  (`vercel.live` script, iframe and fonts, a `pusher.com` websocket). Those
+  were **not** allowed in the CSP (it would let a third-party script run in
+  production too); the product owner turned the Toolbar off for the project.
+  The policy is now sent as `Content-Security-Policy`.
+- **Proposed, not built**: switching supabase-js to the PKCE flow
+  (`flowType: 'pkce'`), so OAuth tokens no longer travel in the URL fragment
+  (`/#access_token=...`), where they reach the browser history. Needs every
+  sign-in provider tested again on staging; a separate change if wanted.
 

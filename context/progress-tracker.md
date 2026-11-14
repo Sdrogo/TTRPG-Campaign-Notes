@@ -243,11 +243,11 @@ image search, read aloud, GDPR (10-01 → 10-10). See the two older archives.
 
 - **72, Security hardening** (product owner, 2026-11-14, from the 1.0
   readiness check): built on PR #325 (headers on Vercel and Caddy, body cap,
-  `/docs` off, per-user rate limits, `SECURITY.md`, security CI job). No
-  migration. Next: the product owner's walk-through on staging with the
-  console open (CSP is report-only), then 72_3 enforces it; turn on GitHub
-  private vulnerability reporting. The Caddy part reaches production with
-  the next release.
+  `/docs` off, per-user rate limits, `SECURITY.md`, security CI job) and
+  72_3 (CSP enforced after the product owner's clean walk-through). No
+  migration. Left: turn on GitHub private vulnerability reporting; the Caddy
+  part reaches production with the next release; PKCE sign-in flow proposed,
+  not built.
 - **70, Master edits Players' answers** (product owner, 2026-11-12): the
   Master edits any Player's answers inline (autosave) in the Session 0
   Questions step, open or closed, and the Section Questions tool. Ticket
