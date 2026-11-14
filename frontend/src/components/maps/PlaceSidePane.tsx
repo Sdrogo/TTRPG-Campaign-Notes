@@ -31,7 +31,7 @@ export function PlaceSidePane({
     <Box
       component="aside"
       aria-label={t('maps.geo.placePane')}
-      style={{ position: 'sticky', top: 0, maxHeight: '100dvh', overflowY: 'auto' }}
+      style={{ position: 'sticky', top: 0, maxHeight: 'var(--split-pane-max-height, 100dvh)', overflowY: 'auto' }}
     >
       <Group
         justify="space-between"

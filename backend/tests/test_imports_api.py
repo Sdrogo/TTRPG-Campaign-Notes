@@ -570,7 +570,7 @@ async def test_a_file_that_is_refused_writes_nothing(
         "too big": (("big.json", b"{" + b" " * (5 * 1024 * 1024)), 413),
         "not json": (("bad.json", b"{oops"), 422),
         "not utf-8": (("bad.md", b"\xff\xfe\x00"), 422),
-        "newer schema": (_json_file({"name": "A"}, schema_version=6), 422),
+        "newer schema": (_json_file({"name": "A"}, schema_version=7), 422),
         "no document": (("empty.json", b'{"documents": []}'), 422),
         "too many documents": (_json_file(*many), 422),
         "too many images": (_json_file(images), 422),
@@ -1548,7 +1548,7 @@ async def test_a_room_export_carries_its_maps_into_another_room(
     target = await _second_room(client, room)
     exported = await _export(client, room, room.master, "json")
     data = json.loads(exported)
-    assert data["schema_version"] == 5
+    assert data["schema_version"] == 6
     maps = {m["name"]: m for m in data["maps"]}
     assert set(maps) == {"Court", "Valley"}
     assert maps["Court"]["linked_document_ids"] == [seeded["castle"]["id"]]
@@ -2076,7 +2076,7 @@ async def test_a_room_export_carries_its_home_into_another_room(
 
     exported = await _export(client, room, room.master, "json")
     data = json.loads(exported)
-    assert data["schema_version"] == 5
+    assert data["schema_version"] == 6
     assert [(s["kind"], s["title"]) for s in data["sections"]] == [
         ("page_documents", "Archive"),
         ("page_maps", None),
@@ -2794,3 +2794,52 @@ async def test_the_cleanup_runs_when_the_job_fails_and_survives_its_own_errors(
     monkeypatch.setattr(import_jobs_repo, "get_job", real_get_job)
     monkeypatch.setattr(storage_cleanup, "remove_staged", broken)
     await import_staging.discard(job_id)
+
+
+async def test_the_relational_link_flag_travels_through_export_copy_and_replace(
+    db_session: AsyncSession,
+    make_token: Callable[..., str],
+    client: AsyncClient,
+    fake_storage: dict[str, bytes],
+    served: dict[str, Any],
+    inline_jobs: None,
+) -> None:
+    room = await _room(client, make_token)
+    seeded = await _seed(client, room)
+    castle_id = seeded["castle"]["id"]
+    before = await _detail(client, room, castle_id)
+    flagged = before["notes"][0]
+    done = await client.patch(
+        f"{room.url}/documents/{castle_id}/notes/{flagged['id']}",
+        json={"relational_link": True},
+        headers=room.master,
+    )
+    assert done.status_code == 200
+
+    exported = await _export(client, room, room.master, "json", f"/documents/{castle_id}")
+    data = json.loads(exported)
+    assert data["schema_version"] == 6
+    assert {n["title"]: n["relational_link"] for n in data["documents"][0]["notes"]} == {
+        n["title"]: n["id"] == flagged["id"] for n in before["notes"]
+    }
+
+    # Copy: the new Notes carry the file's flags.
+    copied = await _import(client, room, room.master, ("castle.json", exported))
+    (copy,) = copied["result"]["created"]
+    copy_notes = (await _detail(client, room, copy["id"]))["notes"]
+    assert {n["title"]: n["relational_link"] for n in copy_notes} == {
+        n["title"]: n["id"] == flagged["id"] for n in before["notes"]
+    }
+
+    # Replace with a file that says nothing (an export made before spec 71):
+    # the Room's flag follows the Note by title.
+    silent = json.loads(exported)
+    for note in silent["documents"][0]["notes"]:
+        del note["relational_link"]
+    await _import(
+        client, room, room.master, ("castle.json", json.dumps(silent).encode()), replace=["0:0"]
+    )
+    after = (await _detail(client, room, castle_id))["notes"]
+    assert {n["title"]: n["relational_link"] for n in after} == {
+        n["title"]: n["id"] == flagged["id"] for n in before["notes"]
+    }

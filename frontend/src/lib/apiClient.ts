@@ -1,4 +1,4 @@
-import { currentLanguage } from '../i18n';
+import i18n, { currentLanguage } from '../i18n';
 import { supabase } from './supabaseClient';
 import { VIEW_AS_HEADER, viewAsUser } from './viewAs';
 import { isDemoMode } from './demo/demoMode';
@@ -88,6 +88,11 @@ async function request(path: string, init: ApiFetchInit): Promise<Response> {
       }
     } catch {
       // Not JSON (e.g. a plain-text 500) - fall back to the raw body.
+    }
+    // Spec 72 Decision 6: the proxy's body cap answers 413 with no translated
+    // `detail` (the backend never saw the request).
+    if (response.status === 413 && message === body) {
+      message = i18n.t('common.requestTooLarge');
     }
     throw new ApiError(response.status, message);
   }

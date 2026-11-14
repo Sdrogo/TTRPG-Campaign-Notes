@@ -520,7 +520,7 @@ async def test_a_member_exports_one_document_with_only_what_it_refers_to(
     assert response.status_code == 200, response.text
     data = response.json()
     ExportJson.model_validate(data)
-    assert data["schema_version"] == 5
+    assert data["schema_version"] == 6
     assert data["maps"] == [] and data["sections"] == []
     assert [d["name"] for d in data["documents"]] == ["Castle"]
     assert data["main_items"] == []

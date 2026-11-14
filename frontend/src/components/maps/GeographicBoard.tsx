@@ -14,6 +14,7 @@ import {
   Tooltip,
 } from '@mantine/core';
 import { ArrowsInIcon, CheckIcon, MinusIcon, PencilSimpleIcon, PlusIcon } from '@phosphor-icons/react';
+import { useFillHeight } from '../../hooks/useFillHeight';
 import { useTranslation } from 'react-i18next';
 import { useBackState } from '../../lib/backNav';
 import { canClose, clickDraft, startDraft, undoCorner, type AreaDraft } from '../../lib/areaDraw';
@@ -73,8 +74,6 @@ const PIN_RADIUS = 7;
 const HANDLE_SIZE = 9;
 const AREA_FONT = 14;
 const LABEL_FONT = 12;
-/** The board's height unless it is given one: the page's, below the header. */
-const FULL_HEIGHT = 'calc(100dvh - 190px)';
 /** How much one press of a zoom button zooms. */
 const ZOOM_STEP = 1.25;
 
@@ -187,12 +186,15 @@ export function GeographicBoard({
   onSelectDocument,
   onSelectPlace,
   paneItem,
-  height = FULL_HEIGHT,
+  height: heightProp,
   fitToPlane = false,
 }: GeographicBoardProps) {
   const { t } = useTranslation();
   const backState = useBackState();
   const wrapper = useRef<HTMLDivElement>(null);
+  // Down to the bottom of the screen, unless the page gives a height.
+  const fill = useFillHeight(wrapper, heightProp === undefined);
+  const height = heightProp ?? fill;
   const svg = useRef<SVGSVGElement>(null);
   // The board's size on screen, followed as it changes.
   const [box, setBox] = useState(FALLBACK_SIZE);
@@ -491,7 +493,7 @@ export function GeographicBoard({
       mih={300}
       pos="relative"
       style={{
-        ...(fitToPlane && { aspectRatio: `${planeWidth} / ${planeHeight}`, maxHeight: FULL_HEIGHT }),
+        ...(fitToPlane && { aspectRatio: `${planeWidth} / ${planeHeight}`, maxHeight: fill }),
         border: '1px solid var(--border-default)',
         borderRadius: 'var(--mantine-radius-lg)',
         overflow: 'hidden',

@@ -31,6 +31,9 @@ class Settings(BaseSettings):
     # keeps two processes under the cap.
     db_pool_size: int = 5
     db_max_overflow: int = 2
+    # FastAPI's /docs, /redoc and /openapi.json (spec 72 Decision 8): off
+    # unless asked for, so production and staging don't publish the route map.
+    api_docs_enabled: bool = False
     # Openverse API credentials for the image search (spec 29). Unset, the
     # search calls Openverse anonymously, under its lower rate limits.
     openverse_client_id: str = ""

@@ -29,9 +29,8 @@ Full history is archived; read it only when you need that detail:
   pypdf) reached `main` through release PRs #292, #298, #300 and #302; their
   migrations were applied to production beforehand. Dependabot PRs land on
   `main`: merge `main` into `staging` before opening a release PR.
-- **Waiting on the product owner**: review of 55 (Room landing) and 57
-  (UI consistency, now in production; 57d alignment built 2026-11-05, on PR #308); 52 live updates to test with two browsers;
-  legal review of `/privacy` and the DPAs with Supabase, OVHcloud and
+- **Waiting on the product owner**: review of 55 (Room landing); 52 live
+  updates to test with two browsers; legal review of `/privacy` and the DPAs with Supabase, OVHcloud and
   Vercel (spec 31; shipped before those were done). Keeping shared content
   anonymised after an account deletion is the default in place, not
   explicitly confirmed.
@@ -119,6 +118,16 @@ One line per unit, dates 2026, newest first. Spec files live in
 
 ### 2026-10-12 → 11-10
 
+- **Demo tour highlight beside the Document aside** (11-14, bugfix, no mig.):
+  a target marked `data-tour-fit="content"` (relational link Note, Document
+  text) is lit only as wide as its lines, since its block boxes run under the
+  floated aside; the photo and maps stay dimmed.
+- **71, Relational link flag in import-export** (product owner, 2026-11-10): the JSON export (schema 6) carries each Note's flag, the import reads it, and a Replace with a silent file keeps the Room's flag by Note title; Markdown stays plain; no mig.
+- **Map split pane fits the screen** (11-13, bugfix, no mig.): on map pages
+  the side pane is bounded to the map column (`SplitView fitRight`,
+  `--split-pane-max-height`), so opening a Document no longer adds a page scroll.
+  Full-page boards measure their height (`useFillHeight`) instead of a fixed
+  `100dvh - 190px`, so no empty band under the map.
 - **69, Same-name Documents on import** (product owner, 2026-11-10): when a
   file Document's id matches nothing, it is matched to the Room Document
   with the same name and offered Copy/Replace (Copy default, "Replace all"
@@ -236,6 +245,13 @@ image search, read aloud, GDPR (10-01 → 10-10). See the two older archives.
 
 ## Next Up
 
+- **72, Security hardening** (product owner, 2026-11-14, from the 1.0
+  readiness check): built on PR #325 (headers on Vercel and Caddy, body cap,
+  `/docs` off, per-user rate limits, `SECURITY.md`, security CI job) and
+  72_3 (CSP enforced after the product owner's clean walk-through). No
+  migration. Left: turn on GitHub private vulnerability reporting; the Caddy
+  part reaches production with the next release; PKCE sign-in flow proposed,
+  not built.
 - **70, Master edits Players' answers** (product owner, 2026-11-12): the
   Master edits any Player's answers inline (autosave) in the Session 0
   Questions step, open or closed, and the Section Questions tool. Ticket
@@ -285,14 +301,10 @@ image search, read aloud, GDPR (10-01 → 10-10). See the two older archives.
   (FR-N3/N4, VR-10), draft/published (FR-D6), notifications (FR-T9),
   sealed content (VR-09). The product owner decides whether they stay.
 - **Parked**: Thread pagination (FR-T3), until Threads get long in practice.
-- **Browser walk-through** (product owner): Notes (12), PDF Attachments
-  (16), Characters (17), Friends (18), mention backlinks (20), search (21),
-  version history drawer (24), Room export and PDF dialog at phone width
-  (23), early card and modal UI (07, 13) were never seen running. Checklist
-  in the 2026-10-10 archive under Next Up.
 - **Ops, later**: delete the suspended Render production and old native
-  staging services; backups and monitoring for the VPS
-  (`vps-migration-plan.md` §7/§8; NFR-07).
+  staging services; backups for the VPS (`vps-migration-plan.md` §7;
+  NFR-07). Uptime is covered: a cron job of the product owner's calls
+  `/health` (2026-11-14).
 - **Decisions taken while building, still to confirm**: "choices beyond
   the ticket" of specs 21 to 27 (2026-10-10 archive) and the proposed
   Decisions in later tickets.

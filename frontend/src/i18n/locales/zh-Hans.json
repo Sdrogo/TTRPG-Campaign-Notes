@@ -35,7 +35,8 @@
     "maxLength": "最多 {{max}} 个字符",
     "unknownUser": "未知用户",
     "accept": "接受",
-    "decline": "拒绝"
+    "decline": "拒绝",
+    "requestTooLarge": "上传的内容过大。"
   },
   "roles": {
     "master": "Master",

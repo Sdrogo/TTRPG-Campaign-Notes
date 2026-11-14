@@ -11,6 +11,7 @@ from pydantic import BaseModel
 
 from app.api.errors import http_error, translated_error
 from app.api.profiles import ProfileFields, profile_fields, sign_avatars
+from app.api.rate_limits import Group, limit
 from app.api.rooms import (
     RoomResponse,
     room_to_response,
@@ -82,7 +83,11 @@ class MyInvitationResponse(BaseModel):
     invited_by: InviterResponse
 
 
-@router.post("/rooms/{room_id}/invitations", status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/rooms/{room_id}/invitations",
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[limit(Group.INVITE)],
+)
 async def create_invitation(
     room_id: uuid.UUID,
     body: CreateInvitationRequest,
@@ -107,7 +112,11 @@ async def create_invitation(
     )
 
 
-@router.post("/rooms/{room_id}/invitations/direct", status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/rooms/{room_id}/invitations/direct",
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[limit(Group.INVITE)],
+)
 async def create_direct_invitation(
     room_id: uuid.UUID,
     body: DirectInvitationRequest,

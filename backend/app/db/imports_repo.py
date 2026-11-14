@@ -35,6 +35,7 @@ def _note_rows(
             title=note.title,
             description=note.text,
             visibility=note.visibility.value,
+            relational_link=note.relational_link,
             position=position,
             created_by=importer,
             created_at=now,

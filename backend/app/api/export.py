@@ -24,6 +24,7 @@ from app.api.document_files import sign_files
 from app.api.errors import http_error
 from app.api.geographic_maps import AreaBody, LinkBody, PinBody
 from app.api.image_uploads import sign_images
+from app.api.rate_limits import Group, limit
 from app.api.relationship_maps import (
     ArrowBody,
     CardBody,
@@ -128,6 +129,7 @@ class NoteJson(BaseModel):
     position: int
     visibility: str
     selective_user_ids: list[uuid.UUID] | None
+    relational_link: bool = False
 
 
 class CommentJson(BaseModel):
@@ -467,6 +469,7 @@ async def export_sections(session: AsyncSession, room_id: uuid.UUID) -> list[dic
 
 @router.get(
     "/rooms/{room_id}/export",
+    dependencies=[limit(Group.EXPORT)],
     response_class=Response,
     responses={
         status.HTTP_200_OK: {

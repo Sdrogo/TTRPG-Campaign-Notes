@@ -383,7 +383,7 @@ def test_json_carries_the_version_ids_and_references() -> None:
         )
     )
 
-    assert data["schema_version"] == SCHEMA_VERSION == 5
+    assert data["schema_version"] == SCHEMA_VERSION == 6
     assert data["generated_at"] == T0.isoformat()
     assert data["links_expire_within_seconds"] == 3600
     assert data["room"] == {"id": str(ROOM_ID), "name": "Barovia", "game_system": "D&D 5e"}
@@ -670,3 +670,12 @@ def test_the_subtitle_is_in_the_json_and_under_the_markdown_heading() -> None:
     heading = f'### <a id="doc-{CASTLE}"></a>Castle'
     assert f"{heading}\n\n*Seat \\*of\\* \\[Strahd\\]*\n\n- Visibility" in text
     assert f'### <a id="doc-{IRENA}"></a>Irena\n\n- Visibility' in text
+
+
+def test_the_relational_link_flag_of_a_note_goes_into_the_json() -> None:
+    flagged = replace(_note(1, "Ties", DocumentVisibility.ROOM), relational_link=True)
+    source = _castle(notes=[flagged, _note(2, "Plain", DocumentVisibility.ROOM)])
+
+    data = render_json(_export(ALICE, [source]))
+
+    assert [n["relational_link"] for n in data["documents"][0]["notes"]] == [True, False]

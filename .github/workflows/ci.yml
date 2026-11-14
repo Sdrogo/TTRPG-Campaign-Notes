@@ -222,3 +222,49 @@ jobs:
       - name: No env files in the image
         run: |
           docker run --rm --entrypoint sh ttrpg-backend -c '! ls -A /app | grep -E "^\.env"'
+
+  # Spec 72 Decisions 13-14: a known vulnerable dependency fails the build,
+  # like the other gates, and the production Caddyfile must parse before the
+  # VPS deploy ever copies it. A finding with no fix released yet can be
+  # ignored by id here (`--ignore-vuln` / an npm override), with a comment
+  # saying why and until when.
+  security:
+    name: Security checks
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: '3.12'
+
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
+        with:
+          node-version: '24'
+
+      # The backend's runtime dependencies, installed as the image installs
+      # them (`pip install .`), in a venv of their own so only they are audited.
+      - name: Backend dependency audit
+        working-directory: backend
+        run: |
+          python -m venv /tmp/audit
+          # The venv's own pip comes from the runner's Python and lags behind;
+          # it is a build tool, not a runtime dependency, so bring it current
+          # rather than fail on its advisories.
+          /tmp/audit/bin/python -m pip install --quiet --upgrade pip
+          /tmp/audit/bin/pip install --quiet . pip-audit
+          /tmp/audit/bin/pip-audit --skip-editable --progress-spinner off
+
+      # What ships to the browser only; dev tooling never reaches users.
+      - name: Frontend dependency audit
+        working-directory: frontend
+        run: npm audit --omit=dev --audit-level=high
+
+      - name: Caddyfile is valid
+        run: |
+          docker run --rm -e API_HOSTS=api.example.com \
+            -v "$PWD/deploy/Caddyfile:/etc/caddy/Caddyfile:ro" \
+            caddy:2 caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile

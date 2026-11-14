@@ -413,6 +413,9 @@
         "groupName": "nome do grupo",
         "decisiveLabel": "resultado"
       }
+    },
+    "rateLimit": {
+      "tooMany": "Demasiados pedidos: aguarde um momento e tente novamente"
     }
   },
   "pdf": {

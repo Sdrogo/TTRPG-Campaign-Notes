@@ -35,7 +35,8 @@
     "maxLength": "Maximaal {{max}} tekens",
     "unknownUser": "Onbekende gebruiker",
     "accept": "Accepteren",
-    "decline": "Weigeren"
+    "decline": "Weigeren",
+    "requestTooLarge": "Deze upload is te groot."
   },
   "roles": {
     "master": "Master",

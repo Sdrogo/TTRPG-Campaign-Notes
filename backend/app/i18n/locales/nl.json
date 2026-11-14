@@ -413,6 +413,9 @@
         "groupName": "groepsnaam",
         "decisiveLabel": "uitkomst"
       }
+    },
+    "rateLimit": {
+      "tooMany": "Te veel verzoeken: wacht even en probeer het opnieuw"
     }
   },
   "pdf": {

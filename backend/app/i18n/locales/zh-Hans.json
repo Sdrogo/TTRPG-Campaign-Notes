@@ -413,6 +413,9 @@
         "groupName": "分组名称",
         "decisiveLabel": "结局"
       }
+    },
+    "rateLimit": {
+      "tooMany": "请求过多：请稍候再试"
     }
   },
   "pdf": {

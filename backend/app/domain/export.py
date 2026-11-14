@@ -44,8 +44,9 @@ from app.domain.visibility import (
 # 2 since spec 28_0 added a Document's `subtitle`; 3 since spec 40 added the
 # Room's `maps`; 4 since spec 56 added the landing page's `sections`; 5 since
 # spec 61 added the clocks (`clock_rules`, `clock_templates`, `clocks`,
-# `clock_groups`). The import reads 1 to 5.
-SCHEMA_VERSION = 5
+# `clock_groups`); 6 since spec 71 added each Note's `relational_link`.
+# The import reads 1 to 6.
+SCHEMA_VERSION = 6
 
 # Shown for a member with no display name: emails are never exported
 # (NFR-03).
@@ -170,6 +171,7 @@ class ExportNote:
     position: int
     visibility: DocumentVisibility
     selective_user_ids: Sequence[uuid.UUID] | None
+    relational_link: bool = False
 
 
 @dataclass(frozen=True)
@@ -349,6 +351,7 @@ def _export_document(
             position=note.position,
             visibility=note.visibility,
             selective_user_ids=(sorted(item.note_grants.get(note.id, ())) if manages else None),
+            relational_link=note.relational_link,
         )
         for note in item.notes
         if is_note_visible(
@@ -595,6 +598,7 @@ def _json_document(document: ExportDocument) -> dict[str, Any]:
                 "position": n.position,
                 "visibility": n.visibility.value,
                 "selective_user_ids": _ids(n.selective_user_ids),
+                "relational_link": n.relational_link,
             }
             for n in document.notes
         ],

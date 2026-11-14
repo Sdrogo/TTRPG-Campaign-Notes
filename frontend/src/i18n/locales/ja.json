@@ -35,7 +35,8 @@
     "maxLength": "最大{{max}}文字",
     "unknownUser": "不明なユーザー",
     "accept": "承認",
-    "decline": "辞退"
+    "decline": "辞退",
+    "requestTooLarge": "アップロードするデータが大きすぎます。"
   },
   "roles": {
     "master": "Master",

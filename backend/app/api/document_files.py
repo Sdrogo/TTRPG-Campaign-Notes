@@ -14,6 +14,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.access import get_owned_document
 from app.api.errors import http_error, translated_error
+from app.api.rate_limits import Group, limit
 from app.auth.dependencies import CurrentUserDep
 from app.db import documents_repo, files_repo, storage, storage_cleanup
 from app.db.session import SessionDep
@@ -95,7 +96,7 @@ async def remove_files(session: AsyncSession, files: Sequence[DocumentFile]) -> 
     await storage_cleanup.schedule_removal(session, [file.storage_path for file in files])
 
 
-@router.post("", status_code=status.HTTP_201_CREATED)
+@router.post("", status_code=status.HTTP_201_CREATED, dependencies=[limit(Group.UPLOAD)])
 async def upload_file(
     room_id: uuid.UUID,
     document_id: uuid.UUID,

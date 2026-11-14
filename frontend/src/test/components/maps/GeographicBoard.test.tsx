@@ -245,7 +245,8 @@ describe('GeographicBoard: moving around', () => {
     render({ fitToPlane: true });
     const box = board().parentElement!;
     expect(box.style.aspectRatio).toBe('2000 / 1400');
-    expect(box.style.maxHeight).toBe('calc(100dvh - 190px)');
+    // Down to the bottom of the screen from where the board starts (top 0 in jsdom).
+    expect(box.style.maxHeight).toBe('calc(100dvh - 16px)');
     expect(box.style.height).toBe('');
   });
 

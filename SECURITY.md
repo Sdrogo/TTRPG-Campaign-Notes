@@ -1,21 +1,38 @@
 # Security Policy
 
-## Supported Versions
+## Supported versions
 
-Use this section to tell people about which versions of your project are
-currently being supported with security updates.
+Ex Libris is deployed continuously: only the version running at
+[exlibris.world](https://exlibris.world), built from the `main` branch,
+receives security fixes. There are no maintained older branches.
 
-| Version | Supported          |
-| ------- | ------------------ |
-| 5.1.x   | :white_check_mark: |
-| 5.0.x   | :x:                |
-| 4.0.x   | :white_check_mark: |
-| < 4.0   | :x:                |
+## Reporting a vulnerability
 
-## Reporting a Vulnerability
+Please report it privately, not in a public issue:
 
-Use this section to tell people how to report a vulnerability.
+1. **Preferred**: GitHub's private vulnerability reporting, from this
+   repository's **Security** tab → **Report a vulnerability**.
+2. **Fallback**: e-mail the data controller named in the app's
+   [privacy notice](https://exlibris.world/privacy).
 
-Tell them where to go, how often they can expect to get an update on a
-reported vulnerability, what to expect if the vulnerability is accepted or
-declined, etc.
+Include what you found, the steps to reproduce it and what an attacker could
+reach with it. Please don't access or change other users' data beyond what
+you need to show the issue, and give us a reasonable time to fix it before
+disclosing it.
+
+What to expect:
+
+- An acknowledgement within **7 days**.
+- An assessment and, when the report is confirmed, a fix shipped to
+  production as soon as it is ready; you'll hear when it is out.
+- If the report is declined, an explanation why.
+
+This is a personal project: there is no bug bounty.
+
+## Scope
+
+In scope: the web app at `exlibris.world` / `www.exlibris.world`, the API at
+`api.exlibris.world`, and the code in this repository. Out of scope: the
+third-party services the app relies on (Supabase, Vercel, OVHcloud,
+Openverse), which have their own reporting channels; denial of service by
+volume; reports from automated scanners without a demonstrated impact.
