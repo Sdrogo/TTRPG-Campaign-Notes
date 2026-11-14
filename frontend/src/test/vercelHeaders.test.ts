@@ -13,7 +13,7 @@ const config = JSON.parse(
 ) as VercelConfig;
 const everyPath = config.headers.find((entry) => entry.source === '/(.*)');
 const header = (key: string) => everyPath?.headers.find((h) => h.key === key)?.value;
-const csp = header('Content-Security-Policy') ?? header('Content-Security-Policy-Report-Only');
+const csp = header('Content-Security-Policy');
 
 function directive(name: string): string[] {
   const found = csp
@@ -31,8 +31,10 @@ describe('vercel.json security headers', () => {
     expect(header('Permissions-Policy')).toContain('camera=()');
   });
 
-  it('has a Content-Security-Policy that only runs the app’s own scripts', () => {
+  it('enforces a Content-Security-Policy that only runs the app’s own scripts', () => {
+    // 72_3: enforced since the walk-through of 2026-11-14, no longer report-only.
     expect(csp).toBeDefined();
+    expect(header('Content-Security-Policy-Report-Only')).toBeUndefined();
     expect(directive('script-src')).toEqual(["'self'"]);
     expect(csp).not.toContain("'unsafe-eval'");
     expect(directive('object-src')).toEqual(["'none'"]);

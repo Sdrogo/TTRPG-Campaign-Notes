@@ -229,12 +229,13 @@ duplication and the History are untouched.
 
 ## Security hardening (spec 72)
 
-- **Headers**: the frontend's are in `frontend/vercel.json` (CSP, nosniff,
+- **Headers**: the frontend's are in `frontend/vercel.json` (CSP enforced since 72_3, nosniff,
   `X-Frame-Options`, Referrer- and Permissions-Policy; Vercel adds HSTS); the
   API's in `deploy/Caddyfile` (HSTS one year on that host, nosniff,
   `default-src 'none'` CSP, no `Server`). A new host the app talks to (API,
   Supabase project) must be added to the CSP's `connect-src`, or the browser
-  blocks it. `frontend/src/test/vercelHeaders.test.ts` guards the set.
+  blocks it. `frontend/src/test/vercelHeaders.test.ts` guards the set. The
+  Vercel Toolbar (Preview deployments) is off: the CSP would block it.
 - **Body caps** in Caddy: 150 MB on `/rooms/*/imports*`, 25 MB elsewhere;
   Caddy's 413 carries CORS for the production origins and the API client
   shows `common.requestTooLarge`. Staging (Render, no Caddy) has neither.
