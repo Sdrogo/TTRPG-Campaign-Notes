@@ -89,7 +89,8 @@ only reports "leaked password protection" (irrelevant: social sign-in only).
      ever pointed at another API host, it has to be added here.
    - `blob:` for media and workers: the Room export and the PDF viewer use
      `blob:` URLs (`saveBlob`, `openPdf`).
-3. **Report-only first.** Unit 72_1 ships the policy as
+3. **Report-only first** (`upgrade-insecure-requests` does nothing in a
+   report-only policy; it only takes effect once 72_3 enforces it). Unit 72_1 ships the policy as
    `Content-Security-Policy-Report-Only`. The product owner does the usual
    browser walk-through on the staging Preview with the console open; any
    `[Report Only]` violation is added to the policy or fixed. Unit 72_3

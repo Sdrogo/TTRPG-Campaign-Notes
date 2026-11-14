@@ -251,6 +251,10 @@ jobs:
         working-directory: backend
         run: |
           python -m venv /tmp/audit
+          # The venv's own pip comes from the runner's Python and lags behind;
+          # it is a build tool, not a runtime dependency, so bring it current
+          # rather than fail on its advisories.
+          /tmp/audit/bin/python -m pip install --quiet --upgrade pip
           /tmp/audit/bin/pip install --quiet . pip-audit
           /tmp/audit/bin/pip-audit --skip-editable --progress-spinner off
 
