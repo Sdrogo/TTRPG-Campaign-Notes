@@ -528,7 +528,7 @@ function DocumentPanel({
               </Paper>
             </Stack>
           </Box>
-          <Stack gap="md" className="document-body-text" data-tour="document-text">
+          <Stack gap="md" className="document-body-text" data-tour="document-text" data-tour-fit="content">
             {editing ? (
               <DocumentEditForm
                 roomId={roomId}

@@ -118,6 +118,10 @@ One line per unit, dates 2026, newest first. Spec files live in
 
 ### 2026-10-12 → 11-10
 
+- **Demo tour highlight beside the Document aside** (11-14, bugfix, no mig.):
+  a target marked `data-tour-fit="content"` (relational link Note, Document
+  text) is lit only as wide as its lines, since its block boxes run under the
+  floated aside; the photo and maps stay dimmed.
 - **71, Relational link flag in import-export** (product owner, 2026-11-10): the JSON export (schema 6) carries each Note's flag, the import reads it, and a Replace with a silent file keeps the Room's flag by Note title; Markdown stays plain; no mig.
 - **Map split pane fits the screen** (11-13, bugfix, no mig.): on map pages
   the side pane is bounded to the map column (`SplitView fitRight`,

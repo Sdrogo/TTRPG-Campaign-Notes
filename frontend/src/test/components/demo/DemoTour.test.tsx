@@ -65,6 +65,22 @@ describe('DemoTour', () => {
     expect(screen.queryByRole('button', { name: 'Indietro' })).not.toBeInTheDocument();
   });
 
+  it('lights a content-fitted element only as wide as its content', async () => {
+    setTourStep(0);
+    render(START);
+    const room = document.querySelector<HTMLElement>('[data-tour="room-landing"]')!;
+    room.textContent = '';
+    room.setAttribute('data-tour-fit', 'content');
+    const badge = document.createElement('span');
+    badge.style.display = 'inline-block';
+    room.append(badge);
+    vi.spyOn(badge, 'getBoundingClientRect').mockReturnValue({ left: 40, width: 100, right: 140, top: 100, bottom: 120, height: 20 } as DOMRect);
+
+    await waitFor(() => expect(spot()).toHaveAttribute('data-lit'));
+    expect(spot().style.left).toBe('34px');
+    expect(spot().style.width).toBe(`${100 + 2 * 6}px`);
+  });
+
   it('puts the card over an element low on the screen', async () => {
     setTourStep(0);
     render(START, { top: 600, left: 900, width: 100, height: 100, bottom: 700 });

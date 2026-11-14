@@ -166,6 +166,7 @@ export function NoteItem({
       className="note-item"
       data-testid="note-item"
       data-tour={note.relationalLink ? 'link-note' : undefined}
+      data-tour-fit={note.relationalLink ? 'content' : undefined}
     >
       <Group justify="space-between" align="flex-start" wrap="nowrap" preventGrowOverflow={false}>
         <Group gap="xs" wrap="wrap" style={{ minWidth: 0 }}>
