@@ -121,10 +121,23 @@ only reports "leaked password protection" (irrelevant: social sign-in only).
    import routes (`/rooms/*/imports*`: a vault is up to 100 MB plus the
    multipart overhead, spec 65), **25 MB** everywhere else (the largest
    other upload is an image at 20 MB, `MAX_INPUT_BYTES`). Over the cap,
-   Caddy answers 413 before the backend sees the body. Caddy's 413 has no
-   translated message, so the frontend shows its generic error; in normal
-   use the routes' own, smaller caps answer first with their translated
-   message, so only a request far beyond any limit meets Caddy's.
+   Caddy answers 413 before the backend sees the body. In normal use the
+   routes' own, smaller caps answer first with their translated message,
+   so only a request far beyond any limit meets Caddy's.
+   **Caddy's 413 must carry CORS headers** (review of PR #325): the backend's
+   CORS middleware never runs on it, and without
+   `Access-Control-Allow-Origin` the browser reports a network error, not a
+   413. A `handle_errors 413` block answers a small JSON body and copies the
+   request's `Origin` into `Access-Control-Allow-Origin` (with
+   `Access-Control-Allow-Credentials: true` and `Vary: Origin`) only when it
+   is one of the production origins (`https://exlibris.world`,
+   `https://www.exlibris.world`). The frontend's API client
+   (`lib/apiClient.ts`) maps a 413 that has no translated `detail` to a new
+   key `errors.requestTooLarge` ("This file is too large to upload"), in
+   every locale. Matchers are ordered so the import routes' 110 MB block is
+   evaluated before the 25 MB catch-all (Caddy sorts `request_body` by
+   matcher specificity only inside one `route`, so both live in a `route`
+   block written in that order).
 7. **Staging is not covered by 5 and 6**: it runs on Render without Caddy.
    Render terminates TLS itself. Accepted: staging holds no real users.
 
@@ -231,7 +244,22 @@ only reports "leaked password protection" (irrelevant: social sign-in only).
   `curl -I https://exlibris.world` and `curl -I https://api.exlibris.world/health`
   show the headers, and the external scan is run again.
 
-## Open Questions
+## Answered (product owner, 2026-11-14)
+
+The product owner left the five questions to Claude ("non sono abbastanza
+esperto di security per rispondere"), so the proposed defaults stand:
+
+1. CSP **report-only on staging first**, then enforced (Decision 3).
+2. Rate limits **as in Decision 10**; they can be raised later from one
+   place (`app/domain/throttle.py`) if real use hits them.
+3. HSTS **one year, no `includeSubDomains`, no `preload`** (Decision 5).
+4. `SECURITY.md`: **GitHub private vulnerability reporting plus the
+   controller's e-mail** as fallback (Decision 12). The product owner turns
+   on private reporting in Settings → Security.
+5. `/docs` **off on staging too** (Decision 8: default off everywhere;
+   local development turns it on in `.env`).
+
+The questions as they were asked:
 
 1. **CSP rollout**: report-only on staging first, then enforce (Decision 3),
    or enforce directly on staging, since staging is the test bed anyway?

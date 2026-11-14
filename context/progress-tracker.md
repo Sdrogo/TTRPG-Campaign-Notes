@@ -246,7 +246,8 @@ image search, read aloud, GDPR (10-01 → 10-10). See the two older archives.
   enforced) and Caddy (HSTS, nosniff, body cap), `/docs` off, per-user rate
   limits on writes, uploads, imports, exports and invitations, real
   `SECURITY.md`, dependency audit and `caddy validate` in CI. Ticket
-  written, five open questions; no migration.
+  written; the product owner left the questions to Claude, so the
+  defaults stand (2026-11-14). No migration.
 - **70, Master edits Players' answers** (product owner, 2026-11-12): the
   Master edits any Player's answers inline (autosave) in the Session 0
   Questions step, open or closed, and the Section Questions tool. Ticket
