@@ -35,7 +35,8 @@
     "maxLength": "Не более {{max}} символов",
     "unknownUser": "Неизвестный пользователь",
     "accept": "Принять",
-    "decline": "Отклонить"
+    "decline": "Отклонить",
+    "requestTooLarge": "Загружаемые данные слишком велики."
   },
   "roles": {
     "master": "Master",

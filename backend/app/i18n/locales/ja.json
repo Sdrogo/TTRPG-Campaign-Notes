@@ -413,6 +413,9 @@
         "groupName": "グループ名",
         "decisiveLabel": "結末"
       }
+    },
+    "rateLimit": {
+      "tooMany": "リクエストが多すぎます。しばらく待ってからもう一度お試しください"
     }
   },
   "pdf": {

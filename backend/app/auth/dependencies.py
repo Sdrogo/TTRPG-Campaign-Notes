@@ -14,11 +14,17 @@ from app.auth.jwt import InvalidTokenError, decode_supabase_jwt
 from app.db import rooms_repo
 from app.db.session import SessionDep
 from app.domain.errors import DomainError
+from app.domain.throttle import RateLimitedError, Throttle
 from app.domain.view_as import ensure_can_view_as, ensure_read_only
 from app.i18n.dependencies import LocaleDep
 from app.i18n.translator import translate
 
 VIEW_AS_HEADER = "X-View-As"
+
+# Spec 72 Decision 10: every write (any method but GET and HEAD) counts here,
+# per user; the heavier routes add their own group limit (`app/api/rate_limits.py`).
+WRITE_THROTTLE = Throttle(limit=600, window=60.0)
+_READ_METHODS = frozenset({"GET", "HEAD", "OPTIONS"})
 
 _bearer_scheme = HTTPBearer(auto_error=False)
 
@@ -72,6 +78,15 @@ def authenticated_user(
     )
 
 
+def rate_limited(exc: RateLimitedError, locale: str) -> HTTPException:
+    """429 for a user over a limit, with the seconds to wait (spec 72)."""
+    return HTTPException(
+        status.HTTP_429_TOO_MANY_REQUESTS,
+        translate(exc.key, locale),
+        headers={"Retry-After": str(exc.retry_after)},
+    )
+
+
 def _forbidden(exc: DomainError, locale: str) -> HTTPException:
     return HTTPException(status.HTTP_403_FORBIDDEN, translate(exc.key, locale, **exc.params))
 
@@ -90,6 +105,11 @@ async def get_current_user(
     caller = authenticated_user(credentials, locale)
     view_as = request.headers.get(VIEW_AS_HEADER)
     if view_as is None:
+        if request.method not in _READ_METHODS:
+            try:
+                WRITE_THROTTLE.check(caller.id)
+            except RateLimitedError as exc:
+                raise rate_limited(exc, locale) from exc
         return caller
     try:
         ensure_read_only(request.method)

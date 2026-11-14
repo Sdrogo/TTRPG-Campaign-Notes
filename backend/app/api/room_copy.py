@@ -8,6 +8,7 @@ from fastapi import APIRouter, status
 
 from app.api.access import require_membership
 from app.api.errors import http_error, translated_error
+from app.api.rate_limits import Group, limit
 from app.api.rooms import MyRoomResponse, room_to_response, sign_room_images
 from app.auth.dependencies import CurrentUserDep
 from app.db import documents_repo, room_copy_repo, rooms_repo
@@ -23,7 +24,11 @@ from app.i18n.translator import translate
 router = APIRouter(prefix="/rooms", tags=["rooms"])
 
 
-@router.post("/{room_id}/duplicate", status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/{room_id}/duplicate",
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[limit(Group.DUPLICATE)],
+)
 async def duplicate_room(
     room_id: uuid.UUID, current_user: CurrentUserDep, session: SessionDep, locale: LocaleDep
 ) -> MyRoomResponse:

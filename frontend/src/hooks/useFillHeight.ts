@@ -16,8 +16,10 @@ export function useFillHeight(ref: RefObject<HTMLElement | null>, enabled = true
   const [top, setTop] = useState<number | null>(null);
   useLayoutEffect(() => {
     if (!enabled) return;
-    // The layout effect runs once the element is on the page.
-    const measure = () => setTop(Math.round(ref.current!.getBoundingClientRect().top + window.scrollY));
+    // Until the element is on the page there is nothing to measure: the fallback stays.
+    const measure = () => {
+      if (ref.current) setTop(Math.round(ref.current.getBoundingClientRect().top + window.scrollY));
+    };
     measure();
     window.addEventListener('resize', measure);
     // What is above can change size (a title wrapping, a banner): the page's height changes with it.

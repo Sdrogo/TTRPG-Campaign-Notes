@@ -26,6 +26,7 @@ from app.api.image_uploads import (
     sign_images,
     upload_object,
 )
+from app.api.rate_limits import Group, limit
 from app.api.relationship_maps import (
     MapDocumentResponse,
     MapResponse,
@@ -546,7 +547,7 @@ async def _check_manager(
     _ensure_geographic(relationship_map, locale)
 
 
-@router.post("/background")
+@router.post("/background", dependencies=[limit(Group.UPLOAD)])
 async def upload_background(
     room_id: uuid.UUID,
     map_id: uuid.UUID,
@@ -566,7 +567,7 @@ async def upload_background(
     return await _store_background(session, room_id, map_id, membership, data, locale)
 
 
-@router.post("/background/from-url")
+@router.post("/background/from-url", dependencies=[limit(Group.UPLOAD)])
 async def import_background(
     room_id: uuid.UUID,
     map_id: uuid.UUID,

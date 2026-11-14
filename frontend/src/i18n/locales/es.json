@@ -35,7 +35,8 @@
     "maxLength": "Máximo {{max}} caracteres",
     "unknownUser": "Usuario desconocido",
     "accept": "Aceptar",
-    "decline": "Rechazar"
+    "decline": "Rechazar",
+    "requestTooLarge": "Esta subida es demasiado grande."
   },
   "roles": {
     "master": "Master",

@@ -413,6 +413,9 @@
         "groupName": "nom du groupe",
         "decisiveLabel": "issue"
       }
+    },
+    "rateLimit": {
+      "tooMany": "Trop de requêtes : patientez un instant puis réessayez"
     }
   },
   "pdf": {

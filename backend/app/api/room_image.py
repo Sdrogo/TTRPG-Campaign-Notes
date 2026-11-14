@@ -13,6 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.errors import http_error, translated_error
 from app.api.image_uploads import fetch_url, normalize, read_upload, upload_object
+from app.api.rate_limits import Group, limit
 from app.api.rooms import RoomResponse, signed_room_response
 from app.auth.dependencies import CurrentUserDep
 from app.db import rooms_repo, storage_cleanup
@@ -83,7 +84,7 @@ async def _store_image(
     return await _replace_image(session, room, path)
 
 
-@router.post("")
+@router.post("", dependencies=[limit(Group.UPLOAD)])
 async def upload_room_image(
     room_id: uuid.UUID,
     file: UploadFile,
@@ -100,7 +101,7 @@ async def upload_room_image(
     return await _store_image(session, room_id, data, locale)
 
 
-@router.post("/from-url")
+@router.post("/from-url", dependencies=[limit(Group.UPLOAD)])
 async def import_room_image(
     room_id: uuid.UUID,
     body: RoomImageFromUrlRequest,

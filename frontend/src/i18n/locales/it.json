@@ -35,7 +35,8 @@
     "maxLength": "Massimo {{max}} caratteri",
     "unknownUser": "Utente sconosciuto",
     "accept": "Accetta",
-    "decline": "Rifiuta"
+    "decline": "Rifiuta",
+    "requestTooLarge": "Questo caricamento è troppo grande."
   },
   "roles": {
     "master": "Master",

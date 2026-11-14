@@ -1,4 +1,4 @@
-from collections.abc import AsyncIterator, Callable, Collection
+from collections.abc import AsyncIterator, Callable, Collection, Iterator
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
@@ -9,6 +9,7 @@ import pytest_asyncio
 from cryptography.hazmat.primitives.asymmetric import ec
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
+from app.api import rate_limits
 from app.auth import jwt as auth_jwt
 from app.config import settings
 from app.db import session as session_module
@@ -152,3 +153,12 @@ def _render_in_process(monkeypatch: pytest.MonkeyPatch) -> None:
     from app.api import export_pdf_job
 
     monkeypatch.setattr(export_pdf_job, "_ISOLATE_RENDER", False)
+
+
+@pytest.fixture(autouse=True)
+def _fresh_rate_limits() -> Iterator[None]:
+    """Spec 72: the per-user limits count in process memory, and tests reuse
+    the app, so every test starts with empty windows."""
+    rate_limits.reset_all()
+    yield
+    rate_limits.reset_all()

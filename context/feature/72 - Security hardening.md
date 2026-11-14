@@ -166,7 +166,7 @@ only reports "leaked password protection" (irrelevant: social sign-in only).
     | Uploads | Document images (file and URL), Comment images, PDF Attachments, Room image, Section images, avatar, map backgrounds | 120 / minute |
     | Import previews | `POST /rooms/{id}/imports/preview`, map import previews | 30 / 10 minutes |
     | Imports | `POST /rooms/{id}/imports`, map imports | 10 / 10 minutes |
-    | Exports | Room PDF (`POST .../export/pdf`), JSON / Markdown Room export, Document PDF | 10 / 10 minutes |
+    | Exports | Room PDF and Document PDF (`POST .../exports/pdf`), JSON / Markdown Room export | 20 / 10 minutes |
     | Room duplication | `POST /rooms/{id}/duplicate` | 5 / 10 minutes |
     | Invitations | creating an invitation link or a direct invitation | 30 / hour |
     | Every other write | any other `POST`, `PUT`, `PATCH`, `DELETE` | 600 / minute |
@@ -189,7 +189,7 @@ only reports "leaked password protection" (irrelevant: social sign-in only).
     Tests check that a vault import (preview then import, retried) and 20
     sequential image uploads all pass under the limits.
     Reads (`GET`) and the live streams are not limited. A user over a
-    limit gets **429** with `errors.rateLimited` ("Too many requests: wait
+    limit gets **429** with `errors.rateLimit.tooMany` ("Too many requests: wait
     a moment and try again"), translated in all 12 backend and frontend
     locales, and a `Retry-After` header with the seconds until the window
     frees a slot. The frontend shows the message as it does other errors.
@@ -232,7 +232,7 @@ only reports "leaked password protection" (irrelevant: social sign-in only).
   the CSP report-only, Decision 14 (`caddy validate` in CI). Released to
   staging; the API headers only reach production with the next release.
 - **72_2, Backend**: Decisions 8-11 (docs off, throttle helper, limits,
-  `errors.rateLimited` in every locale), Decisions 12-13 (`SECURITY.md`,
+  `errors.rateLimit.tooMany` in every locale), Decisions 12-13 (`SECURITY.md`,
   dependency audit job).
 - **72_3, Enforce the CSP**: after the product owner's walk-through of
   72_1, the policy (with any fixes) moves from `-Report-Only` to the
@@ -249,7 +249,7 @@ only reports "leaked password protection" (irrelevant: social sign-in only).
   - The throttle helper: window sliding, refused calls not counted, idle
     keys forgotten (moved from the image search tests).
   - Each group limit: the call after the limit answers 429 with
-    `errors.rateLimited` and a `Retry-After`; another user is not affected;
+    `errors.rateLimit.tooMany` and a `Retry-After`; another user is not affected;
     a `GET` is never limited.
   - The general write limit counts by user, and a View As request (always
     read-only, spec 22b) is never counted.
@@ -295,3 +295,33 @@ The questions as they were asked:
    e-mail as fallback, or GitHub only?
 5. **API docs** (Decision 8): off on staging too, or keep `/docs` on
    staging for convenience?
+
+## Built (2026-11-14)
+
+All three decisions groups built on PR #325, no migration; 72_3 (switch the
+CSP from report-only to enforced) waits for the product owner's walk-through
+on staging.
+
+- **72_1**: `frontend/vercel.json` headers (CSP as
+  `Content-Security-Policy-Report-Only`), `deploy/Caddyfile` headers, the
+  two non-overlapping `request_body` caps (150 MB imports, 25 MB the rest;
+  mutually exclusive matchers instead of an ordered `route`) and
+  `handle_errors 413` with CORS for the production origins. The API client
+  maps a 413 without `detail` to `common.requestTooLarge` (12 locales).
+- **72_2**: `API_DOCS_ENABLED` (`main.py::docs_urls`); `app/domain/throttle.py`
+  (the spec 29 image search throttle now subclasses it); the general write
+  limit runs inside `get_current_user` (every protected route already runs
+  it, once per request), so a group-limited request also counts once in the
+  general one; group limits in `app/api/rate_limits.py` as decorator
+  dependencies. **Changed from Decision 10**: exports are 20 per 10 minutes
+  and the single-Document JSON / Markdown export (spec 27) is not limited,
+  since it is a cheap read a Master may repeat Document by Document. 429
+  carries `errors.rateLimit.tooMany` (12 locales) and `Retry-After`. Tests
+  reset every window (`conftest.py::_fresh_rate_limits`).
+- **SECURITY.md** rewritten; CI job **Security checks** (`pip-audit` on the
+  runtime dependencies, `npm audit --omit=dev --audit-level=high`,
+  `caddy validate`).
+- Also fixed on the way: staging's frontend suite was red on
+  `useFillHeight` (one session removed the null-ref guard while another added
+  the test for it); the guard is back, so both branches are covered.
+

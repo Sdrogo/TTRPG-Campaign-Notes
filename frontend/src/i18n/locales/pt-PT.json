@@ -35,7 +35,8 @@
     "maxLength": "Máximo de {{max}} caracteres",
     "unknownUser": "Utilizador desconhecido",
     "accept": "Aceitar",
-    "decline": "Recusar"
+    "decline": "Recusar",
+    "requestTooLarge": "Este carregamento é demasiado grande."
   },
   "roles": {
     "master": "Master",

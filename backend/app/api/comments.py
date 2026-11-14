@@ -31,6 +31,7 @@ from app.api.image_uploads import (
     store_image,
 )
 from app.api.mentions import clean_content_mentions, index_mentions
+from app.api.rate_limits import Group, limit
 from app.api.reveals import (
     RevealRequest,
     audience_of,
@@ -829,7 +830,9 @@ async def _attach_image(
     return await _single_response(session, found, viewer, images=[*images, image])
 
 
-@router.post("/{comment_id}/images", status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/{comment_id}/images", status_code=status.HTTP_201_CREATED, dependencies=[limit(Group.UPLOAD)]
+)
 async def upload_comment_image(
     room_id: uuid.UUID,
     document_id: uuid.UUID,
@@ -848,7 +851,11 @@ async def upload_comment_image(
     return await _attach_image(session, viewer, document, comment_id, file, locale)
 
 
-@router.post("/{comment_id}/images/from-url", status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/{comment_id}/images/from-url",
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[limit(Group.UPLOAD)],
+)
 async def import_comment_image(
     room_id: uuid.UUID,
     document_id: uuid.UUID,

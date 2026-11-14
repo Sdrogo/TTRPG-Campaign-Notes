@@ -18,6 +18,7 @@ from app.api.access import require_membership
 from app.api.errors import http_error, translated_error
 from app.api.export_pdf_job import spawn
 from app.api.import_job import job_payload, load_import_context, run_import_job
+from app.api.rate_limits import Group, limit
 from app.auth.dependencies import CurrentUserDep
 from app.db import import_jobs_repo, import_staging, rooms_repo, storage
 from app.db import session as session_module
@@ -367,7 +368,7 @@ def _preview_document(
     )
 
 
-@router.post("/preview")
+@router.post("/preview", dependencies=[limit(Group.IMPORT_PREVIEW)])
 async def preview_import(
     room_id: uuid.UUID,
     current_user: CurrentUserDep,
@@ -458,7 +459,7 @@ def _job_response(job: ImportJob) -> ImportJobResponse:
     )
 
 
-@router.post("", status_code=status.HTTP_202_ACCEPTED)
+@router.post("", status_code=status.HTTP_202_ACCEPTED, dependencies=[limit(Group.IMPORT)])
 async def start_import(
     room_id: uuid.UUID,
     current_user: CurrentUserDep,

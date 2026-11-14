@@ -13,6 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.errors import translated_error
 from app.api.image_uploads import fetch_url, normalize, read_upload, upload_object
 from app.api.profiles import ProfileFields, profile_fields, sign_avatars
+from app.api.rate_limits import Group, limit
 from app.auth.dependencies import CurrentUser, CurrentUserDep
 from app.db import storage_cleanup, users_repo
 from app.db.session import SessionDep
@@ -173,7 +174,7 @@ async def update_account(
     return await _response(updated)
 
 
-@router.post("/avatar")
+@router.post("/avatar", dependencies=[limit(Group.UPLOAD)])
 async def upload_avatar(
     file: UploadFile, current_user: CurrentUserDep, session: SessionDep, locale: LocaleDep
 ) -> AccountResponse:
@@ -183,7 +184,7 @@ async def upload_avatar(
     return await _response(await _store_avatar(session, current_user, data, locale))
 
 
-@router.post("/avatar/from-url")
+@router.post("/avatar/from-url", dependencies=[limit(Group.UPLOAD)])
 async def import_avatar(
     body: AvatarFromUrlRequest, current_user: CurrentUserDep, session: SessionDep, locale: LocaleDep
 ) -> AccountResponse:

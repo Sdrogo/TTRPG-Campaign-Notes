@@ -15,6 +15,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.access import require_membership, visible_documents
 from app.api.errors import http_error, translated_error
 from app.api.geographic_maps import GeoDetailResponse, geo_detail
+from app.api.rate_limits import Group, limit
 from app.api.relationship_maps import get_visible_map, insert_map
 from app.api.validation import UniqueIds
 from app.auth.dependencies import CurrentUserDep
@@ -235,7 +236,7 @@ async def _plan(
         raise translated_error(_IMPORT_ERROR_STATUS[type(exc)], exc, locale) from exc
 
 
-@router.post("/import/preview")
+@router.post("/import/preview", dependencies=[limit(Group.IMPORT_PREVIEW)])
 async def preview_map_import(
     room_id: uuid.UUID,
     body: ImportPreviewRequest,
@@ -264,7 +265,7 @@ async def preview_map_import(
     )
 
 
-@router.post("/import", status_code=status.HTTP_201_CREATED)
+@router.post("/import", status_code=status.HTTP_201_CREATED, dependencies=[limit(Group.IMPORT)])
 async def import_map(
     room_id: uuid.UUID,
     body: ImportRequest,

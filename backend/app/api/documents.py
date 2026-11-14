@@ -33,6 +33,7 @@ from app.api.image_uploads import (
 )
 from app.api.mentions import clean_content_mentions, index_mentions, link_document_names
 from app.api.notes import NoteResponse, visible_note_responses
+from app.api.rate_limits import Group, limit
 from app.api.reveals import (
     RevealDocumentRequest,
     RevealedInDocument,
@@ -636,7 +637,9 @@ async def delete_document(
     await push_document(session, room_id, document_id, before=before)
 
 
-@router.post("/{document_id}/images", status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/{document_id}/images", status_code=status.HTTP_201_CREATED, dependencies=[limit(Group.UPLOAD)]
+)
 async def upload_document_image(
     room_id: uuid.UUID,
     document_id: uuid.UUID,
@@ -658,7 +661,11 @@ async def upload_document_image(
     return await _to_response(session, document, membership)
 
 
-@router.post("/{document_id}/images/from-url", status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/{document_id}/images/from-url",
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[limit(Group.UPLOAD)],
+)
 async def import_document_image(
     room_id: uuid.UUID,
     document_id: uuid.UUID,

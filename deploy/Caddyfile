@@ -3,6 +3,30 @@
 # in API_HOSTS (set in compose.yaml / the server's .env); each must already
 # resolve to this server.
 {$API_HOSTS} {
+	# Security headers on every response, the live streams included (spec 72
+	# Decision 5). The API only answers JSON, SSE and files, so its CSP lets
+	# nothing load and nothing frame it. HSTS: one year, this host only.
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options "nosniff"
+		Content-Security-Policy "default-src 'none'; frame-ancestors 'none'"
+		Referrer-Policy "no-referrer"
+		-Server
+	}
+
+	# Request body caps (spec 72 Decision 6), answered with 413 before the
+	# backend reads anything. An import carries a whole vault (up to 100 MB
+	# in up to 3,000 files, spec 65); the largest other upload is a 20 MB
+	# image. The two matchers never overlap, so their order doesn't matter.
+	@imports path /rooms/*/imports /rooms/*/imports/*
+	@not_imports not path /rooms/*/imports /rooms/*/imports/*
+	request_body @imports {
+		max_size 150MB
+	}
+	request_body @not_imports {
+		max_size 25MB
+	}
+
 	# The live streams (spec 46_2, spec 52): not compressed and flushed at
 	# once, so each event reaches the browser as it is sent.
 	@live_stream path /rooms/*/events /rooms/*/session-zero/events
@@ -14,5 +38,19 @@
 	handle {
 		encode zstd gzip
 		reverse_proxy backend:10000
+	}
+
+	# Caddy's own 413 never passes through the backend's CORS middleware;
+	# without these headers the browser reports a network error instead of
+	# the status (spec 72 Decision 6). Only the production origins get them.
+	handle_errors 413 {
+		@allowed_origin header_regexp Origin ^https://(www\.)?exlibris\.world$
+		header @allowed_origin {
+			Access-Control-Allow-Origin {http.request.header.Origin}
+			Access-Control-Allow-Credentials true
+		}
+		header Vary Origin
+		header Content-Type application/json
+		respond `{"detail": null}` 413
 	}
 }

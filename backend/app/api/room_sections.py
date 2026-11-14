@@ -18,6 +18,7 @@ from app.api.access import require_membership
 from app.api.clocks import visible_chip_targets
 from app.api.errors import http_error, translated_error
 from app.api.image_uploads import fetch_url, normalize, read_upload, upload_object
+from app.api.rate_limits import Group, limit
 from app.api.session_zero import (
     ModuleResponse,
     _load_board,
@@ -678,7 +679,7 @@ async def _require_master(
     await _section_or_404(session, room_id, section_id, locale)
 
 
-@router.post("/{section_id}/image")
+@router.post("/{section_id}/image", dependencies=[limit(Group.UPLOAD)])
 async def upload_section_image(
     room_id: uuid.UUID,
     section_id: uuid.UUID,
@@ -697,7 +698,7 @@ async def upload_section_image(
     )
 
 
-@router.post("/{section_id}/image/from-url")
+@router.post("/{section_id}/image/from-url", dependencies=[limit(Group.UPLOAD)])
 async def import_section_image(
     room_id: uuid.UUID,
     section_id: uuid.UUID,
