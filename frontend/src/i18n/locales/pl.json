@@ -35,7 +35,8 @@
     "maxLength": "Maksymalnie {{max}} znaków",
     "unknownUser": "Nieznany użytkownik",
     "accept": "Przyjmij",
-    "decline": "Odrzuć"
+    "decline": "Odrzuć",
+    "requestTooLarge": "Przesyłany plik jest za duży."
   },
   "roles": {
     "master": "Master",

@@ -5,11 +5,11 @@ lives in `app/db/openverse.py`."""
 
 import time
 import uuid
-from collections import deque
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from typing import Any
 
+from app.domain import throttle
 from app.domain.errors import DomainError
 
 # Results per page. Openverse serves at most 20 to an anonymous client.
@@ -144,10 +144,10 @@ def parse_page(raw: Mapping[str, Any], page: int) -> ImagePage:
     return ImagePage(results=results, page=page, has_more=more)
 
 
-class Throttle:
-    """At most `limit` calls per `window` seconds for each key, counted in
-    this process (Decision 6: one uvicorn process per environment, so the
-    count is exact; it resets on deploy)."""
+class Throttle(throttle.Throttle):
+    """At most `limit` searches per `window` seconds for each user (Decision
+    6), refused with the image search's own message. The window itself is
+    the shared one of spec 72 (`app/domain/throttle.py`)."""
 
     def __init__(
         self,
@@ -155,25 +155,7 @@ class Throttle:
         window: float = THROTTLE_WINDOW_SECONDS,
         clock: Callable[[], float] = time.monotonic,
     ) -> None:
-        self._limit = limit
-        self._window = window
-        self._clock = clock
-        self._calls: dict[uuid.UUID, deque[float]] = {}
+        super().__init__(limit, window, clock)
 
-    def check(self, key: uuid.UUID) -> None:
-        """Counts a call for `key`, or raises when its window is full (the
-        refused call isn't counted)."""
-        now = self._clock()
-        calls = self._calls.setdefault(key, deque())
-        while calls and calls[0] <= now - self._window:
-            calls.popleft()
-        if len(calls) >= self._limit:
-            raise ImageSearchError("errors.imageSearch.throttled")
-        calls.append(now)
-        # Forget users idle for a whole window, so the map doesn't grow.
-        for other in [k for k, v in self._calls.items() if not v or v[-1] <= now - self._window]:
-            del self._calls[other]
-
-    def reset(self) -> None:
-        """Forgets every count (tests)."""
-        self._calls.clear()
+    def _refusal(self, retry_after: int) -> DomainError:
+        return ImageSearchError("errors.imageSearch.throttled")

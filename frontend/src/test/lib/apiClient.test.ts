@@ -236,6 +236,20 @@ describe('error handling', () => {
     await expect(apiFetch('/rooms/1')).rejects.toThrow('{"error":"nope"}');
   });
 
+  // Spec 72 Decision 6: Caddy's body cap answers before the backend can translate.
+  it("names a proxy's 413 as an upload that is too large", async () => {
+    await setLanguage('en');
+    respondWith(JSON.stringify({ detail: null }), { status: 413 });
+
+    await expect(apiFetch('/rooms/1/imports')).rejects.toThrow('This upload is too large.');
+  });
+
+  it("keeps the backend's own translated 413 message", async () => {
+    respondWith(JSON.stringify({ detail: 'At most 10 MB' }), { status: 413 });
+
+    await expect(apiFetch('/rooms/1/files')).rejects.toThrow('At most 10 MB');
+  });
+
   it('does not treat a 204 as an error', async () => {
     respondWith('', { status: 204 });
 

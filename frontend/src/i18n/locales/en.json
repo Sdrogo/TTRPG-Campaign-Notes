@@ -35,7 +35,8 @@
     "maxLength": "At most {{max}} characters",
     "unknownUser": "Unknown user",
     "accept": "Accept",
-    "decline": "Decline"
+    "decline": "Decline",
+    "requestTooLarge": "This upload is too large."
   },
   "roles": {
     "master": "Master",

@@ -227,6 +227,30 @@ duplication and the History are untouched.
 - One player per page (`lib/speechPlayer.ts`) owns the browser's single speech queue: the text is cut into sentence-sized utterances (≤ 200 characters, to dodge Chrome stopping long ones), and each new reading cancels the previous one. Leaving the Document page stops it.
 - The voice (per app language) and speed live in `localStorage` (`ttrpg.speech`) on each device, chosen on the Account page; with no voice chosen the app picks the best installed voice for the language by name and kind (`rankVoices`, spec 30b), and only with none at all leaves it to the browser's default for `it-IT` / `en-US`.
 
+## Security hardening (spec 72)
+
+- **Headers**: the frontend's are in `frontend/vercel.json` (CSP, nosniff,
+  `X-Frame-Options`, Referrer- and Permissions-Policy; Vercel adds HSTS); the
+  API's in `deploy/Caddyfile` (HSTS one year on that host, nosniff,
+  `default-src 'none'` CSP, no `Server`). A new host the app talks to (API,
+  Supabase project) must be added to the CSP's `connect-src`, or the browser
+  blocks it. `frontend/src/test/vercelHeaders.test.ts` guards the set.
+- **Body caps** in Caddy: 150 MB on `/rooms/*/imports*`, 25 MB elsewhere;
+  Caddy's 413 carries CORS for the production origins and the API client
+  shows `common.requestTooLarge`. Staging (Render, no Caddy) has neither.
+- **Rate limits**, per user, in process memory (`app/domain/throttle.py`):
+  600 writes a minute in `get_current_user`, plus group limits on uploads,
+  import previews, imports, exports, Room duplication and invitations
+  (`app/api/rate_limits.py`); 429 `errors.rateLimit.tooMany` with
+  `Retry-After`. Exact only with one uvicorn process per environment, like
+  the image search throttle; several workers would need the counters in
+  Postgres. Sized so the bulk uploads fit (one vault = one preview + one
+  import request; Document images go one per request).
+- **API docs** (`/docs`, `/redoc`, `/openapi.json`) are off unless
+  `API_DOCS_ENABLED=true` (local `.env`).
+- **CI** job "Security checks": `pip-audit`, `npm audit --omit=dev
+  --audit-level=high`, `caddy validate`.
+
 ## Auth and Access Model
 
 - Every user signs in via **Supabase Auth using OAuth** — Google (the preferred one, D-07, FR-A1), Discord or GitHub (spec 08, 2026-09-23; Facebook and X were removed on 2026-10-03, as there are no app credentials for them). The providers are enabled in Supabase's dashboard and listed once in `frontend/src/lib/authProviders.ts`; the backend doesn't know or care which one was used, since every provider's session is the same Supabase JWT. An account may come without an email (a provider can withhold it): `users.email` is nullable, invitations are link-based, and a user without a display name or email is shown with the unknown-user label. The frontend holds the resulting session and attaches it as a Bearer token on every backend request.

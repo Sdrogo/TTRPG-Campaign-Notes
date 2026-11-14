@@ -14,6 +14,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.access import get_visible_document, require_membership
 from app.api.errors import http_error, translated_error
 from app.api.export_pdf_job import run_export_job, spawn
+from app.api.rate_limits import Group, limit
 from app.auth.dependencies import CurrentUserDep
 from app.db import export_jobs_repo, rooms_repo, storage, tags_repo
 from app.db import session as session_module
@@ -119,7 +120,7 @@ async def _response(
     )
 
 
-@router.post("/pdf", status_code=status.HTTP_202_ACCEPTED)
+@router.post("/pdf", status_code=status.HTTP_202_ACCEPTED, dependencies=[limit(Group.EXPORT)])
 async def create_pdf_export(
     room_id: uuid.UUID,
     body: PdfExportRequest,

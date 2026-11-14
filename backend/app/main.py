@@ -85,7 +85,22 @@ def add_cors(target: FastAPI, config: Settings) -> None:
     )
 
 
-app = FastAPI(title="Ex Libris API", lifespan=lifespan)
+def docs_urls(config: Settings) -> dict[str, str | None]:
+    """FastAPI's API docs paths, or `None` for each when `api_docs_enabled` is
+    off (spec 72 Decision 8), which makes them 404."""
+    if config.api_docs_enabled:
+        return {"docs_url": "/docs", "redoc_url": "/redoc", "openapi_url": "/openapi.json"}
+    return {"docs_url": None, "redoc_url": None, "openapi_url": None}
+
+
+_docs = docs_urls(settings)
+app = FastAPI(
+    title="Ex Libris API",
+    lifespan=lifespan,
+    docs_url=_docs["docs_url"],
+    redoc_url=_docs["redoc_url"],
+    openapi_url=_docs["openapi_url"],
+)
 add_cors(app, settings)
 
 app.include_router(auth_router)

@@ -35,7 +35,8 @@
     "maxLength": "{{max}} caractères maximum",
     "unknownUser": "Utilisateur inconnu",
     "accept": "Accepter",
-    "decline": "Refuser"
+    "decline": "Refuser",
+    "requestTooLarge": "Cet envoi est trop volumineux."
   },
   "roles": {
     "master": "Master",

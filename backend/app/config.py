@@ -33,6 +33,9 @@ class Settings(BaseSettings):
     db_max_overflow: int = 2
     # Openverse API credentials for the image search (spec 29). Unset, the
     # search calls Openverse anonymously, under its lower rate limits.
+    # FastAPI's /docs, /redoc and /openapi.json (spec 72 Decision 8): off
+    # unless asked for, so production and staging don't publish the route map.
+    api_docs_enabled: bool = False
     openverse_client_id: str = ""
     openverse_client_secret: str = ""
 
