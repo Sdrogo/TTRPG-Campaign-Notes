@@ -117,9 +117,11 @@ only reports "leaked password protection" (irrelevant: social sign-in only).
      (the API only answers JSON, SSE and files: nothing to load or frame)
    - `Referrer-Policy: no-referrer`
    - `-Server` (drops the header naming Caddy)
-6. **Body cap in Caddy** (`request_body max_size`): **110 MB** on the
-   import routes (`/rooms/*/imports*`: a vault is up to 100 MB plus the
-   multipart overhead, spec 65), **25 MB** everywhere else (the largest
+6. **Body cap in Caddy** (`request_body max_size`): **150 MB** on the
+   import routes (`/rooms/*/imports*`: a vault, zip or folder of up to
+   3,000 files, is at most 100 MB, spec 65, sent whole in one request; the
+   margin covers the multipart overhead of 3,000 parts and the choices
+   field), **25 MB** everywhere else (the largest
    other upload is an image at 20 MB, `MAX_INPUT_BYTES`). Over the cap,
    Caddy answers 413 before the backend sees the body. In normal use the
    routes' own, smaller caps answer first with their translated message,
@@ -134,7 +136,7 @@ only reports "leaked password protection" (irrelevant: social sign-in only).
    `https://www.exlibris.world`). The frontend's API client
    (`lib/apiClient.ts`) maps a 413 that has no translated `detail` to a new
    key `errors.requestTooLarge` ("This file is too large to upload"), in
-   every locale. Matchers are ordered so the import routes' 110 MB block is
+   every locale. Matchers are ordered so the import routes' 150 MB block is
    evaluated before the 25 MB catch-all (Caddy sorts `request_body` by
    matcher specificity only inside one `route`, so both live in a `route`
    block written in that order).
@@ -161,13 +163,31 @@ only reports "leaked password protection" (irrelevant: social sign-in only).
 
     | Group | Routes | Limit |
     |---|---|---|
-    | Uploads | Document images (file and URL), PDF Attachments, Room image, avatar, map backgrounds and map import | 60 / minute |
-    | Imports | `POST /rooms/{id}/imports` and `/imports/preview` | 10 / 10 minutes |
+    | Uploads | Document images (file and URL), Comment images, PDF Attachments, Room image, Section images, avatar, map backgrounds | 120 / minute |
+    | Import previews | `POST /rooms/{id}/imports/preview`, map import previews | 30 / 10 minutes |
+    | Imports | `POST /rooms/{id}/imports`, map imports | 10 / 10 minutes |
     | Exports | Room PDF (`POST .../export/pdf`), JSON / Markdown Room export, Document PDF | 10 / 10 minutes |
     | Room duplication | `POST /rooms/{id}/duplicate` | 5 / 10 minutes |
     | Invitations | creating an invitation link or a direct invitation | 30 / hour |
-    | Every other write | any other `POST`, `PUT`, `PATCH`, `DELETE` | 300 / minute |
+    | Every other write | any other `POST`, `PUT`, `PATCH`, `DELETE` | 600 / minute |
 
+    **Bulk uploads stay inside these limits** (product owner, 2026-11-14:
+    "assicurati che i limiti di import e upload non rompano le feature di
+    upload massivo"), checked against the code:
+    - A vault import (spec 65) is **two requests**, the preview and the
+      import, each carrying every file of the zip or folder at once
+      (`previewFormData`, `importFormData`); the vault's pictures are then
+      read by the backend job, not uploaded again. So one vault costs 1
+      preview and 1 import: 30 previews and 10 imports in 10 minutes leave
+      room for many retries.
+    - Document images go **one request per file, in sequence**
+      (`useUploadDocumentImages`), up to 20 per Document; 120 a minute is two
+      a second, more than a sequential upload of real pictures reaches.
+    - A Comment takes at most 4 images, a Document 10 PDF Attachments.
+    - Map saves (spec 42/43) are one write per change; 600 writes a minute
+      is 10 a second.
+    Tests check that a vault import (preview then import, retried) and 20
+    sequential image uploads all pass under the limits.
     Reads (`GET`) and the live streams are not limited. A user over a
     limit gets **429** with `errors.rateLimited` ("Too many requests: wait
     a moment and try again"), translated in all 12 backend and frontend
@@ -250,7 +270,8 @@ The product owner left the five questions to Claude ("non sono abbastanza
 esperto di security per rispondere"), so the proposed defaults stand:
 
 1. CSP **report-only on staging first**, then enforced (Decision 3).
-2. Rate limits **as in Decision 10**; they can be raised later from one
+2. Rate limits **as in Decision 10**, raised after the bulk upload check
+   (product owner: the bulk uploads must keep working); they can be raised later from one
    place (`app/domain/throttle.py`) if real use hits them.
 3. HSTS **one year, no `includeSubDomains`, no `preload`** (Decision 5).
 4. `SECURITY.md`: **GitHub private vulnerability reporting plus the
