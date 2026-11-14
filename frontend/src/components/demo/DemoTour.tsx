@@ -32,12 +32,50 @@ function findTarget(target: string): Element | null {
   return null;
 }
 
-/** The highlight around an element, cut to the screen so a tall section still shows its edge. */
+// Block boxes run under a float beside them; only their lines wrap around it.
+const SPANS_FLOAT = new Set(['block', 'list-item', 'inline', 'contents', 'none']);
+
+/**
+ * The right edge of what an element shows: its text lines and the boxes that
+ * sit beside a float (flex, inline-block, images...), not its block boxes.
+ * On the Document page the text wraps around the floated aside (images, maps),
+ * but its blocks span the full width behind it, so their own box would light
+ * the aside too.
+ */
+function contentRight(element: Element): number | null {
+  let right: number | null = null;
+  const grow = (edge: number) => {
+    right = right === null ? edge : Math.max(right, edge);
+  };
+  const range = document.createRange();
+  const walker = document.createTreeWalker(element, NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT);
+  for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+    // `Text` here is Mantine's component, so the node type tells text apart.
+    if (node.nodeType === Node.TEXT_NODE) {
+      if (!(node as Text).data.trim()) continue;
+      range.selectNodeContents(node);
+      for (const line of range.getClientRects()) if (line.width > 0) grow(line.right);
+    } else if (!SPANS_FLOAT.has(getComputedStyle(node as Element).display)) {
+      const box = (node as Element).getBoundingClientRect();
+      if (box.width > 0) grow(box.right);
+    }
+  }
+  return right;
+}
+
+/**
+ * The highlight around an element, cut to the screen so a tall section still
+ * shows its edge. An element marked `data-tour-fit="content"` is lit only as
+ * wide as its content, so the float its text wraps around stays dimmed.
+ */
 function spotOf(element: Element): Spot {
   const rect = element.getBoundingClientRect();
   const top = Math.max(rect.top - PAD, 0);
   const bottom = Math.min(rect.bottom + PAD, window.innerHeight);
-  return { top, left: rect.left - PAD, width: rect.width + 2 * PAD, height: Math.max(bottom - top, 0) };
+  const fitted = element.getAttribute('data-tour-fit') === 'content' ? contentRight(element) : null;
+  const edge = rect.left + rect.width;
+  const right = fitted === null ? edge : Math.min(fitted, edge);
+  return { top, left: rect.left - PAD, width: right - rect.left + 2 * PAD, height: Math.max(bottom - top, 0) };
 }
 
 /** Whether two highlights are the same place, so an unchanged one causes no render. */
