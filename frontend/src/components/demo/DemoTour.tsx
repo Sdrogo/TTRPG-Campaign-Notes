@@ -52,11 +52,11 @@ function contentRight(element: Element): number | null {
   for (let node = walker.nextNode(); node; node = walker.nextNode()) {
     // `Text` here is Mantine's component, so the node type tells text apart.
     if (node.nodeType === Node.TEXT_NODE) {
-      if (!node.textContent?.trim()) continue;
+      if (!(node as Text).data.trim()) continue;
       range.selectNodeContents(node);
       for (const line of range.getClientRects()) if (line.width > 0) grow(line.right);
-    } else if (node instanceof Element && !SPANS_FLOAT.has(getComputedStyle(node).display)) {
-      const box = node.getBoundingClientRect();
+    } else if (!SPANS_FLOAT.has(getComputedStyle(node as Element).display)) {
+      const box = (node as Element).getBoundingClientRect();
       if (box.width > 0) grow(box.right);
     }
   }
