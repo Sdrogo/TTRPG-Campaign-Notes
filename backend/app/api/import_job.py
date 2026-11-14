@@ -29,6 +29,7 @@ from app.db import (
     imports_repo,
     map_transfer_repo,
     mentions_repo,
+    notes_repo,
     relationship_maps_repo,
     remote_images,
     room_sections_repo,
@@ -151,6 +152,9 @@ async def load_import_context(
         )
     ]
     images = await get_visible_images_for_documents(session, [d.id for d in visible], importer)
+    # Only a Replace reads them, and only on Documents the importer manages.
+    managed = [d.id for d in visible if is_owner(importer.role, importer.user_id, owners[d.id])]
+    notes = await notes_repo.list_notes_for_documents(session, managed)
     tags = await tags_repo.list_tags(session, room.id)
     is_master = importer.role is RoomRole.MASTER
     return ImportContext(
@@ -161,6 +165,7 @@ async def load_import_context(
                 is_owner(importer.role, importer.user_id, owners[document.id]),
                 frozenset(str(image.id) for image in images.get(document.id, ())),
                 document.name,
+                tuple(fold(n.title) for n in notes.get(document.id, ()) if n.relational_link),
             )
             for document in visible
         },

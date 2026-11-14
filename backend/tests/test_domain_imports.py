@@ -163,10 +163,10 @@ def test_a_file_that_is_not_one_of_the_formats_is_refused(content: bytes) -> Non
 
 def test_a_newer_schema_version_is_refused() -> None:
     with pytest.raises(ImportRefusedError) as raised:
-        _json({"schema_version": 6, "documents": [{"name": "A"}]})
+        _json({"schema_version": 7, "documents": [{"name": "A"}]})
 
     assert raised.value.key == "errors.import.unsupportedSchema"
-    assert raised.value.params["version"] == 6
+    assert raised.value.params["version"] == 7
 
 
 def test_a_file_with_no_document_is_refused() -> None:
@@ -826,3 +826,69 @@ def test_a_replace_of_a_name_match_the_importer_does_not_manage_is_refused() -> 
     assert (document.matched_by_name, document.can_replace) == (True, False)
     with pytest.raises(ImportCannotReplaceError):
         plan_import(files, context, ImportChoices(replace=frozenset({"0:0"})))
+
+
+def _file_with_notes(*notes: dict[str, Any]) -> list[ImportFile]:
+    return [
+        _json(
+            {
+                "schema_version": 6,
+                "documents": [{"id": str(uuid.uuid4()), "name": "Strahd", "notes": list(notes)}],
+            }
+        )
+    ]
+
+
+def test_the_relational_link_flag_is_read_from_the_json_and_may_be_absent() -> None:
+    (file,) = _file_with_notes(
+        {"title": "A", "relational_link": True},
+        {"title": "B", "relational_link": False},
+        {"title": "C"},
+        {"title": "D", "relational_link": "yes"},
+    )
+
+    assert [n.relational_link for n in file.documents[0].notes] == [True, False, None, None]
+    assert file_from_json(file_to_json(file)) == file
+
+
+def test_a_copy_takes_the_flag_the_file_states_and_defaults_to_unflagged() -> None:
+    files = _file_with_notes({"title": "A", "relational_link": True}, {"title": "B"})
+
+    notes = plan_import(files, _context()).documents[0].notes
+
+    assert [n.relational_link for n in notes] == [True, False]
+
+
+def test_a_replace_keeps_the_flag_of_the_rooms_note_with_the_same_title() -> None:
+    room = ExistingDocument(uuid.uuid4(), True, frozenset(), "Strahd", ("ties", "ties"))
+    files = _file_with_notes(
+        {"title": " Ties "},
+        {"title": "TIES"},
+        {"title": "ties"},
+        {"title": "Other"},
+        {"title": "Forced off", "relational_link": False},
+    )
+    context = _context(existing={room.id: room})
+    key = plan_import(files, context).documents[0].key
+
+    replaced = plan_import(files, context, ImportChoices(replace=frozenset({key})))
+
+    # Two flagged old Notes, each used once; the file's own word beats the Room's.
+    assert [n.relational_link for n in replaced.documents[0].notes] == [
+        True,
+        True,
+        False,
+        False,
+        False,
+    ]
+
+
+def test_a_replace_lets_the_file_state_win_over_the_rooms_flag() -> None:
+    room = ExistingDocument(uuid.uuid4(), True, frozenset(), "Strahd", ("ties",))
+    files = _file_with_notes({"title": "Ties", "relational_link": False})
+    context = _context(existing={room.id: room})
+    key = plan_import(files, context).documents[0].key
+
+    notes = plan_import(files, context, ImportChoices(replace=frozenset({key}))).documents[0].notes
+
+    assert [n.relational_link for n in notes] == [False]

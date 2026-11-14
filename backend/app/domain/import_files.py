@@ -64,6 +64,8 @@ class ImportNote:
     title: str
     text: Text
     visibility: str | None
+    # Spec 71: None when the file doesn't say (older exports, Markdown).
+    relational_link: bool | None = None
 
 
 @dataclass(frozen=True)
@@ -309,6 +311,9 @@ def _json_document(raw: dict[str, Any], name: str, tags: Mapping[str, ImportTag]
             title=_optional_str(item.get("title"), name) or "",
             text=_json_text(item.get("description"), name),
             visibility=_optional_str(item.get("visibility"), name),
+            relational_link=item["relational_link"]
+            if isinstance(item.get("relational_link"), bool)
+            else None,
         )
         for item in (_object(note, name) for note in _list(raw.get("notes"), name))
     )
@@ -586,7 +591,10 @@ def file_to_json(file: ImportFile) -> dict[str, Any]:
                 "text": _text_to_json(d.text),
                 "visibility": d.visibility,
                 "tag_names": list(d.tag_names),
-                "notes": [[n.title, _text_to_json(n.text), n.visibility] for n in d.notes],
+                "notes": [
+                    [n.title, _text_to_json(n.text), n.visibility, n.relational_link]
+                    for n in d.notes
+                ],
                 "images": [[i.source_id, i.url, i.is_favorite] for i in d.images],
                 "comment_count": d.comment_count,
                 "file_count": d.file_count,
@@ -615,7 +623,11 @@ def file_from_json(data: dict[str, Any]) -> ImportFile:
                 text=_text_from_json(d["text"]),
                 visibility=d["visibility"],
                 tag_names=tuple(d["tag_names"]),
-                notes=tuple(ImportNote(n[0], _text_from_json(n[1]), n[2]) for n in d["notes"]),
+                notes=tuple(
+                    # The fourth entry is absent from the payload of a job queued before spec 71.
+                    ImportNote(n[0], _text_from_json(n[1]), n[2], n[3] if len(n) > 3 else None)
+                    for n in d["notes"]
+                ),
                 images=tuple(ImportImage(i[0], i[1], i[2]) for i in d["images"]),
                 comment_count=d["comment_count"],
                 file_count=d["file_count"],
