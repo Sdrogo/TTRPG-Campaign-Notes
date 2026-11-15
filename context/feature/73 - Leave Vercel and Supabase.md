@@ -299,7 +299,7 @@ Room PDFs) VPS-4 is a reboot-and-resize away, not a migration; several API worke
   which has an EU adequacy decision. The privacy notice and the GDPR dossier
   list where data lives and who processes it, so both are updated in step 6
   (fewer processors: Supabase and Vercel leave the list).
-- **Disk**: production's 75 GB (staging's 40 GB) holds the database and Docker images; files and backups are
+- **Disk**: production's 100 GB (staging's 40 GB) holds the database and Docker images; files and backups are
   off the disk, so it is not a near-term limit. The `/health` cron can alert on
   free space.
 
