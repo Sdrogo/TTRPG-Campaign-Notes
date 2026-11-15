@@ -240,7 +240,7 @@ keeps running between steps.
 
 | # | Step | Claude build time | Downtime in production | Product owner's part |
 |---|---|---|---|---|
-| 1 | New production VPS-2: same setup as today's (Docker, Caddy, deploy workflow pointed at it), plus the frontend served by Caddy (`vercel.json` headers move to the Caddyfile); API and frontend switched to it | ~1.5 h | none (DNS switch, TTL 300; old box and Vercel keep serving meanwhile) | order and harden the VPS-2 (same steps as 2026-10-08), GitHub secrets, DNS switch; delete the Vercel project after a quiet week |
+| 1 | New production VPS (VPS-2 or VPS-3, question 3): same setup as today's (Docker, Caddy, deploy workflow pointed at it), plus the frontend served by Caddy (`vercel.json` headers move to the Caddyfile); API and frontend switched to it | ~1.5 h | none (DNS switch, TTL 300; old box and Vercel keep serving meanwhile) | order and harden the new VPS (same steps as 2026-10-08), GitHub secrets, DNS switch; delete the Vercel project after a quiet week |
 | 2 | Current VPS-1 turned into staging (frontend, backend, Postgres, deploy on `staging`); still using the staging Supabase Auth and Storage | ~1 h | none | DNS records for the two staging names; staging `backend.env`; then Render staging can go |
 | 3 | Sign-in in the backend (option A) | ~3–4 h incl. tests | none; every user is signed out once | OAuth consoles: new redirect URIs, client secrets in both `backend.env`; run the migration on staging, then prod |
 | 4 | Files to object storage, plus the copy script (lists Supabase objects, copies each, checks size; safe to re-run, only copies what is missing) | ~1.5 h | none: copy, deploy, copy again for anything uploaded meanwhile | create the buckets and keys at OVH |
@@ -252,7 +252,9 @@ sessions because each step waits for staging checks and the product owner's
 manual steps. Steps 3 and 4 can swap; step 5 goes last so that, until then,
 rolling back any step is just reverting a deploy.
 
-**Rollback per step**: 2, DNS back to Vercel; 3, redeploy the previous image
+**Rollback per step**: 1, DNS back to the current VPS (API) and Vercel
+(frontend), both left running until the switch has held for a week; 2,
+nothing to roll back in production (staging only); 3, redeploy the previous image
 and frontend (Supabase Auth is untouched until step 6); 4, settings back to
 Supabase Storage (objects are copied, never moved, until step 6); 5, point
 `DATABASE_URL` back at Supabase, losing only what was written since the move,
@@ -312,8 +314,8 @@ Room PDFs) VPS-2 or VPS-3 is a reboot-and-resize away, not a migration.
 6. **Backup retention**: 7 daily, 4 weekly, 6 monthly, encrypted, in another
    OVH region (recommended)? Where should the decryption key be kept besides
    the VPS (it must not live only there)?
-7. **Order**: as above (staging, frontend, sign-in, files, database), or the
-   database earlier?
+7. **Order**: as above (new production VPS with the frontend, staging on the
+   current VPS, sign-in, files, database), or the database earlier?
 8. **Decommissioning**: delete the Supabase projects, Render and Vercel about
    4 weeks after the last step, keeping a final dump (recommended)?
 
