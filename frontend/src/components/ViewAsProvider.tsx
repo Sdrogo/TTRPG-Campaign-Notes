@@ -4,9 +4,18 @@ import { QueryClient, QueryClientProvider, useQueryClient } from '@tanstack/reac
 import { ViewAsContext, type ViewAs } from '../hooks/useViewAs';
 import { VIEW_AS_PARAM, setViewAsUser } from '../lib/viewAs';
 
-// The pages a preview covers: a Room's Documents and each Document, and its
-// relationship maps (spec 28).
-const ROOM_PAGES = ['/rooms/:roomId/documents/*', '/rooms/:roomId/maps/*'];
+// The pages a preview covers: every page of a Room that reads what its
+// members see - the landing page and its Sections (spec 55), Documents and
+// each Document, relationship maps (spec 28), Session 0 (spec 46) and Clocks
+// (spec 61). Not the setup, which only the Master uses.
+const ROOM_PAGES = [
+  '/rooms/:roomId',
+  '/rooms/:roomId/sections/*',
+  '/rooms/:roomId/documents/*',
+  '/rooms/:roomId/maps/*',
+  '/rooms/:roomId/session-zero',
+  '/rooms/:roomId/clocks',
+];
 
 /** Navigation state that ends a preview ("Exit" on the banner). */
 export interface ExitViewAsState {
