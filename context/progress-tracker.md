@@ -245,6 +245,9 @@ image search, read aloud, GDPR (10-01 → 10-10). See the two older archives.
 
 ## Next Up
 
+- **License** (product owner, 2026-11-15): GPL-3.0 replaced by the
+  Functional Source License `FSL-1.1-ALv2` (no commercial competing service;
+  each version becomes Apache-2.0 after two years), licensor Andrea Partenope.
 - **72, Security hardening** (product owner, 2026-11-14, from the 1.0
   readiness check): built on PR #325 (headers on Vercel and Caddy, body cap,
   `/docs` off, per-user rate limits, `SECURITY.md`, security CI job) and
