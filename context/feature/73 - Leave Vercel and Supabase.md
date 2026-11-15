@@ -90,6 +90,8 @@ the 15-client pooler limit goes away (keep the 5 + 2 pool, it is enough).
 Moving the database to the box the API runs on also removes ~15 ms of round
 trip per query (Erith ↔ Frankfurt today).
 
+It goes on the new production VPS-2 (5).
+
 Rejected: a managed Postgres (OVH Public Cloud, Neon, others): a subscription
 again, and €15+ a month for less than this box gives.
 
@@ -97,7 +99,7 @@ again, and €15+ a month for less than this box gives.
 with this step, not after it:
 
 - nightly `pg_dump -Fc` from a small cron container, encrypted (`age`) and
-  copied off the VPS to the second VPS in another datacenter (5) and to the
+  copied off the VPS to the staging VPS in another datacenter (5) and to the
   object storage of 3, kept 7 daily, 4 weekly, 6 monthly;
 - the files themselves live in the object storage, which keeps its own copies;
   a weekly sync of the bucket into a second bucket/region covers deletion by
@@ -200,51 +202,43 @@ How A would work (details go to the build units):
 - Rate limit on `/auth/*` (spec 72 style) and the security checklist of spec
   72 rerun on the new routes.
 
-### 5. Staging and a second VPS (recommended: second VPS-1 in another datacenter)
+### 5. Two VPS: the current one becomes staging, a bigger one runs production
 
-The product owner would like a second VPS to share the load (2026-11-15) and
-shared OVH's current range: VPS-1 2 vCore / 4 GB / 40 GB €4.49 a month (the one
-in use), VPS-2 4 / 8 / 75 €7.21, VPS-3 6 / 12 / 100 €10.40, VPS-4 8 / 24 / 200
-€19.96 (prices "from", as shown by OVH).
+The product owner's choice (2026-11-15): "usare la macchina 1 più leggera per
+staging e la macchina 2 più pompata per PROD". OVH's current range, as shared:
+VPS-1 2 vCore / 4 GB / 40 GB €4.49 a month (the one in use), VPS-2 4 / 8 / 75
+€7.21, VPS-3 6 / 12 / 100 €10.40, VPS-4 8 / 24 / 200 €19.96 (prices "from").
 
-At today's size (46 MB database, 21 users) production does not need its load
-split: one VPS-1 runs frontend, API and Postgres with room to spare. Splitting
-production itself (API on one box, Postgres on the other) adds a second
-machine that can fail, a database port exposed between them over the public
-network (TLS, firewall allow-list), and more to deploy, for no speed gain yet.
-What a second box does buy now is **isolation**:
-
-- **Recommended: a second VPS-1 in a different OVH datacenter** (e.g. France
-  or Germany, not Erith), holding:
-  - **staging** (frontend, backend, Postgres, its own bucket), deployed on
-    every green push to `staging`, as `staging.exlibris.world` and
-    `api-staging.exlibris.world`; a runaway staging job can no longer touch
-    production;
-  - the **off-site copy of production's nightly backups** (pulled from
-    production over SSH, encrypted), so a lost production VPS or datacenter
-    leaves a copy elsewhere; it is also where a restore is rehearsed.
-  - If production ever dies, this box can be promoted: restore the latest dump,
-    repoint DNS (runbook in step 5).
-- **When production needs more**: resize it in place (VPS-1 → VPS-2 or VPS-3,
-  a reboot, no migration). Move Postgres to its own VPS only when the database
-  is what saturates the CPU or memory, which is far off.
-- Alternative: one VPS-2 (8 GB, €7.21) running both production and staging with
-  memory caps. Cheaper than two boxes but no isolation and no off-site copy.
+- **Production: a new VPS-2** (8 GB, 75 GB) running frontend, API and
+  Postgres. Enough for today's size many times over; VPS-3 or VPS-4 later is a
+  resize in place (a reboot, no migration). Proposed datacenter: **in the EU**
+  (France or Germany), so production data goes back inside the EU (today the
+  database is in Frankfurt, the API in Erith UK) and the privacy notice stays
+  simple.
+- **Staging: the current VPS-1** (Erith), once production has left it:
+  frontend, backend, Postgres and its own bucket, deployed on every green push
+  to `staging` as `staging.exlibris.world` and `api-staging.exlibris.world`.
+  A runaway staging job can no longer touch production.
+- **Off-site backups**: being in another datacenter, the staging VPS also
+  receives an encrypted copy of production's nightly dump (pulled over SSH),
+  besides the object storage copy; it is where a restore is rehearsed and,
+  if production dies, the box that can be promoted (runbook in step 5).
+- The production move to the new VPS is the same zero-downtime switch done on
+  2026-10-08 (new box serves the same image, DNS switch, old box kept for
+  rollback), so it costs no extra downtime; it happens before the database
+  moves, so Postgres lands directly on its final box.
 
 Render, the Supabase staging project and the Vercel Preview all go away.
 
-Staging is built **first**, because every later step is tried there before
-production.
-
 ## Order of work
 
-Each step is shippable on its own and is tried on staging first. Production
+Each step is shippable on its own and, from step 2 on, is tried on staging first. Production
 keeps running between steps.
 
 | # | Step | Claude build time | Downtime in production | Product owner's part |
 |---|---|---|---|---|
-| 1 | Second VPS: hardening (as for production), staging stack (frontend via Caddy, backend, Postgres, deploy on `staging`); still using the staging Supabase Auth and Storage | ~1.5 h | none | order and harden the VPS; DNS records for the two staging names; staging `backend.env` |
-| 2 | Production frontend on the VPS; `vercel.json` headers move to the Caddyfile | ~1 h (with 1) | none (DNS switch, TTL 300; both hosts serve the same build meanwhile) | DNS switch; delete the Vercel project after a quiet week |
+| 1 | New production VPS-2: same setup as today's (Docker, Caddy, deploy workflow pointed at it), plus the frontend served by Caddy (`vercel.json` headers move to the Caddyfile); API and frontend switched to it | ~1.5 h | none (DNS switch, TTL 300; old box and Vercel keep serving meanwhile) | order and harden the VPS-2 (same steps as 2026-10-08), GitHub secrets, DNS switch; delete the Vercel project after a quiet week |
+| 2 | Current VPS-1 turned into staging (frontend, backend, Postgres, deploy on `staging`); still using the staging Supabase Auth and Storage | ~1 h | none | DNS records for the two staging names; staging `backend.env`; then Render staging can go |
 | 3 | Sign-in in the backend (option A) | ~3–4 h incl. tests | none; every user is signed out once | OAuth consoles: new redirect URIs, client secrets in both `backend.env`; run the migration on staging, then prod |
 | 4 | Files to object storage, plus the copy script (lists Supabase objects, copies each, checks size; safe to re-run, only copies what is missing) | ~1.5 h | none: copy, deploy, copy again for anything uploaded meanwhile | create the buckets and keys at OVH |
 | 5 | Database to the VPS, plus nightly encrypted off-site backups and the restore runbook | ~1.5 h | **~15–30 min** maintenance (API answers 503 while `pg_dump` / `pg_restore` of ~46 MB runs) | run the dump/restore at a quiet hour with the runbook |
@@ -266,10 +260,10 @@ test.
 
 | Item | Monthly |
 |---|---|
-| VPS-1 (already paid) | ~€3.80 + VAT |
+| VPS-2, production | €7.21 |
+| VPS-1, staging (already paid) | €4.49 |
 | Object storage, files + backups (~0.5 GB today) | a few cents; at 50 GB, ~€0.50–1 (check OVH's current price per GB and for outgoing traffic) |
-| Second VPS-1 for staging and off-site backups | €4.49 |
-| **Total** | **~€9–10**, against ~€45 to stay on Vercel Pro + Supabase Pro |
+| **Total** | **~€12–13**, against ~€45 to stay on Vercel Pro + Supabase Pro |
 
 The VPS is the next ceiling: at some point (hundreds of active users, large
 Room PDFs) VPS-2 or VPS-3 is a reboot-and-resize away, not a migration.
@@ -290,11 +284,12 @@ Room PDFs) VPS-2 or VPS-3 is a reboot-and-resize away, not a migration.
   the consoles, and the old Supabase sign-in stays deployable until step 6.
 - **No more Preview per branch.** Only the one staging URL; acceptable since
   PRs already merge into `staging` to be tried.
-- **Data location**: the database moves from Frankfurt (EU) to Erith (UK). The
-  UK has an EU adequacy decision; the privacy notice and the GDPR dossier
+- **Data location**: with production on an EU VPS, data stays in the EU
+  (the API leaves Erith UK). Backup copies on the staging VPS sit in the UK,
+  which has an EU adequacy decision. The privacy notice and the GDPR dossier
   list where data lives and who processes it, so both are updated in step 6
   (fewer processors: Supabase and Vercel leave the list).
-- **Disk**: 40 GB holds the database and Docker images; files and backups are
+- **Disk**: production's 75 GB (staging's 40 GB) holds the database and Docker images; files and backups are
   off the disk, so it is not a near-term limit. The `/health` cron can alert on
   free space.
 
@@ -304,10 +299,9 @@ Room PDFs) VPS-2 or VPS-3 is a reboot-and-resize away, not a migration.
    Supabase Auth, no frontend change)?
 2. **Files**: OVH Object Storage (recommended), another S3 provider, or the VPS
    disk?
-3. **Second VPS**: a VPS-1 in another datacenter for staging and off-site
-   backups, production staying whole on the current one (recommended); or
-   production split across two boxes (API / Postgres); or one VPS-2 for
-   everything?
+3. **Production VPS**: VPS-2 in an EU datacenter (France or Germany),
+   recommended; or another size/location? (Decided: current VPS-1 becomes
+   staging, a bigger one runs production.)
 4. **Account linking by verified email** across providers, like Supabase
    does today (recommended), or one account per provider identity?
 5. **Everyone signed out once** at the sign-in switch: fine with a short
