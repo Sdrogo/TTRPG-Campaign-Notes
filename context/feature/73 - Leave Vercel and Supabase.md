@@ -95,7 +95,7 @@ It goes on the new production VPS (Leaseweb, 5).
 Rejected: a managed Postgres (OVH Public Cloud, Neon, others): a subscription
 again, and €15+ a month for less than this box gives.
 
-**Backups become entirely ours** (OVH general conditions §6), so they ship
+**Backups become entirely ours** (an unmanaged VPS: the host does not back up its data; OVH general conditions §6 say so for the staging VPS, Leaseweb's terms to check for production), so they ship
 with this step, not after it:
 
 - nightly `pg_dump -Fc` from a small cron container, encrypted (`age`) and
@@ -236,7 +236,7 @@ VPS-1 2 vCore / 4 GB / 40 GB €4.49 a month (the one in use), VPS-2 4 / 8 / 75
 - **Off-site backups**: being with another provider in another country, the staging VPS also
   receives an encrypted copy of production's nightly dump (pulled over SSH),
   besides the object storage copy; it is where a restore is rehearsed and,
-  if production dies, the box that can be promoted (runbook in step 5).
+  if production dies, the box that can be promoted (runbook in step 5 of the order of work).
 - The production move to the new VPS is the same zero-downtime switch done on
   2026-10-08 (new box serves the same image, DNS switch, old box kept for
   rollback), so it costs no extra downtime; it happens before the database
@@ -290,7 +290,7 @@ Room PDFs) a larger Leaseweb plan is a resize away (to confirm with Leaseweb), n
   by step 5 shipping the off-site backup, the age check and a tried restore
   in the same PR as the move.
 - **One box for everything.** If the VPS is down, the whole app is down
-  (today only the API). OVH's VPS SLA plus a restore runbook that rebuilds on a
+  (today only the API). Leaseweb's VPS SLA (to check at order) plus a restore runbook that rebuilds on a
   fresh VPS from the off-site backup in under an hour.
 - **Our own sign-in code.** Mitigated by a maintained library (Authlib),
   PKCE + `state`, hashed rotating refresh tokens, rate limits, tests for every
@@ -321,8 +321,8 @@ Room PDFs) a larger Leaseweb plan is a resize away (to confirm with Leaseweb), n
    does today (recommended), or one account per provider identity?
 5. **Everyone signed out once** at the sign-in switch: fine with a short
    notice on the landing page, or no notice?
-6. **Backup retention**: 7 daily, 4 weekly, 6 monthly, encrypted, in another
-   OVH region (recommended)? Where should the decryption key be kept besides
+6. **Backup retention**: 7 daily, 4 weekly, 6 monthly, encrypted, on the
+   staging VPS (OVH, Erith) and in the object storage (recommended)? Where should the decryption key be kept besides
    the VPS (it must not live only there)?
 7. **Order**: as above (new production VPS with the frontend, staging on the
    current VPS, sign-in, files, database), or the database earlier?
