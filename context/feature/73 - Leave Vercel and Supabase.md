@@ -97,8 +97,8 @@ again, and €15+ a month for less than this box gives.
 with this step, not after it:
 
 - nightly `pg_dump -Fc` from a small cron container, encrypted (`age`) and
-  copied off the VPS to the object storage of 3 (other region), kept 7 daily,
-  4 weekly, 6 monthly;
+  copied off the VPS to the second VPS in another datacenter (5) and to the
+  object storage of 3, kept 7 daily, 4 weekly, 6 monthly;
 - the files themselves live in the object storage, which keeps its own copies;
   a weekly sync of the bucket into a second bucket/region covers deletion by
   mistake;
@@ -200,18 +200,38 @@ How A would work (details go to the build units):
 - Rate limit on `/auth/*` (spec 72 style) and the security checklist of spec
   72 rerun on the new routes.
 
-### 5. Staging: on the same VPS (recommended)
+### 5. Staging and a second VPS (recommended: second VPS-1 in another datacenter)
 
-A second compose project on the VPS (`/opt/exlibris-staging`): its own
-backend, its own Postgres container, its own bucket, served by the same Caddy
-as `staging.exlibris.world` and `api-staging.exlibris.world`, deployed on every
-green push to `staging`. Memory caps on the staging containers (backend 768 MB,
-Postgres 256 MB) keep a runaway staging job from starving production; the
-whole stack fits 4 GB with room to spare at today's size.
+The product owner would like a second VPS to share the load (2026-11-15) and
+shared OVH's current range: VPS-1 2 vCore / 4 GB / 40 GB €4.49 a month (the one
+in use), VPS-2 4 / 8 / 75 €7.21, VPS-3 6 / 12 / 100 €10.40, VPS-4 8 / 24 / 200
+€19.96 (prices "from", as shown by OVH).
 
-Alternative: a second small VPS (~€4–5 a month) for full isolation. Worth it
-only if staging ever needs heavy load tests. Render, the Supabase staging
-project and the Vercel Preview all go away either way.
+At today's size (46 MB database, 21 users) production does not need its load
+split: one VPS-1 runs frontend, API and Postgres with room to spare. Splitting
+production itself (API on one box, Postgres on the other) adds a second
+machine that can fail, a database port exposed between them over the public
+network (TLS, firewall allow-list), and more to deploy, for no speed gain yet.
+What a second box does buy now is **isolation**:
+
+- **Recommended: a second VPS-1 in a different OVH datacenter** (e.g. France
+  or Germany, not Erith), holding:
+  - **staging** (frontend, backend, Postgres, its own bucket), deployed on
+    every green push to `staging`, as `staging.exlibris.world` and
+    `api-staging.exlibris.world`; a runaway staging job can no longer touch
+    production;
+  - the **off-site copy of production's nightly backups** (pulled from
+    production over SSH, encrypted), so a lost production VPS or datacenter
+    leaves a copy elsewhere; it is also where a restore is rehearsed.
+  - If production ever dies, this box can be promoted: restore the latest dump,
+    repoint DNS (runbook in step 5).
+- **When production needs more**: resize it in place (VPS-1 → VPS-2 or VPS-3,
+  a reboot, no migration). Move Postgres to its own VPS only when the database
+  is what saturates the CPU or memory, which is far off.
+- Alternative: one VPS-2 (8 GB, €7.21) running both production and staging with
+  memory caps. Cheaper than two boxes but no isolation and no off-site copy.
+
+Render, the Supabase staging project and the Vercel Preview all go away.
 
 Staging is built **first**, because every later step is tried there before
 production.
@@ -223,7 +243,7 @@ keeps running between steps.
 
 | # | Step | Claude build time | Downtime in production | Product owner's part |
 |---|---|---|---|---|
-| 1 | Staging stack on the VPS (frontend via Caddy, backend, Postgres, deploy on `staging`); still using the staging Supabase Auth and Storage | ~1.5 h | none | DNS records for the two staging names; staging `backend.env` |
+| 1 | Second VPS: hardening (as for production), staging stack (frontend via Caddy, backend, Postgres, deploy on `staging`); still using the staging Supabase Auth and Storage | ~1.5 h | none | order and harden the VPS; DNS records for the two staging names; staging `backend.env` |
 | 2 | Production frontend on the VPS; `vercel.json` headers move to the Caddyfile | ~1 h (with 1) | none (DNS switch, TTL 300; both hosts serve the same build meanwhile) | DNS switch; delete the Vercel project after a quiet week |
 | 3 | Sign-in in the backend (option A) | ~3–4 h incl. tests | none; every user is signed out once | OAuth consoles: new redirect URIs, client secrets in both `backend.env`; run the migration on staging, then prod |
 | 4 | Files to object storage, plus the copy script (lists Supabase objects, copies each, checks size; safe to re-run, only copies what is missing) | ~1.5 h | none: copy, deploy, copy again for anything uploaded meanwhile | create the buckets and keys at OVH |
@@ -248,8 +268,8 @@ test.
 |---|---|
 | VPS-1 (already paid) | ~€3.80 + VAT |
 | Object storage, files + backups (~0.5 GB today) | a few cents; at 50 GB, ~€0.50–1 (check OVH's current price per GB and for outgoing traffic) |
-| Second VPS for staging (only if chosen) | ~€4–5 |
-| **Total** | **~€4–9**, against ~€45 to stay on Vercel Pro + Supabase Pro |
+| Second VPS-1 for staging and off-site backups | €4.49 |
+| **Total** | **~€9–10**, against ~€45 to stay on Vercel Pro + Supabase Pro |
 
 The VPS is the next ceiling: at some point (hundreds of active users, large
 Room PDFs) VPS-2 or VPS-3 is a reboot-and-resize away, not a migration.
@@ -284,8 +304,10 @@ Room PDFs) VPS-2 or VPS-3 is a reboot-and-resize away, not a migration.
    Supabase Auth, no frontend change)?
 2. **Files**: OVH Object Storage (recommended), another S3 provider, or the VPS
    disk?
-3. **Staging**: on the same VPS with memory caps (recommended), or a second
-   small VPS?
+3. **Second VPS**: a VPS-1 in another datacenter for staging and off-site
+   backups, production staying whole on the current one (recommended); or
+   production split across two boxes (API / Postgres); or one VPS-2 for
+   everything?
 4. **Account linking by verified email** across providers, like Supabase
    does today (recommended), or one account per provider identity?
 5. **Everyone signed out once** at the sign-in switch: fine with a short
