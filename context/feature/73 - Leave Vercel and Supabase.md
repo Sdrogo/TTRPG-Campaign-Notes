@@ -209,15 +209,20 @@ staging e la macchina 2 più pompata per PROD". OVH's current range, as shared:
 VPS-1 2 vCore / 4 GB / 40 GB €4.49 a month (the one in use), VPS-2 4 / 8 / 75
 €7.21, VPS-3 6 / 12 / 100 €10.40, VPS-4 8 / 24 / 200 €19.96 (prices "from").
 
-- **Production: a new VPS-2 or VPS-3** running frontend, API and Postgres
-  (the product owner leans to VPS-3, "per essere più future proof"). VPS-2
-  (8 GB) is already enough for today's size many times over; VPS-3 (12 GB,
-  100 GB) costs €3.19 a month more. OVH resizes a VPS upward in place (a
-  reboot, no migration) but not downward, so starting small keeps both doors
-  open; starting with VPS-3 is also fine, the difference is ~€38 a year. Proposed datacenter: **in the EU**
-  (France or Germany), so production data goes back inside the EU (today the
-  database is in Frankfurt, the API in Erith UK) and the privacy notice stays
-  simple.
+- **Production: a new VPS-3** (6 vCore, 12 GB, 100 GB, €10.40 a month),
+  running frontend, API and Postgres. The product owner's choice (2026-11-15):
+  today's numbers come from a handful of testers, and going public should
+  bring a large increase. VPS-4 later is a resize in place (a reboot, no
+  migration; OVH does not resize downward).
+- **What limits growth before the hardware does**: the backend runs one
+  uvicorn process, and three things assume it (the rate limits of spec 72,
+  the image search throttle, the Room PDF semaphore and its startup sweeper,
+  the live-stream fan-out of specs 46_2/52). With 6 vCores the API should run
+  several workers, which means moving those counters and the event fan-out
+  into Postgres (or a small Redis). That is a separate ticket, to do before or
+  soon after going public; this migration only makes it possible. Postgres
+  gets settings sized for the box (e.g. `shared_buffers` ~2–3 GB), with the
+  backend's pool raised to match the workers.
 - **Staging: the current VPS-1** (Erith), once production has left it:
   frontend, backend, Postgres and its own bucket, deployed on every green push
   to `staging` as `staging.exlibris.world` and `api-staging.exlibris.world`.
@@ -240,7 +245,7 @@ keeps running between steps.
 
 | # | Step | Claude build time | Downtime in production | Product owner's part |
 |---|---|---|---|---|
-| 1 | New production VPS (VPS-2 or VPS-3, question 3): same setup as today's (Docker, Caddy, deploy workflow pointed at it), plus the frontend served by Caddy (`vercel.json` headers move to the Caddyfile); API and frontend switched to it | ~1.5 h | none (DNS switch, TTL 300; old box and Vercel keep serving meanwhile) | order and harden the new VPS (same steps as 2026-10-08), GitHub secrets, DNS switch; delete the Vercel project after a quiet week |
+| 1 | New production VPS-3: same setup as today's (Docker, Caddy, deploy workflow pointed at it), plus the frontend served by Caddy (`vercel.json` headers move to the Caddyfile); API and frontend switched to it | ~1.5 h | none (DNS switch, TTL 300; old box and Vercel keep serving meanwhile) | order and harden the new VPS (same steps as 2026-10-08), GitHub secrets, DNS switch; delete the Vercel project after a quiet week |
 | 2 | Current VPS-1 turned into staging (frontend, backend, Postgres, deploy on `staging`); still using the staging Supabase Auth and Storage | ~1 h | none | DNS records for the two staging names; staging `backend.env`; then Render staging can go |
 | 3 | Sign-in in the backend (option A) | ~3–4 h incl. tests | none; every user is signed out once | OAuth consoles: new redirect URIs, client secrets in both `backend.env`; run the migration on staging, then prod |
 | 4 | Files to object storage, plus the copy script (lists Supabase objects, copies each, checks size; safe to re-run, only copies what is missing) | ~1.5 h | none: copy, deploy, copy again for anything uploaded meanwhile | create the buckets and keys at OVH |
@@ -265,10 +270,10 @@ test.
 
 | Item | Monthly |
 |---|---|
-| VPS-2 or VPS-3, production | €7.21 or €10.40 |
+| VPS-3, production | €10.40 |
 | VPS-1, staging (already paid) | €4.49 |
 | Object storage, files + backups (~0.5 GB today) | a few cents; at 50 GB, ~€0.50–1 (check OVH's current price per GB and for outgoing traffic) |
-| **Total** | **~€12–15**, against ~€45 to stay on Vercel Pro + Supabase Pro |
+| **Total** | **~€15**, against ~€45 to stay on Vercel Pro + Supabase Pro |
 
 The VPS is the next ceiling: at some point (hundreds of active users, large
 Room PDFs) VPS-2 or VPS-3 is a reboot-and-resize away, not a migration.
@@ -304,7 +309,7 @@ Room PDFs) VPS-2 or VPS-3 is a reboot-and-resize away, not a migration.
    Supabase Auth, no frontend change)?
 2. **Files**: OVH Object Storage (recommended), another S3 provider, or the VPS
    disk?
-3. **Production VPS**: VPS-2 or VPS-3, in an EU datacenter (France or
+3. **Production VPS datacenter**: VPS-3 decided; in the EU (France or
    Germany), recommended? (Decided: current VPS-1 becomes
    staging, a bigger one runs production.)
 4. **Account linking by verified email** across providers, like Supabase
@@ -324,4 +329,6 @@ Room PDFs) VPS-2 or VPS-3 is a reboot-and-resize away, not a migration.
 - Raising the Room PDF size cap (possible after step 4, separate ticket).
 - New sign-in providers or email/password sign-in.
 - Multi-server or high-availability setups.
+- Several API workers (shared rate limits, live-stream fan-out): separate
+  ticket, see 5.
 - Any change to `requirements.md`.
