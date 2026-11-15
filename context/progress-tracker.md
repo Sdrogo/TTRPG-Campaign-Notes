@@ -118,6 +118,11 @@ One line per unit, dates 2026, newest first. Spec files live in
 
 ### 2026-10-12 → 11-10
 
+- **View as: Players only, every Room page** (11-15, bugfix, no mig.): the
+  "View as" picker lists only Players (another Master sees everything, so
+  previewing one looked like Master-only content leaking under the read-only
+  banner); the preview now also covers the landing, Sections, Session 0 and
+  Clocks, where "View as" did nothing (ROOM_PAGES was still spec 22b's list).
 - **Demo tour highlight beside the Document aside** (11-14, bugfix, no mig.):
   a target marked `data-tour-fit="content"` (relational link Note, Document
   text) is lit only as wide as its lines, since its block boxes run under the
