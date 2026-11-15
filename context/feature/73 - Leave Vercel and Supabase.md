@@ -209,9 +209,12 @@ staging e la macchina 2 più pompata per PROD". OVH's current range, as shared:
 VPS-1 2 vCore / 4 GB / 40 GB €4.49 a month (the one in use), VPS-2 4 / 8 / 75
 €7.21, VPS-3 6 / 12 / 100 €10.40, VPS-4 8 / 24 / 200 €19.96 (prices "from").
 
-- **Production: a new VPS-2** (8 GB, 75 GB) running frontend, API and
-  Postgres. Enough for today's size many times over; VPS-3 or VPS-4 later is a
-  resize in place (a reboot, no migration). Proposed datacenter: **in the EU**
+- **Production: a new VPS-2 or VPS-3** running frontend, API and Postgres
+  (the product owner leans to VPS-3, "per essere più future proof"). VPS-2
+  (8 GB) is already enough for today's size many times over; VPS-3 (12 GB,
+  100 GB) costs €3.19 a month more. OVH resizes a VPS upward in place (a
+  reboot, no migration) but not downward, so starting small keeps both doors
+  open; starting with VPS-3 is also fine, the difference is ~€38 a year. Proposed datacenter: **in the EU**
   (France or Germany), so production data goes back inside the EU (today the
   database is in Frankfurt, the API in Erith UK) and the privacy notice stays
   simple.
@@ -260,10 +263,10 @@ test.
 
 | Item | Monthly |
 |---|---|
-| VPS-2, production | €7.21 |
+| VPS-2 or VPS-3, production | €7.21 or €10.40 |
 | VPS-1, staging (already paid) | €4.49 |
 | Object storage, files + backups (~0.5 GB today) | a few cents; at 50 GB, ~€0.50–1 (check OVH's current price per GB and for outgoing traffic) |
-| **Total** | **~€12–13**, against ~€45 to stay on Vercel Pro + Supabase Pro |
+| **Total** | **~€12–15**, against ~€45 to stay on Vercel Pro + Supabase Pro |
 
 The VPS is the next ceiling: at some point (hundreds of active users, large
 Room PDFs) VPS-2 or VPS-3 is a reboot-and-resize away, not a migration.
@@ -299,8 +302,8 @@ Room PDFs) VPS-2 or VPS-3 is a reboot-and-resize away, not a migration.
    Supabase Auth, no frontend change)?
 2. **Files**: OVH Object Storage (recommended), another S3 provider, or the VPS
    disk?
-3. **Production VPS**: VPS-2 in an EU datacenter (France or Germany),
-   recommended; or another size/location? (Decided: current VPS-1 becomes
+3. **Production VPS**: VPS-2 or VPS-3, in an EU datacenter (France or
+   Germany), recommended? (Decided: current VPS-1 becomes
    staging, a bigger one runs production.)
 4. **Account linking by verified email** across providers, like Supabase
    does today (recommended), or one account per provider identity?
