@@ -90,7 +90,7 @@ the 15-client pooler limit goes away (keep the 5 + 2 pool, it is enough).
 Moving the database to the box the API runs on also removes ~15 ms of round
 trip per query (Erith ↔ Frankfurt today).
 
-It goes on the new production VPS-2 (5).
+It goes on the new production VPS-3 (5).
 
 Rejected: a managed Postgres (OVH Public Cloud, Neon, others): a subscription
 again, and €15+ a month for less than this box gives.
@@ -276,7 +276,7 @@ test.
 | **Total** | **~€15**, against ~€45 to stay on Vercel Pro + Supabase Pro |
 
 The VPS is the next ceiling: at some point (hundreds of active users, large
-Room PDFs) VPS-2 or VPS-3 is a reboot-and-resize away, not a migration.
+Room PDFs) VPS-4 is a reboot-and-resize away, not a migration; several API workers come first (5).
 
 ## Risks
 
