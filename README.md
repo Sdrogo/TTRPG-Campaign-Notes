@@ -130,3 +130,13 @@ specs are in `context/feature/` and current status is in
 In Claude Code on the web, `.claude/hooks/session-start.sh` prepares each new
 session to run all the checks above: it installs both sides' dependencies and
 sets up a local Postgres the way CI does.
+
+## License
+
+Ex Libris is source-available under the [Functional Source License, Version
+1.1, ALv2 Future License](LICENSE) (`FSL-1.1-ALv2`). You may read, run, modify
+and share the code for any purpose except a Competing Use: offering it, or a
+product built on it, as a commercial service that substitutes for Ex Libris.
+Each version becomes available under the Apache License 2.0 two years after
+its release. Bundled fonts keep their own licenses (SIL Open Font License 1.1,
+next to the files).
