@@ -90,7 +90,7 @@ the 15-client pooler limit goes away (keep the 5 + 2 pool, it is enough).
 Moving the database to the box the API runs on also removes ~15 ms of round
 trip per query (Erith ↔ Frankfurt today).
 
-It goes on the new production VPS-3 (5).
+It goes on the new production VPS (Leaseweb, 5).
 
 Rejected: a managed Postgres (OVH Public Cloud, Neon, others): a subscription
 again, and €15+ a month for less than this box gives.
@@ -209,11 +209,17 @@ staging e la macchina 2 più pompata per PROD". OVH's current range, as shared:
 VPS-1 2 vCore / 4 GB / 40 GB €4.49 a month (the one in use), VPS-2 4 / 8 / 75
 €7.21, VPS-3 6 / 12 / 100 €10.40, VPS-4 8 / 24 / 200 €19.96 (prices "from").
 
-- **Production: a new VPS-3** (6 vCore, 12 GB, 100 GB, €10.40 a month),
-  running frontend, API and Postgres. The product owner's choice (2026-11-15):
-  today's numbers come from a handful of testers, and going public should
-  bring a large increase. VPS-4 later is a resize in place (a reboot, no
-  migration; OVH does not resize downward).
+- **Production: Leaseweb VPS 2, Frankfurt (FRA-01)** (6 vCPU, 16 GB, 200 GB
+  NVMe, 30 TB traffic, €8.09 a month excl. VAT), running frontend, API and
+  Postgres. History (2026-11-15): the product owner first chose an OVH VPS-3
+  (expecting a large increase in users once public), but OVH had no VPS in
+  stock in any region; Hetzner was too expensive (CPX32 4/8 at €30.49);
+  Leaseweb gives more than the VPS-3 for less. Frankfurt keeps production
+  data in the EU, where the Supabase database already is. Running production
+  with a different provider than staging (OVH) also makes the backup copy on
+  the staging VPS truly off-site. To check at order: minimum term, snapshot
+  and backup pricing, resize options, Leaseweb's DPA (added to the GDPR
+  dossier).
 - **What limits growth before the hardware does**: the backend runs one
   uvicorn process, and three things assume it (the rate limits of spec 72,
   the image search throttle, the Room PDF semaphore and its startup sweeper,
@@ -227,7 +233,7 @@ VPS-1 2 vCore / 4 GB / 40 GB €4.49 a month (the one in use), VPS-2 4 / 8 / 75
   frontend, backend, Postgres and its own bucket, deployed on every green push
   to `staging` as `staging.exlibris.world` and `api-staging.exlibris.world`.
   A runaway staging job can no longer touch production.
-- **Off-site backups**: being in another datacenter, the staging VPS also
+- **Off-site backups**: being with another provider in another country, the staging VPS also
   receives an encrypted copy of production's nightly dump (pulled over SSH),
   besides the object storage copy; it is where a restore is rehearsed and,
   if production dies, the box that can be promoted (runbook in step 5).
@@ -245,7 +251,7 @@ keeps running between steps.
 
 | # | Step | Claude build time | Downtime in production | Product owner's part |
 |---|---|---|---|---|
-| 1 | New production VPS-3: same setup as today's (Docker, Caddy, deploy workflow pointed at it), plus the frontend served by Caddy (`vercel.json` headers move to the Caddyfile); API and frontend switched to it | ~1.5 h | none (DNS switch, TTL 300; old box and Vercel keep serving meanwhile) | order and harden the new VPS (same steps as 2026-10-08), GitHub secrets, DNS switch; delete the Vercel project after a quiet week |
+| 1 | New production VPS (Leaseweb VPS 2, Frankfurt): same setup as today's (Docker, Caddy, deploy workflow pointed at it), plus the frontend served by Caddy (`vercel.json` headers move to the Caddyfile); API and frontend switched to it | ~1.5 h | none (DNS switch, TTL 300; old box and Vercel keep serving meanwhile) | order and harden the new VPS (same steps as 2026-10-08), GitHub secrets, DNS switch; delete the Vercel project after a quiet week |
 | 2 | Current VPS-1 turned into staging (frontend, backend, Postgres, deploy on `staging`); still using the staging Supabase Auth and Storage | ~1 h | none | DNS records for the two staging names; staging `backend.env`; then Render staging can go |
 | 3 | Sign-in in the backend (option A) | ~3–4 h incl. tests | none; every user is signed out once | OAuth consoles: new redirect URIs, client secrets in both `backend.env`; run the migration on staging, then prod |
 | 4 | Files to object storage, plus the copy script (lists Supabase objects, copies each, checks size; safe to re-run, only copies what is missing) | ~1.5 h | none: copy, deploy, copy again for anything uploaded meanwhile | create the buckets and keys at OVH |
@@ -270,13 +276,13 @@ test.
 
 | Item | Monthly |
 |---|---|
-| VPS-3, production | €10.40 |
+| Leaseweb VPS 2, production | €8.09 |
 | VPS-1, staging (already paid) | €4.49 |
 | Object storage, files + backups (~0.5 GB today) | a few cents; at 50 GB, ~€0.50–1 (check OVH's current price per GB and for outgoing traffic) |
-| **Total** | **~€15**, against ~€45 to stay on Vercel Pro + Supabase Pro |
+| **Total** | **~€13**, against ~€45 to stay on Vercel Pro + Supabase Pro |
 
 The VPS is the next ceiling: at some point (hundreds of active users, large
-Room PDFs) VPS-4 is a reboot-and-resize away, not a migration; several API workers come first (5).
+Room PDFs) a larger Leaseweb plan is a resize away (to confirm with Leaseweb), not a migration; several API workers come first (5).
 
 ## Risks
 
@@ -299,7 +305,7 @@ Room PDFs) VPS-4 is a reboot-and-resize away, not a migration; several API worke
   which has an EU adequacy decision. The privacy notice and the GDPR dossier
   list where data lives and who processes it, so both are updated in step 6
   (fewer processors: Supabase and Vercel leave the list).
-- **Disk**: production's 100 GB (staging's 40 GB) holds the database and Docker images; files and backups are
+- **Disk**: production's 200 GB (staging's 40 GB) holds the database and Docker images; files and backups are
   off the disk, so it is not a near-term limit. The `/health` cron can alert on
   free space.
 
@@ -309,8 +315,7 @@ Room PDFs) VPS-4 is a reboot-and-resize away, not a migration; several API worke
    Supabase Auth, no frontend change)?
 2. **Files**: OVH Object Storage (recommended), another S3 provider, or the VPS
    disk?
-3. **Production VPS datacenter**: VPS-3 decided; in the EU (France or
-   Germany), recommended? (Decided: current VPS-1 becomes
+3. **Production VPS**: decided, Leaseweb VPS 2 in Frankfurt (2026-11-15). (Decided: current VPS-1 becomes
    staging, a bigger one runs production.)
 4. **Account linking by verified email** across providers, like Supabase
    does today (recommended), or one account per provider identity?
