@@ -23,19 +23,22 @@ set_tag() {
 }
 touch .env
 mkdir -p site/releases
-# Unpacked beside the live build; it takes the release's name only once the
-# backend is healthy (below). A redeploy of the same commit with other build
-# settings (the VITE_* variables) still replaces the live build.
-if [ -f frontend.tgz ]; then
-  rm -rf "site/releases/$tag.new"
-  mkdir "site/releases/$tag.new"
-  tar -xzf frontend.tgz -C "site/releases/$tag.new"
-fi
-rm -f frontend.tgz
 previous="$(sed -n 's/^BACKEND_TAG=//p' .env)"
 
 # Pulled before .env changes: a failed pull leaves everything as it was.
 BACKEND_TAG="$tag" docker compose pull backend
+
+# Each build gets its own folder, <tag>-<time>, so even a redeploy of the
+# live commit (with other VITE_* values) never touches the folder being
+# served; it goes live below, once the backend is healthy.
+build=
+if [ -f frontend.tgz ]; then
+  build="$tag-$(date +%s)"
+  mkdir "site/releases/$build"
+  tar -xzf frontend.tgz -C "site/releases/$build"
+fi
+# Never left for a later run (a rollback by hand) to pick up.
+rm -f frontend.tgz
 
 # From here on, any failure (`up`, the Caddy reload, the health check) puts
 # the last healthy image back, so neither a reboot nor the next deploy's
@@ -43,6 +46,7 @@ BACKEND_TAG="$tag" docker compose pull backend
 # On a first deploy there is nothing to restore: the pin is just removed.
 restore() {
   set_tag "$previous"
+  if [ -n "$build" ]; then rm -rf "site/releases/$build"; fi
   if [ -n "$previous" ]; then
     echo "deploy of $tag failed; restoring $previous" >&2
     docker compose up -d backend || true
@@ -70,18 +74,14 @@ if [ "$status" != healthy ]; then
 fi
 trap - ERR
 
-# The frontend of this commit goes live. A rollback to a commit whose build
-# was pruned keeps the frontend that is live now, and says so.
-if [ -d "site/releases/$tag.new" ]; then
-  # The two renames are a moment apart; the old build of the same commit
-  # goes only after them.
-  rm -rf "site/releases/$tag.old"
-  if [ -d "site/releases/$tag" ]; then mv "site/releases/$tag" "site/releases/$tag.old"; fi
-  mv "site/releases/$tag.new" "site/releases/$tag"
-  rm -rf "site/releases/$tag.old"
+# The frontend of this commit goes live. A rollback takes the newest build
+# kept for that commit; if it was pruned, the live frontend stays, and the
+# script says so.
+if [ -z "$build" ]; then
+  build="$(ls -1t site/releases | grep -E "^$tag-[0-9]+$" | head -n 1 || true)"
 fi
-if [ -f "site/releases/$tag/index.html" ]; then
-  ln -sfn "releases/$tag" site/current.new
+if [ -n "$build" ] && [ -f "site/releases/$build/index.html" ]; then
+  ln -sfn "releases/$build" site/current.new
   mv -T site/current.new site/current
 else
   echo "no frontend build for $tag; the live frontend is unchanged" >&2

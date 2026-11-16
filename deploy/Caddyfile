@@ -5,7 +5,7 @@
 # each must already resolve to this server.
 
 # The frontend (ticket 73 step 1, replacing Vercel): the built SPA, unpacked
-# by deploy.sh into site/releases/<sha> and switched in through the
+# by deploy.sh into site/releases/<sha>-<time> and switched in through the
 # site/current link. The headers are the ones vercel.json set, plus HSTS;
 # CSP_CONNECT_SRC lists the API and Supabase origins the app talks to.
 {$FRONTEND_HOSTS} {

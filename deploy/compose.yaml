@@ -5,7 +5,7 @@
 #                FRONTEND_HOSTS, FRONTEND_REDIRECT_HOSTS, CSP_CONNECT_SRC,
 #                and BACKEND_TAG once
 #                deploy.sh has run
-#   site/        the built frontend: releases/<sha>, and `current`, a link
+#   site/        the built frontend: releases/<sha>-<time>, and `current`, a link
 #                to the live one (deploy.sh)
 # The deploy workflow copies this file, the Caddyfile and deploy.sh here on
 # every deploy, so edit them in the repository, not on the server.
