@@ -1,7 +1,52 @@
-# HTTPS in front of the backend (context/vps-migration-plan.md, §4).
+# HTTPS in front of the backend (context/vps-migration-plan.md, §4) and,
+# since ticket 73, the frontend too.
 # Caddy gets and renews Let's Encrypt certificates on its own for every name
-# in API_HOSTS (set in compose.yaml / the server's .env); each must already
-# resolve to this server.
+# in API_HOSTS and FRONTEND_HOSTS (set in compose.yaml / the server's .env);
+# each must already resolve to this server.
+
+# The frontend (ticket 73 step 1, replacing Vercel): the built SPA, unpacked
+# by deploy.sh into site/releases/<sha> and switched in through the
+# site/current link. The headers are the ones vercel.json set, plus HSTS;
+# CSP_CONNECT_SRC lists the API and Supabase origins the app talks to.
+{$FRONTEND_HOSTS} {
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=(), usb=()"
+		Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' {$CSP_CONNECT_SRC}; media-src 'self' blob:; worker-src 'self' blob:; object-src 'none'; frame-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests"
+		-Server
+	}
+
+	root * /srv/site/current
+	encode zstd gzip
+
+	# Vite puts a content hash in every name under /assets, so a file there
+	# never changes: cache it for a year. A missing one is a plain 404, not
+	# the app's index.html served as JavaScript.
+	handle /assets/* {
+		@exists file
+		header @exists Cache-Control "public, max-age=31536000, immutable"
+		file_server
+	}
+	# Everything else (index.html, public/ files, and every app route through
+	# the SPA fallback) is checked again on each visit, so a deploy shows up
+	# at once.
+	handle {
+		header Cache-Control "no-cache"
+		try_files {path} /index.html
+		file_server
+	}
+}
+
+# www goes to the apex, as it did on Vercel, so sign-in only ever returns to
+# one origin. Off by default, like FRONTEND_HOSTS.
+{$FRONTEND_REDIRECT_HOSTS} {
+	redir https://exlibris.world{uri} permanent
+}
+
+# The API.
 {$API_HOSTS} {
 	# Security headers on every response, the live streams included (spec 72
 	# Decision 5). The API only answers JSON, SSE and files, so its CSP lets

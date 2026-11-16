@@ -1,15 +1,24 @@
-name: Deploy production backend
+name: Deploy production
 
 # Builds the backend image, pushes it to GHCR and deploys it on the VPS
-# (context/vps-migration-plan.md, §5). Runs after CI passes on a push to
-# `main`, or by hand (Actions → Run workflow) to deploy or roll back to any
+# (context/vps-migration-plan.md, §5), together with the frontend built from
+# the same commit (ticket 73: Caddy serves it, replacing Vercel). Runs after
+# CI passes on a push to `main`, or by hand (Actions → Run workflow) to deploy or roll back to any
 # commit. Off until the repository variable VPS_DEPLOY_ENABLED is `true`.
 # Migrations stay a by-hand step and are never run here.
 #
 # Needs, in the `vps-production` environment (not `production`, which
 # Vercel's own GitHub deployments already use): secrets VPS_HOST, VPS_USER,
 # VPS_SSH_KEY (a key used only by this workflow) and VPS_KNOWN_HOSTS (the
-# output of `ssh-keyscan -t ed25519 <host>`, checked by hand).
+# output of `ssh-keyscan -t ed25519 <host>`, checked by hand). And variables
+# (not secrets: they end up in the public bundle) VITE_API_BASE_URL,
+# VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY for the frontend build:
+# with no VITE_API_BASE_URL the frontend is neither built nor shipped (a
+# server that doesn't serve it yet). CHECK_FRONTEND_HOST turns on the outside
+# check of the frontend under that name; CHECK_API_HOST (default
+# api.exlibris.world) is the API's. Both let a new server be tried under
+# other names before the DNS switch. Order for a server taking over the
+# frontend: its .env FRONTEND_HOSTS and these variables first, then DNS.
 #
 # Both triggers only work from the default branch: this starts deploying
 # once it reaches `main` with a release.
@@ -60,6 +69,33 @@ jobs:
         id: commit
         run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      # Before the image, so a missing setting stops the deploy early. The
+      # VITE_* values are baked into the bundle at build time: an empty one
+      # would give a frontend that loads and then fails on every call.
+      - name: Build the frontend
+        if: vars.VITE_API_BASE_URL != ''
+        working-directory: frontend
+        env:
+          VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL }}
+          VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ vars.VITE_SUPABASE_PUBLISHABLE_KEY }}
+        run: |
+          for name in VITE_API_BASE_URL VITE_SUPABASE_URL VITE_SUPABASE_PUBLISHABLE_KEY; do
+            if [ -z "${!name}" ]; then
+              echo "variable $name is not set in the vps-production environment" >&2
+              exit 1
+            fi
+          done
+          npm ci
+          npm run build
+          tar -czf ../frontend.tgz -C dist .
+
       - name: Build and push the image
         env:
           SHA: ${{ steps.commit.outputs.sha }}
@@ -86,24 +122,37 @@ jobs:
           SHA: ${{ steps.commit.outputs.sha }}
           TARGET: ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}
         run: |
-          scp -i ~/.ssh/deploy_key deploy/compose.yaml deploy/Caddyfile deploy/deploy.sh "$TARGET:/opt/exlibris/"
+          files=(deploy/compose.yaml deploy/Caddyfile deploy/deploy.sh)
+          [ -f frontend.tgz ] && files+=(frontend.tgz)
+          scp -i ~/.ssh/deploy_key "${files[@]}" "$TARGET:/opt/exlibris/"
           ssh -i ~/.ssh/deploy_key "$TARGET" "bash /opt/exlibris/deploy.sh $SHA"
 
       # From outside, through Caddy and HTTPS, at the VPS's own address
-      # (--resolve): public DNS for api.exlibris.world may point at Render
-      # after a rollback, so it would pass while the VPS is broken, and no
-      # other name has to stay in DNS for this check.
+      # (--resolve): public DNS may point at another server (a rollback, or a
+      # new server not switched in yet), so it would pass while the VPS is
+      # broken. The frontend, when CHECK_FRONTEND_HOST is set, must answer
+      # with its index.html.
       - name: Check the VPS from outside
         env:
           VPS_HOST: ${{ secrets.VPS_HOST }}
+          API_HOST: ${{ vars.CHECK_API_HOST || 'api.exlibris.world' }}
+          FRONTEND_HOST: ${{ vars.CHECK_FRONTEND_HOST }}
         run: |
-          for _ in $(seq 1 20); do
-            curl -fsS --max-time 5 --resolve "api.exlibris.world:443:$VPS_HOST" \
-              https://api.exlibris.world/health && exit 0
-            sleep 3
-          done
-          echo "https://api.exlibris.world/health on the VPS did not answer" >&2
-          exit 1
+          # Both retried: on a new name Caddy may still be getting the
+          # certificate.
+          check() {
+            for _ in $(seq 1 20); do
+              curl -fsS --max-time 5 --resolve "$1:443:$VPS_HOST" "https://$1$2" \
+                | grep -F "$3" >/dev/null && return 0
+              sleep 3
+            done
+            echo "https://$1$2 on the VPS did not answer as expected" >&2
+            return 1
+          }
+          check "$API_HOST" /health '"ok"'
+          if [ -n "$FRONTEND_HOST" ]; then
+            check "$FRONTEND_HOST" / '<div id="root">'
+          fi
 
       # `prod` names the image last deployed successfully (compose.yaml's
       # default), so it moves only after the checks above pass.

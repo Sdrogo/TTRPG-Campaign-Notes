@@ -250,6 +250,11 @@ image search, read aloud, GDPR (10-01 → 10-10). See the two older archives.
 
 ## Next Up
 
+- **73, Leave Vercel and Supabase** (product owner, 2026-11-15): six steps
+  on the VPS, ~9–10 h of Claude build time. Ticket confirmed 2026-11-16;
+  step 1 built (frontend served by Caddy, deploy builds and ships it), to be
+  switched in on the new Strasbourg VPS by the product owner. Still open:
+  sign-in option, files provider, linking (steps 3–4).
 - **License** (product owner, 2026-11-15): GPL-3.0 replaced by the
   Functional Source License `FSL-1.1-ALv2` (no commercial competing service;
   each version becomes Apache-2.0 after two years), licensor Andrea Partenope.
