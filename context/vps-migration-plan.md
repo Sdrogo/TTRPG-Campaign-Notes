@@ -15,7 +15,7 @@ Render production service and the production frontend's `VITE_API_BASE_URL`
 points at it. The VPS exists (OVHcloud VPS-1, 2 vCores / 4 GB, Debian 12 with
 Docker, datacenter Erith, UK; host `vps-5a99f406.vps.ovh.net`, user `debian`)
 and was hardened as in §4; `api-vps.exlibris.world` points at it. The files it
-runs are in `deploy/` and `.github/workflows/deploy-prod.yml` (§5). Next: the
+runs are in `deploy/` and `.github/workflows/deploy-prod.yml` / `deploy-vps.yml` (§5). Next: the
 first deploy (§9 step 2), then the test and the switch. Production traffic is
 still served by Render.
 
@@ -176,7 +176,7 @@ CI) → release PR `staging` → `main`. Only what happens on `main` changes.
 1. **Registry**: GitHub Container Registry (`ghcr.io`), free for this use and
    authenticated with the workflow's own `GITHUB_TOKEN` (`packages: write`).
    Keep the package private; the VPS pulls with a read-only token.
-2. **Build once, in CI**: `.github/workflows/deploy-prod.yml` runs as a
+2. **Build once, in CI**: `.github/workflows/deploy-prod.yml` (the job itself is in the shared `deploy-vps.yml` since ticket 73) runs as a
    `workflow_run` after `CI` succeeds on a push to `main`, or by hand (Actions
    → Run workflow, with an optional commit or branch) to redeploy or roll back.
    It builds `backend/Dockerfile` like the `Backend image` job and pushes it as

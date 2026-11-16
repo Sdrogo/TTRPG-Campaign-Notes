@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Deploys one backend image on the VPS and waits until it is healthy.
-# Run by .github/workflows/deploy-prod.yml over SSH from /opt/exlibris:
+# Run by .github/workflows/deploy-vps.yml (for production and staging) over
+# SSH from /opt/exlibris:
 #   bash deploy.sh <image tag>
 # By hand, to roll back to the previous image (and its frontend):
 #   cd /opt/exlibris && bash deploy.sh "$(cat .backend_tag.previous)"
@@ -83,7 +84,8 @@ trap - ERR
 # kept for that commit; if it was pruned, the live frontend stays, and the
 # script says so.
 if [ -z "$build" ]; then
-  build="$(ls -1t site/releases | grep -E "^$tag-[0-9]+$" | head -n 1 || true)"
+  # (`<tag>` alone: the layout of the first deploys, 2026-11-16.)
+  build="$(ls -1t site/releases | grep -E "^$tag(-[0-9]+)?$" | head -n 1 || true)"
 fi
 if [ -n "$build" ] && [ -f "site/releases/$build/index.html" ]; then
   ln -sfn "releases/$build" site/current.new
