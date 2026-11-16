@@ -49,6 +49,7 @@ import type { Member } from '../types/member';
 import type { MainItem, Tag } from '../types/tag';
 import { itemLabel, reorderShownItems } from '../lib/mainItems';
 import { notifyError } from '../lib/notify';
+import { viewAsCandidates } from '../lib/viewAs';
 import { PageHeading } from '../components/PageHeading';
 import { EmptyState } from '../components/EmptyState';
 
@@ -184,9 +185,7 @@ function RoomDocumentsContent({ roomId, currentUserId }: { roomId: string; curre
                   canImport={canCreateDocument}
                   currentUserId={currentUserId}
                   onLeft={() => navigate('/rooms')}
-                  viewAsMembers={
-                    isMaster ? members.data!.filter((m) => m.userId !== currentUserId) : undefined
-                  }
+                  viewAsMembers={isMaster ? viewAsCandidates(members.data!) : undefined}
                 />
               )}
             </>

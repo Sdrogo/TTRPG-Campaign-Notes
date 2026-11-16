@@ -5,11 +5,12 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { apiFetch } from '../../lib/apiClient';
-import { setViewAsUser, viewAsUser } from '../../lib/viewAs';
+import { setViewAsUser, viewAsCandidates, viewAsUser } from '../../lib/viewAs';
 import { useReadOnly, useViewAs } from '../../hooks/useViewAs';
 import { ViewAsProvider } from '../../components/ViewAsProvider';
 import { AppHeader } from '../../components/AppHeader';
 import { rawMember, rawRoom } from '../fixtures';
+import type { Member } from '../../types/member';
 import { renderWithProviders } from '../utils';
 
 vi.mock('../../lib/apiClient', async (importOriginal) => ({
@@ -72,7 +73,35 @@ describe('viewAs module state', () => {
   });
 });
 
+describe('viewAsCandidates', () => {
+  it('offers only the Players: another Master sees everything, like the caller', () => {
+    const member = (userId: string, role: Member['role']) => ({ userId, role }) as Member;
+    const members = [member('master', 'master'), member('co-master', 'master'), member('alice', 'player')];
+
+    expect(viewAsCandidates(members).map((member) => member.userId)).toEqual(['alice']);
+  });
+});
+
 describe('ViewAsProvider', () => {
+  it.each([
+    '/rooms/room-1',
+    '/rooms/room-1/sections/section-1',
+    '/rooms/room-1/session-zero',
+    '/rooms/room-1/clocks',
+  ])('previews the landing page, Sections, Session 0 and Clocks too (%s)', (path) => {
+    render(`${path}?as=alice`);
+
+    expect(view()).toBe('room-1:alice');
+    expect(viewAsUser()).toBe('alice');
+  });
+
+  it("doesn't preview the Room's setup", () => {
+    render('/rooms/room-1/setup?as=alice');
+
+    expect(view()).toBe('own');
+    expect(viewAsUser()).toBeNull();
+  });
+
   it("is the signed-in user's own view without the parameter", () => {
     const { ownClient, unmount } = render('/rooms/room-1/documents');
 

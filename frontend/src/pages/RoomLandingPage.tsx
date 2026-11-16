@@ -18,6 +18,7 @@ import { canCreateDocuments } from '../lib/roomPermissions';
 import { missingPageKinds, sectionHref } from '../lib/landing';
 import { sectionDescription, sectionTitle } from '../lib/landingText';
 import { useBackState } from '../lib/backNav';
+import { viewAsCandidates } from '../lib/viewAs';
 import { PageHeading } from '../components/PageHeading';
 import { DocumentMentionsProvider } from '../components/mentions/DocumentMentionsProvider';
 
@@ -72,7 +73,7 @@ function RoomLandingContent({ roomId, currentUserId }: { roomId: string; current
             canImport={canCreateDocuments(me, room.data)}
             currentUserId={currentUserId}
             onLeft={() => navigate('/rooms')}
-            viewAsMembers={isMaster ? members.data!.filter((m) => m.userId !== currentUserId) : undefined}
+            viewAsMembers={isMaster ? viewAsCandidates(members.data!) : undefined}
           />
           )
         }

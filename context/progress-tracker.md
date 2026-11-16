@@ -118,6 +118,11 @@ One line per unit, dates 2026, newest first. Spec files live in
 
 ### 2026-10-12 → 11-10
 
+- **View as: Players only, every Room page** (11-15, bugfix, no mig.): the
+  "View as" picker lists only Players (another Master sees everything, so
+  previewing one looked like Master-only content leaking under the read-only
+  banner); the preview now also covers the landing, Sections, Session 0 and
+  Clocks, where "View as" did nothing (ROOM_PAGES was still spec 22b's list).
 - **Demo tour highlight beside the Document aside** (11-14, bugfix, no mig.):
   a target marked `data-tour-fit="content"` (relational link Note, Document
   text) is lit only as wide as its lines, since its block boxes run under the
@@ -245,6 +250,14 @@ image search, read aloud, GDPR (10-01 → 10-10). See the two older archives.
 
 ## Next Up
 
+- **73, Leave Vercel and Supabase** (product owner, 2026-11-15): six steps
+  on the VPS, ~9–10 h of Claude build time. Ticket confirmed 2026-11-16;
+  step 1 built (frontend served by Caddy, deploy builds and ships it), to be
+  switched in on the new Strasbourg VPS by the product owner. Still open:
+  sign-in option, files provider, linking (steps 3–4).
+- **License** (product owner, 2026-11-15): GPL-3.0 replaced by the
+  Functional Source License `FSL-1.1-ALv2` (no commercial competing service;
+  each version becomes Apache-2.0 after two years), licensor Andrea Partenope.
 - **72, Security hardening** (product owner, 2026-11-14, from the 1.0
   readiness check): built on PR #325 (headers on Vercel and Caddy, body cap,
   `/docs` off, per-user rate limits, `SECURITY.md`, security CI job) and
