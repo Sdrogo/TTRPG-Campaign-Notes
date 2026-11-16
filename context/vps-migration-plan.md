@@ -343,6 +343,21 @@ Independent of the backend move, the production frontend can leave
    change: their callback is Supabase's, not ours.
 5. Order: 3 and 4 before 2, so the first visit on the new domain already works.
 
+**Since ticket 73 step 1 the frontend can move to the VPS** (Caddy serves it,
+the deploy builds and ships it; `context/architecture.md` → Environments).
+It is off by default on every server, so a release never touches one that
+doesn't serve it. Order for the server taking over:
+
+1. Its `/opt/exlibris/.env`: `FRONTEND_HOSTS` (the names it serves),
+   `FRONTEND_REDIRECT_HOSTS` (`www.exlibris.world`, redirected to the apex)
+   and `CSP_CONNECT_SRC` (API and Supabase origins).
+2. `vps-production` variables: `VITE_API_BASE_URL`, `VITE_SUPABASE_URL`,
+   `VITE_SUPABASE_PUBLISHABLE_KEY`, and `CHECK_FRONTEND_HOST` (plus
+   `CHECK_API_HOST` while trying it under temporary names).
+3. A deploy (release or Run workflow), checked under temporary names.
+4. Only then DNS: `@`, `www` and `api` to the server; `docker compose up -d
+   caddy` there after `.env` lists the real names.
+
 ## 11. Open questions for the product owner
 
 1. **Domain**: answered, `exlibris.world` on Hostinger (2026-10-08).

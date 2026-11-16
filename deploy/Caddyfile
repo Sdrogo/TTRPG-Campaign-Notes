@@ -40,6 +40,12 @@
 	}
 }
 
+# www goes to the apex, as it did on Vercel, so sign-in only ever returns to
+# one origin. Off by default, like FRONTEND_HOSTS.
+{$FRONTEND_REDIRECT_HOSTS} {
+	redir https://exlibris.world{uri} permanent
+}
+
 # The API.
 {$API_HOSTS} {
 	# Security headers on every response, the live streams included (spec 72
