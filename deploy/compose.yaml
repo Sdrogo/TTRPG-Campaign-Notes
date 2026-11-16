@@ -1,8 +1,11 @@
 # Production backend on the VPS (context/vps-migration-plan.md). Lives in
 # /opt/exlibris on the server next to:
 #   backend.env  the backend's settings (secrets, chmod 600, never in git)
-#   .env         non-secret settings for this file: API_HOSTS, and
-#                BACKEND_TAG once deploy.sh has run
+#   .env         non-secret settings for this file: API_HOSTS,
+#                FRONTEND_HOSTS, CSP_CONNECT_SRC, and BACKEND_TAG once
+#                deploy.sh has run
+#   site/        the built frontend: releases/<sha>, and `current`, a link
+#                to the live one (deploy.sh)
 # The deploy workflow copies this file, the Caddyfile and deploy.sh here on
 # every deploy, so edit them in the repository, not on the server.
 services:
@@ -39,8 +42,13 @@ services:
       # only api-vps (api still points at Render, so no certificate could be
       # issued for it); the cutover adds api (vps-migration-plan.md, §9).
       API_HOSTS: ${API_HOSTS:-api-vps.exlibris.world}
+      # The frontend's names (ticket 73), and the origins its CSP lets it
+      # call: the API and Supabase (auth, until ticket 73 step 3).
+      FRONTEND_HOSTS: ${FRONTEND_HOSTS:-exlibris.world, www.exlibris.world}
+      CSP_CONNECT_SRC: ${CSP_CONNECT_SRC:-https://api.exlibris.world https://mlksmacrcjurfuxtwdjw.supabase.co wss://mlksmacrcjurfuxtwdjw.supabase.co}
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./site:/srv/site:ro
       - caddy_data:/data
       - caddy_config:/config
     depends_on:

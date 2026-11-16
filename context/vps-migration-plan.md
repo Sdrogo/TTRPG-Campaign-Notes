@@ -361,7 +361,7 @@ says GitHub.
 
 | Task | How |
 |---|---|
-| Deploy | Release `staging` → `main`; the workflow deploys after CI. By hand: GitHub → Actions → *Deploy production backend* → Run workflow (optional commit or branch). |
+| Deploy | Release `staging` → `main`; the workflow deploys after CI. By hand: GitHub → Actions → *Deploy production* → Run workflow (optional commit or branch). |
 | Roll back the code | Run the workflow on an older commit, or `bash deploy.sh "$(cat .backend_tag.previous)"`. |
 | Roll back the host | Resume the Render service (auto-deploy off), then point the `api` record back to a CNAME `exlibri-prod-docker.onrender.com`. |
 | Logs | `docker compose logs --tail 100 backend` (or `caddy`); `-f` to follow. |

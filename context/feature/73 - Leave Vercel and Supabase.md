@@ -1,7 +1,9 @@
 # 73 - Leave Vercel and Supabase
 
-Status: **plan, to confirm**. No code until the product owner answers the
-questions at the end (rule: ticket and docs first).
+Status: **confirmed 2026-11-16, step 1 built** (frontend served by Caddy,
+`deploy-prod.yml` builds and ships it; switched in by the product owner on the
+new Strasbourg VPS). Steps 3 and 4 wait for the answers to questions 1, 2
+and 4 at the end.
 
 ## Goals
 
@@ -251,7 +253,7 @@ keeps running between steps.
 
 | # | Step | Claude build time | Downtime in production | Product owner's part |
 |---|---|---|---|---|
-| 1 | New production VPS (OVH VPS-2, Strasbourg): same setup as today's (Docker, Caddy, deploy workflow pointed at it), plus the frontend served by Caddy (`vercel.json` headers move to the Caddyfile); API and frontend switched to it | ~1.5 h | none (DNS switch, TTL 300; old box and Vercel keep serving meanwhile) | order and harden the new VPS (same steps as 2026-10-08), GitHub secrets, DNS switch; delete the Vercel project after a quiet week |
+| 1 | New production VPS (OVH VPS-2, Strasbourg): same setup as today's (Docker, Caddy, deploy workflow pointed at it), plus the frontend served by Caddy (`vercel.json` headers move to the Caddyfile); API and frontend switched to it | ~1.5 h | none (DNS switch, TTL 300; old box and Vercel keep serving meanwhile) | order and harden the new VPS (same steps as 2026-10-08), GitHub secrets, DNS switch; delete the Vercel project after a quiet week. **Built 2026-11-16**: `deploy/Caddyfile` `{$FRONTEND_HOSTS}` site, `deploy.sh` (`site/releases/<sha>`, `site/current`), `deploy-prod.yml` (frontend build, `CHECK_*_HOST`) |
 | 2 | Current VPS-1 turned into staging (frontend, backend, Postgres, deploy on `staging`); still using the staging Supabase Auth and Storage | ~1 h | none | DNS records for the two staging names; staging `backend.env`; then Render staging can go |
 | 3 | Sign-in in the backend (option A) | ~3–4 h incl. tests | none; every user is signed out once | OAuth consoles: new redirect URIs, client secrets in both `backend.env`; run the migration on staging, then prod |
 | 4 | Files to object storage, plus the copy script (lists Supabase objects, copies each, checks size; safe to re-run, only copies what is missing) | ~1.5 h | none: copy, deploy, copy again for anything uploaded meanwhile | create the buckets and keys at OVH |
