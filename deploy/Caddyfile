@@ -87,9 +87,10 @@
 
 	# Caddy's own 413 never passes through the backend's CORS middleware;
 	# without these headers the browser reports a network error instead of
-	# the status (spec 72 Decision 6). Only the production origins get them.
+	# the status (spec 72 Decision 6). Only our own origins get them:
+	# production, and staging (ticket 73 step 2).
 	handle_errors 413 {
-		@allowed_origin header_regexp Origin ^https://(www\.)?exlibris\.world$
+		@allowed_origin header_regexp Origin ^https://((www|staging)\.)?exlibris\.world$
 		header @allowed_origin {
 			Access-Control-Allow-Origin {http.request.header.Origin}
 			Access-Control-Allow-Credentials true

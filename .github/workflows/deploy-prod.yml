@@ -1,27 +1,13 @@
 name: Deploy production
 
-# Builds the backend image, pushes it to GHCR and deploys it on the VPS
-# (context/vps-migration-plan.md, §5), together with the frontend built from
-# the same commit (ticket 73: Caddy serves it, replacing Vercel). Runs after
-# CI passes on a push to `main`, or by hand (Actions → Run workflow) to deploy or roll back to any
-# commit. Off until the repository variable VPS_DEPLOY_ENABLED is `true`.
-# Migrations stay a by-hand step and are never run here.
+# `main` → the production VPS (ticket 73: frontend and API, Strasbourg). The
+# work is in deploy-vps.yml; what it needs is listed there, in the
+# `vps-production` environment (not `production`, which Vercel's own GitHub
+# deployments used). Runs after CI passes on a push to `main`, or by hand
+# (Actions → Run workflow) to deploy or roll back to any commit. Off until
+# the repository variable VPS_DEPLOY_ENABLED is `true`.
 #
-# Needs, in the `vps-production` environment (not `production`, which
-# Vercel's own GitHub deployments already use): secrets VPS_HOST, VPS_USER,
-# VPS_SSH_KEY (a key used only by this workflow) and VPS_KNOWN_HOSTS (the
-# output of `ssh-keyscan -t ed25519 <host>`, checked by hand). And variables
-# (not secrets: they end up in the public bundle) VITE_API_BASE_URL,
-# VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY for the frontend build:
-# with no VITE_API_BASE_URL the frontend is neither built nor shipped (a
-# server that doesn't serve it yet). CHECK_FRONTEND_HOST turns on the outside
-# check of the frontend under that name; CHECK_API_HOST (default
-# api.exlibris.world) is the API's. Both let a new server be tried under
-# other names before the DNS switch. Order for a server taking over the
-# frontend: its .env FRONTEND_HOSTS and these variables first, then DNS.
-#
-# Both triggers only work from the default branch: this starts deploying
-# once it reaches `main` with a release.
+# Both triggers only work from the default branch.
 on:
   workflow_run:
     workflows: [CI]
@@ -41,128 +27,19 @@ concurrency:
 permissions:
   contents: read
 
-env:
-  IMAGE: ghcr.io/sdrogo/ttrpg-campaign-notes-backend
-
 jobs:
   deploy:
-    name: Build and deploy
     if: >-
       vars.VPS_DEPLOY_ENABLED == 'true' &&
       (github.event_name == 'workflow_dispatch' ||
        (github.event.workflow_run.conclusion == 'success' &&
         github.event.workflow_run.event == 'push'))
-    runs-on: ubuntu-latest
-    environment: vps-production
-    timeout-minutes: 20
     permissions:
       contents: read
       packages: write
-
-    steps:
-      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
-        with:
-          ref: ${{ github.event.workflow_run.head_sha || inputs.ref || 'main' }}
-          persist-credentials: false
-
-      - name: Resolve the commit
-        id: commit
-        run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
-
-      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
-        with:
-          node-version: '24'
-          cache: npm
-          cache-dependency-path: frontend/package-lock.json
-
-      # Before the image, so a missing setting stops the deploy early. The
-      # VITE_* values are baked into the bundle at build time: an empty one
-      # would give a frontend that loads and then fails on every call.
-      - name: Build the frontend
-        if: vars.VITE_API_BASE_URL != ''
-        working-directory: frontend
-        env:
-          VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL }}
-          VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
-          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ vars.VITE_SUPABASE_PUBLISHABLE_KEY }}
-        run: |
-          for name in VITE_API_BASE_URL VITE_SUPABASE_URL VITE_SUPABASE_PUBLISHABLE_KEY; do
-            if [ -z "${!name}" ]; then
-              echo "variable $name is not set in the vps-production environment" >&2
-              exit 1
-            fi
-          done
-          npm ci
-          npm run build
-          tar -czf ../frontend.tgz -C dist .
-
-      - name: Build and push the image
-        env:
-          SHA: ${{ steps.commit.outputs.sha }}
-          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
-          docker build -t "$IMAGE:$SHA" backend
-          docker push "$IMAGE:$SHA"
-
-      - name: Set up SSH
-        env:
-          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
-          VPS_KNOWN_HOSTS: ${{ secrets.VPS_KNOWN_HOSTS }}
-        run: |
-          install -m 700 -d ~/.ssh
-          printf '%s\n' "$VPS_SSH_KEY" > ~/.ssh/deploy_key
-          chmod 600 ~/.ssh/deploy_key
-          printf '%s\n' "$VPS_KNOWN_HOSTS" > ~/.ssh/known_hosts
-
-      # compose.yaml, the Caddyfile and deploy.sh come from this commit, so
-      # the server always runs the versions in the repository.
-      - name: Deploy on the VPS
-        env:
-          SHA: ${{ steps.commit.outputs.sha }}
-          TARGET: ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}
-        run: |
-          files=(deploy/compose.yaml deploy/Caddyfile deploy/deploy.sh)
-          [ -f frontend.tgz ] && files+=(frontend.tgz)
-          scp -i ~/.ssh/deploy_key "${files[@]}" "$TARGET:/opt/exlibris/"
-          ssh -i ~/.ssh/deploy_key "$TARGET" "bash /opt/exlibris/deploy.sh $SHA"
-
-      # From outside, through Caddy and HTTPS, at the VPS's own address
-      # (--resolve): public DNS may point at another server (a rollback, or a
-      # new server not switched in yet), so it would pass while the VPS is
-      # broken. The frontend, when CHECK_FRONTEND_HOST is set, must answer
-      # with its index.html.
-      - name: Check the VPS from outside
-        env:
-          VPS_HOST: ${{ secrets.VPS_HOST }}
-          API_HOST: ${{ vars.CHECK_API_HOST || 'api.exlibris.world' }}
-          FRONTEND_HOST: ${{ vars.CHECK_FRONTEND_HOST }}
-        run: |
-          # Both retried: on a new name Caddy may still be getting the
-          # certificate.
-          check() {
-            for _ in $(seq 1 20); do
-              curl -fsS --max-time 5 --resolve "$1:443:$VPS_HOST" "https://$1$2" \
-                | grep -F "$3" >/dev/null && return 0
-              sleep 3
-            done
-            echo "https://$1$2 on the VPS did not answer as expected" >&2
-            return 1
-          }
-          check "$API_HOST" /health '"ok"'
-          if [ -n "$FRONTEND_HOST" ]; then
-            check "$FRONTEND_HOST" / '<div id="root">'
-          fi
-
-      # `prod` names the image last deployed successfully (compose.yaml's
-      # default), so it moves only after the checks above pass.
-      - name: Tag the image as prod
-        env:
-          SHA: ${{ steps.commit.outputs.sha }}
-        run: |
-          docker tag "$IMAGE:$SHA" "$IMAGE:prod"
-          docker push "$IMAGE:prod"
-
-      - name: Remove the SSH key
-        if: always()
-        run: rm -f ~/.ssh/deploy_key
+    uses: ./.github/workflows/deploy-vps.yml
+    with:
+      environment: vps-production
+      ref: ${{ github.event.workflow_run.head_sha || inputs.ref || 'main' }}
+      tag_alias: prod
+    secrets: inherit

@@ -255,7 +255,10 @@ image search, read aloud, GDPR (10-01 → 10-10). See the two older archives.
   step 1 built (frontend served by Caddy, deploy builds and ships it), to be
   switched in on the new Strasbourg VPS by the product owner (DNS moved
   2026-11-16). Fix after the switch: a redeploy of the live commit now
-  replaces its frontend build (it was kept, so new `VITE_*` values were lost). Still open:
+  replaces its frontend build (it was kept, so new `VITE_*` values were lost).
+  Step 2 built (same PR): one shared deploy workflow, `deploy-staging.yml` for
+  the Erith VPS as staging (frontend + API, still on the staging Supabase);
+  switched in by hand by the product owner. Still open:
   sign-in option, files provider, linking (steps 3–4).
 - **License** (product owner, 2026-11-15): GPL-3.0 replaced by the
   Functional Source License `FSL-1.1-ALv2` (no commercial competing service;

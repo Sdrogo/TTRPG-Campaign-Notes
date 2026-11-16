@@ -1,0 +1,45 @@
+name: Deploy staging
+
+# `staging` → the staging VPS (ticket 73 step 2: frontend and API on the
+# Erith VPS, staging.exlibris.world). The work is in deploy-vps.yml; what it
+# needs is listed there, in the `vps-staging` environment. Runs after CI
+# passes on a push to `staging`, or by hand (Actions → Run workflow). Off
+# until the repository variable VPS_STAGING_DEPLOY_ENABLED is `true`.
+#
+# Both triggers only work once this file is on the default branch (`main`),
+# so staging deploys start after the release that brings it.
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [staging]
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: Commit SHA or branch to deploy (default staging)
+        required: false
+
+# One deploy at a time, and never cancel one halfway.
+concurrency:
+  group: deploy-staging
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    if: >-
+      vars.VPS_STAGING_DEPLOY_ENABLED == 'true' &&
+      (github.event_name == 'workflow_dispatch' ||
+       (github.event.workflow_run.conclusion == 'success' &&
+        github.event.workflow_run.event == 'push'))
+    permissions:
+      contents: read
+      packages: write
+    uses: ./.github/workflows/deploy-vps.yml
+    with:
+      environment: vps-staging
+      ref: ${{ github.event.workflow_run.head_sha || inputs.ref || 'staging' }}
+      tag_alias: staging
+    secrets: inherit

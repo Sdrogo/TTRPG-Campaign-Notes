@@ -7,7 +7,7 @@
 #
 # The frontend (ticket 73) comes as frontend.tgz, copied here by the workflow
 # and built from the same commit as the image. It is unpacked into
-# site/releases/<tag> and goes live only once the backend is healthy, by
+# site/releases/<tag>-<time> and goes live only once the backend is healthy, by
 # replacing the site/current link in one rename, so a visitor never gets half
 # a build.
 set -euo pipefail
@@ -23,6 +23,9 @@ set_tag() {
 }
 touch .env
 mkdir -p site/releases
+# frontend.tgz belongs to this run only: never left, even by a failure, for
+# a later run (a rollback by hand) to pick up.
+trap 'rm -f frontend.tgz' EXIT
 previous="$(sed -n 's/^BACKEND_TAG=//p' .env)"
 
 # Pulled before .env changes: a failed pull leaves everything as it was.
@@ -34,11 +37,13 @@ BACKEND_TAG="$tag" docker compose pull backend
 build=
 if [ -f frontend.tgz ]; then
   build="$tag-$(date +%s)"
-  mkdir "site/releases/$build"
-  tar -xzf frontend.tgz -C "site/releases/$build"
+  # Under a temporary name until complete: a failed unpack leaves nothing a
+  # rollback could pick up (the next deploy clears it).
+  rm -rf site/releases/*.partial
+  mkdir "site/releases/$build.partial"
+  tar -xzf frontend.tgz -C "site/releases/$build.partial"
+  mv "site/releases/$build.partial" "site/releases/$build"
 fi
-# Never left for a later run (a rollback by hand) to pick up.
-rm -f frontend.tgz
 
 # From here on, any failure (`up`, the Caddy reload, the health check) puts
 # the last healthy image back, so neither a reboot nor the next deploy's
