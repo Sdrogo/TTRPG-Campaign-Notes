@@ -1,0 +1,216 @@
+name: Deploy to a VPS
+
+# The deploy itself, shared by deploy-prod.yml (`main` → production VPS) and
+# deploy-staging.yml (`staging` → staging VPS, ticket 73 step 2). Builds the
+# backend image and the frontend from one commit, pushes the image to GHCR,
+# copies compose.yaml, the Caddyfile, deploy.sh and the frontend to
+# /opt/exlibris on the VPS and runs deploy.sh there
+# (context/vps-migration-plan.md, §5). Migrations stay a by-hand step and are
+# never run here.
+#
+# Needs, in the caller's GitHub environment (`vps-production`,
+# `vps-staging`): secrets VPS_HOST, VPS_USER, VPS_SSH_KEY (a key used only by
+# these workflows) and VPS_KNOWN_HOSTS (`<ip> ssh-ed25519 <key>`, from the
+# server's /etc/ssh/ssh_host_ed25519_key.pub). And variables (not secrets:
+# they end up in the public bundle) VITE_API_BASE_URL, VITE_SUPABASE_URL and
+# VITE_SUPABASE_PUBLISHABLE_KEY for the frontend build: with no
+# VITE_API_BASE_URL the frontend is neither built nor shipped (a server that
+# doesn't serve it yet). CHECK_FRONTEND_HOST turns on the outside check of
+# the frontend under that name; CHECK_API_HOST (default api.exlibris.world)
+# is the API's. Both let a new server be tried under other names before the
+# DNS switch. Order for a server taking over the frontend: its .env
+# FRONTEND_HOSTS and these variables first, then DNS.
+on:
+  workflow_call:
+    inputs:
+      environment:
+        description: GitHub environment holding the VPS's secrets and variables
+        required: true
+        type: string
+      ref:
+        description: Commit SHA or branch to deploy
+        required: true
+        type: string
+      tag_alias:
+        description: Image tag moved to this commit once the deploy passes
+        required: true
+        type: string
+      migrate_if_labeled:
+        description: >-
+          Run the migrations first when the PR merged as `ref` carries the
+          `db-migration` label (ticket 74). Only for a merge commit.
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+env:
+  IMAGE: ghcr.io/sdrogo/ttrpg-campaign-notes-backend
+
+jobs:
+  # Ticket 74: the label on the merged PR is the product owner's go for the
+  # migrations. Found from the merge commit; any other way in migrates
+  # nothing.
+  label:
+    name: Check the db-migration label
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      migrate: ${{ steps.find.outputs.migrate }}
+    steps:
+      - name: Find the merged PR's labels
+        id: find
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          REF: ${{ inputs.ref }}
+          WANTED: ${{ inputs.migrate_if_labeled }}
+        run: |
+          migrate=false
+          if [ "$WANTED" = true ]; then
+            labels="$(gh api "repos/$REPO/commits/$REF/pulls" \
+              --jq '[.[] | select(.merged_at != null) | .labels[].name] | join(",")')"
+            echo "labels of the PR merged as $REF: ${labels:-none}"
+            case ",$labels," in *,db-migration,*) migrate=true ;; esac
+          fi
+          echo "migrate=$migrate" >> "$GITHUB_OUTPUT"
+          echo "migrations: $migrate"
+
+  deploy:
+    name: Build and deploy
+    needs: label
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          ref: ${{ inputs.ref }}
+          persist-credentials: false
+
+      - name: Resolve the commit
+        id: commit
+        run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      # Before the image, so a missing setting stops the deploy early. The
+      # VITE_* values are baked into the bundle at build time: an empty one
+      # would give a frontend that loads and then fails on every call.
+      - name: Build the frontend
+        if: vars.VITE_API_BASE_URL != ''
+        working-directory: frontend
+        env:
+          VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL }}
+          VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ vars.VITE_SUPABASE_PUBLISHABLE_KEY }}
+          ENVIRONMENT: ${{ inputs.environment }}
+        run: |
+          for name in VITE_API_BASE_URL VITE_SUPABASE_URL VITE_SUPABASE_PUBLISHABLE_KEY; do
+            if [ -z "${!name}" ]; then
+              echo "variable $name is not set in the $ENVIRONMENT environment" >&2
+              exit 1
+            fi
+          done
+          npm ci
+          npm run build
+          tar -czf ../frontend.tgz -C dist .
+
+      - name: Build and push the image
+        env:
+          SHA: ${{ steps.commit.outputs.sha }}
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
+          docker build -t "$IMAGE:$SHA" backend
+          docker push "$IMAGE:$SHA"
+
+      - name: Set up SSH
+        env:
+          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+          VPS_KNOWN_HOSTS: ${{ secrets.VPS_KNOWN_HOSTS }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$VPS_SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          printf '%s\n' "$VPS_KNOWN_HOSTS" > ~/.ssh/known_hosts
+
+      # Ticket 74: before the backend is switched, with the new image (so a
+      # migration that imports app code finds this commit's code), while the
+      # old backend keeps serving. A failure stops the deploy here: nothing
+      # is switched or tagged.
+      - name: Run the database migrations
+        if: needs.label.outputs.migrate == 'true'
+        env:
+          SHA: ${{ steps.commit.outputs.sha }}
+          TARGET: ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}
+        run: |
+          tar -czf migrations.tgz -C backend migrations alembic.ini
+          scp -i ~/.ssh/deploy_key deploy/compose.yaml deploy/migrate.sh migrations.tgz "$TARGET:/opt/exlibris/"
+          ssh -i ~/.ssh/deploy_key "$TARGET" "bash /opt/exlibris/migrate.sh $SHA"
+
+      # compose.yaml, the Caddyfile and deploy.sh come from this commit, so
+      # the server always runs the versions in the repository.
+      - name: Deploy on the VPS
+        env:
+          SHA: ${{ steps.commit.outputs.sha }}
+          TARGET: ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}
+        run: |
+          files=(deploy/compose.yaml deploy/Caddyfile deploy/deploy.sh deploy/migrate.sh)
+          [ -f frontend.tgz ] && files+=(frontend.tgz)
+          scp -i ~/.ssh/deploy_key "${files[@]}" "$TARGET:/opt/exlibris/"
+          ssh -i ~/.ssh/deploy_key "$TARGET" "bash /opt/exlibris/deploy.sh $SHA"
+
+      # From outside, through Caddy and HTTPS, at the VPS's own address
+      # (--resolve): public DNS may point at another server (a rollback, or a
+      # new server not switched in yet), so it would pass while the VPS is
+      # broken. The frontend, when CHECK_FRONTEND_HOST is set, must answer
+      # with its index.html.
+      - name: Check the VPS from outside
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          API_HOST: ${{ vars.CHECK_API_HOST || 'api.exlibris.world' }}
+          FRONTEND_HOST: ${{ vars.CHECK_FRONTEND_HOST }}
+        run: |
+          # Both retried: on a new name Caddy may still be getting the
+          # certificate.
+          check() {
+            for _ in $(seq 1 20); do
+              curl -fsS --max-time 5 --resolve "$1:443:$VPS_HOST" "https://$1$2" \
+                | grep -F "$3" >/dev/null && return 0
+              sleep 3
+            done
+            echo "https://$1$2 on the VPS did not answer as expected" >&2
+            return 1
+          }
+          check "$API_HOST" /health '"ok"'
+          if [ -n "$FRONTEND_HOST" ]; then
+            check "$FRONTEND_HOST" / '<div id="root">'
+          fi
+
+      # The alias (`prod`, `staging`) names the image last deployed
+      # successfully there (compose.yaml's default is `prod`), so it moves
+      # only after the checks above pass.
+      - name: Tag the image as ${{ inputs.tag_alias }}
+        env:
+          SHA: ${{ steps.commit.outputs.sha }}
+          ALIAS: ${{ inputs.tag_alias }}
+        run: |
+          docker tag "$IMAGE:$SHA" "$IMAGE:$ALIAS"
+          docker push "$IMAGE:$ALIAS"
+
+      - name: Remove the SSH key
+        if: always()
+        run: rm -f ~/.ssh/deploy_key

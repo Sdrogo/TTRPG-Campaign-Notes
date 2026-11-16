@@ -5,7 +5,7 @@
 # each must already resolve to this server.
 
 # The frontend (ticket 73 step 1, replacing Vercel): the built SPA, unpacked
-# by deploy.sh into site/releases/<sha> and switched in through the
+# by deploy.sh into site/releases/<sha>-<time> and switched in through the
 # site/current link. The headers are the ones vercel.json set, plus HSTS;
 # CSP_CONNECT_SRC lists the API and Supabase origins the app talks to.
 {$FRONTEND_HOSTS} {
@@ -87,9 +87,10 @@
 
 	# Caddy's own 413 never passes through the backend's CORS middleware;
 	# without these headers the browser reports a network error instead of
-	# the status (spec 72 Decision 6). Only the production origins get them.
+	# the status (spec 72 Decision 6). Only our own origins get them:
+	# production, and staging (ticket 73 step 2).
 	handle_errors 413 {
-		@allowed_origin header_regexp Origin ^https://(www\.)?exlibris\.world$
+		@allowed_origin header_regexp Origin ^https://((www|staging)\.)?exlibris\.world$
 		header @allowed_origin {
 			Access-Control-Allow-Origin {http.request.header.Origin}
 			Access-Control-Allow-Credentials true
