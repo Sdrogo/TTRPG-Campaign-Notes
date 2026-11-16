@@ -131,16 +131,19 @@ jobs:
           API_HOST: ${{ vars.CHECK_API_HOST || 'api.exlibris.world' }}
           FRONTEND_HOST: ${{ vars.CHECK_FRONTEND_HOST || 'exlibris.world' }}
         run: |
-          ok=
-          for _ in $(seq 1 20); do
-            if curl -fsS --max-time 5 --resolve "$API_HOST:443:$VPS_HOST" \
-                 "https://$API_HOST/health"; then ok=1; break; fi
-            sleep 3
-          done
-          [ -n "$ok" ] || { echo "https://$API_HOST/health on the VPS did not answer" >&2; exit 1; }
-          curl -fsS --max-time 10 --resolve "$FRONTEND_HOST:443:$VPS_HOST" \
-            "https://$FRONTEND_HOST/" | grep -F '<div id="root">' >/dev/null \
-            || { echo "https://$FRONTEND_HOST/ on the VPS did not serve the app" >&2; exit 1; }
+          # Both retried: on a new name Caddy may still be getting the
+          # certificate.
+          check() {
+            for _ in $(seq 1 20); do
+              curl -fsS --max-time 5 --resolve "$1:443:$VPS_HOST" "https://$1$2" \
+                | grep -F "$3" >/dev/null && return 0
+              sleep 3
+            done
+            echo "https://$1$2 on the VPS did not answer as expected" >&2
+            return 1
+          }
+          check "$API_HOST" /health '"ok"'
+          check "$FRONTEND_HOST" / '<div id="root">'
 
       # `prod` names the image last deployed successfully (compose.yaml's
       # default), so it moves only after the checks above pass.
