@@ -291,11 +291,13 @@ pytest, split by what a test needs rather than by what it covers.
 - Feature branches are cut from an up-to-date `origin/staging`
   (`git fetch origin staging` first) and merged back into it.
 - The `staging` → `main` release PR is opened only when the product
-  owner asks for a release. A migration that ships in it is applied to
-  the live database with their go-ahead before that PR is merged.
-- A PR that adds a migration is merged into `staging` only after the
-  migration is applied to the staging database (its own Supabase
-  project since 2026-10-04, `architecture.md` → Environments).
+  owner asks for a release. A migration that ships in it runs on the
+  live database when the product owner puts the `db-migration` label on
+  that PR (ticket 74, `architecture.md` → Environments).
+- A PR that adds or changes a migration carries the `db-migration` label
+  (the *Migration label* check fails without it); merged into `staging`,
+  the staging deploy runs it first. Migrations stay backward compatible:
+  the old backend serves while they run.
 - CI runs on every pull request and on pushes to `main` and `staging`.
 - Claude reviews every non-draft pull request into `staging`
   automatically (`.github/workflows/claude-code-review.yml`, replacing

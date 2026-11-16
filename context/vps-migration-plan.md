@@ -200,10 +200,10 @@ CI) → release PR `staging` → `main`. Only what happens on `main` changes.
    *Alternative without SSH from CI*: a pull-based updater on the VPS
    (Watchtower watching the `prod` tag). Simpler, but deploys become invisible
    to CI and harder to roll back; the push-based job is preferred.
-4. **Migrations stay by hand**, as today: applied to the production database
-   with the product owner's go-ahead **before** the release PR is merged
-   (`code-standards.md` → Branches and Pull Requests). The deploy job does not
-   run Alembic.
+4. **Migrations** (ticket 74, 2026-11-16, replacing the by-hand step): the
+   deploy runs `deploy/migrate.sh` on the server before switching the backend
+   when the merged PR carries the `db-migration` label; Actions → *Migrate
+   database* runs them on demand (`architecture.md` → Environments).
 5. **Render production is suspended** (2026-10-08), so a merge to `main`
    deploys to the VPS only. Turn its auto-deploy off before ever resuming it.
 6. **Staging is unchanged**: Render keeps deploying `staging` from its own
@@ -377,6 +377,8 @@ says GitHub.
 | Task | How |
 |---|---|
 | Deploy | Release `staging` → `main`; the workflow deploys after CI. By hand: GitHub → Actions → *Deploy production* → Run workflow (optional commit or branch). |
+| Migrate the database | Put the `db-migration` label on the PR before merging it (the deploy migrates first), or Actions → *Migrate database* → Run workflow (environment, optional ref; production waits for approval). Logs show `alembic current` before and after. |
+| Undo a migration | By hand on the server: `cd /opt/exlibris && docker compose run --rm --no-deps -T -v "$PWD/migrations-src/migrations:/app/migrations:ro" -v "$PWD/migrations-src/alembic.ini:/app/alembic.ini:ro" backend alembic downgrade -1` (the folder is left by the last run). |
 | Roll back the code | Run the workflow on an older commit, or `bash deploy.sh "$(cat .backend_tag.previous)"`. |
 | Roll back the host | Resume the Render service (auto-deploy off), then point the `api` record back to a CNAME `exlibri-prod-docker.onrender.com`. |
 | Logs | `docker compose logs --tail 100 backend` (or `caddy`); `-f` to follow. |

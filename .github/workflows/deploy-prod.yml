@@ -37,9 +37,13 @@ jobs:
     permissions:
       contents: read
       packages: write
+      pull-requests: read
     uses: ./.github/workflows/deploy-vps.yml
     with:
       environment: vps-production
       ref: ${{ github.event.workflow_run.head_sha || inputs.ref || 'main' }}
+      # A merge (not Run workflow) migrates first when its PR has the
+      # db-migration label (ticket 74).
+      migrate_if_labeled: ${{ github.event_name == 'workflow_run' }}
       tag_alias: prod
     secrets: inherit

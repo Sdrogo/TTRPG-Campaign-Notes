@@ -35,6 +35,13 @@ on:
         description: Image tag moved to this commit once the deploy passes
         required: true
         type: string
+      migrate_if_labeled:
+        description: >-
+          Run the migrations first when the PR merged as `ref` carries the
+          `db-migration` label (ticket 74). Only for a merge commit.
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -43,8 +50,39 @@ env:
   IMAGE: ghcr.io/sdrogo/ttrpg-campaign-notes-backend
 
 jobs:
+  # Ticket 74: the label on the merged PR is the product owner's go for the
+  # migrations. Found from the merge commit; any other way in migrates
+  # nothing.
+  label:
+    name: Check the db-migration label
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      migrate: ${{ steps.find.outputs.migrate }}
+    steps:
+      - name: Find the merged PR's labels
+        id: find
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          REF: ${{ inputs.ref }}
+          WANTED: ${{ inputs.migrate_if_labeled }}
+        run: |
+          migrate=false
+          if [ "$WANTED" = true ]; then
+            labels="$(gh api "repos/$REPO/commits/$REF/pulls" \
+              --jq '[.[] | select(.merged_at != null) | .labels[].name] | join(",")')"
+            echo "labels of the PR merged as $REF: ${labels:-none}"
+            case ",$labels," in *,db-migration,*) migrate=true ;; esac
+          fi
+          echo "migrate=$migrate" >> "$GITHUB_OUTPUT"
+          echo "migrations: $migrate"
+
   deploy:
     name: Build and deploy
+    needs: label
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
     timeout-minutes: 20
@@ -109,6 +147,20 @@ jobs:
           chmod 600 ~/.ssh/deploy_key
           printf '%s\n' "$VPS_KNOWN_HOSTS" > ~/.ssh/known_hosts
 
+      # Ticket 74: before the backend is switched, with the new image (so a
+      # migration that imports app code finds this commit's code), while the
+      # old backend keeps serving. A failure stops the deploy here: nothing
+      # is switched or tagged.
+      - name: Run the database migrations
+        if: needs.label.outputs.migrate == 'true'
+        env:
+          SHA: ${{ steps.commit.outputs.sha }}
+          TARGET: ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}
+        run: |
+          tar -czf migrations.tgz -C backend migrations alembic.ini
+          scp -i ~/.ssh/deploy_key deploy/compose.yaml deploy/migrate.sh migrations.tgz "$TARGET:/opt/exlibris/"
+          ssh -i ~/.ssh/deploy_key "$TARGET" "bash /opt/exlibris/migrate.sh $SHA"
+
       # compose.yaml, the Caddyfile and deploy.sh come from this commit, so
       # the server always runs the versions in the repository.
       - name: Deploy on the VPS
@@ -116,7 +168,7 @@ jobs:
           SHA: ${{ steps.commit.outputs.sha }}
           TARGET: ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}
         run: |
-          files=(deploy/compose.yaml deploy/Caddyfile deploy/deploy.sh)
+          files=(deploy/compose.yaml deploy/Caddyfile deploy/deploy.sh deploy/migrate.sh)
           [ -f frontend.tgz ] && files+=(frontend.tgz)
           scp -i ~/.ssh/deploy_key "${files[@]}" "$TARGET:/opt/exlibris/"
           ssh -i ~/.ssh/deploy_key "$TARGET" "bash /opt/exlibris/deploy.sh $SHA"

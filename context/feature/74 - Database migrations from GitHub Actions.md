@@ -1,7 +1,8 @@
 # 74 - Database migrations from GitHub Actions
 
-Status: **ticket, to confirm**. No code until the product owner confirms
-(rule: ticket and docs first).
+Status: **confirmed 2026-11-16** ("ok alle 3 opzioni": label `db-migration`,
+the CI reminder, a required reviewer on the production button). **Built** in
+PR #334.
 
 Asked by the product owner on 2026-11-16: "possiamo scrivere un action su
 github per fare le migrazioni del DB su staging e prod?", then "potremmo
@@ -63,7 +64,8 @@ qualcosa?".
    the label re-runs it (`pull_request` `labeled` / `unlabeled` events).
 6. **Production approval**: the label is the approval. Optionally the
    product owner can also add a required reviewer on the GitHub environment
-   used by the manual button for production (`vps-production-migrate`), so
+   used by the manual button for production (`migrate-production-approval`, a job of its own before the one that uses
+   `vps-production`), so
    the button waits for a click.
 7. **Downgrades are not automated.** Rolling back a migration stays a
    by-hand step (`alembic downgrade`), documented in the runbook.
@@ -77,7 +79,8 @@ qualcosa?".
 - `deploy/deploy.sh`: a `migrate` sub-command (or `deploy/migrate.sh`) that
   runs `alembic current`, `alembic upgrade head`, `alembic current`.
 - `.github/workflows/migrate-db.yml`: the manual button.
-- `ci.yml`: the label reminder job.
+- `migration-label.yml` (its own workflow, so the `labeled`/`unlabeled`
+  events don't re-run the whole CI): the label reminder.
 - Docs: `architecture.md` (Environments, migrations bullet), `code-standards.md`
   if it mentions applying migrations, `vps-migration-plan.md` runbook,
   progress tracker; memory note that migrations are no longer by hand.
@@ -91,7 +94,7 @@ qualcosa?".
   migration that comes along.
 - The CI reminder on a test PR with and without the label.
 
-## Questions for the product owner
+## Questions for the product owner (answered 2026-11-16: yes to all three)
 
 1. Label name `db-migration`, fine?
 2. The CI reminder (decision 5): wanted, or too strict?
