@@ -277,7 +277,7 @@ test.
 |---|---|
 | OVH VPS-2 Warsaw, production | €7.21 |
 | VPS-1, staging (already paid) | €4.49 |
-| Object storage, files + backups (~0.5 GB today) | a few cents; at 50 GB, ~€0.50–1 (check OVH's current price per GB and for outgoing traffic) |
+| Object storage, OVH Multi Zone Standard (files) + Infrequent Access (backups): ~€0.014 / ~€0.0095 per GiB a month, traffic and API requests free (OVH price list, checked 2026-11-16) | a few cents today; ~€0.70 at 50 GB |
 | **Total** | **~€12**, against ~€45 to stay on Vercel Pro + Supabase Pro |
 
 The VPS is the next ceiling: at some point (hundreds of active users, large
