@@ -23,11 +23,13 @@ set_tag() {
 }
 touch .env
 mkdir -p site/releases
-# Deploying the commit that is already live again keeps its folder as it is.
-if [ -f frontend.tgz ] && [ "$(readlink site/current || true)" != "releases/$tag" ]; then
-  rm -rf "site/releases/$tag"
-  mkdir "site/releases/$tag"
-  tar -xzf frontend.tgz -C "site/releases/$tag"
+# Unpacked beside the live build; it takes the release's name only once the
+# backend is healthy (below). A redeploy of the same commit with other build
+# settings (the VITE_* variables) still replaces the live build.
+if [ -f frontend.tgz ]; then
+  rm -rf "site/releases/$tag.new"
+  mkdir "site/releases/$tag.new"
+  tar -xzf frontend.tgz -C "site/releases/$tag.new"
 fi
 rm -f frontend.tgz
 previous="$(sed -n 's/^BACKEND_TAG=//p' .env)"
@@ -70,6 +72,14 @@ trap - ERR
 
 # The frontend of this commit goes live. A rollback to a commit whose build
 # was pruned keeps the frontend that is live now, and says so.
+if [ -d "site/releases/$tag.new" ]; then
+  # The two renames are a moment apart; the old build of the same commit
+  # goes only after them.
+  rm -rf "site/releases/$tag.old"
+  if [ -d "site/releases/$tag" ]; then mv "site/releases/$tag" "site/releases/$tag.old"; fi
+  mv "site/releases/$tag.new" "site/releases/$tag"
+  rm -rf "site/releases/$tag.old"
+fi
 if [ -f "site/releases/$tag/index.html" ]; then
   ln -sfn "releases/$tag" site/current.new
   mv -T site/current.new site/current
