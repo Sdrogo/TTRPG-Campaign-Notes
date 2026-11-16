@@ -313,10 +313,12 @@ Room PDFs) VPS-3 or VPS-4 is an in-place upgrade away, not a migration; several 
 
 ## Questions for the product owner
 
-1. **Sign-in**: A (our own, in the backend), recommended, or B (self-hosted
-   Supabase Auth, no frontend change)?
-2. **Files**: OVH Object Storage (recommended), another S3 provider, or the VPS
-   disk?
+1. **Sign-in**: decided 2026-11-16, **A** (our own, in the backend).
+2. **Files**: decided 2026-11-16, **stay on Supabase Storage for now**, move
+   later if needed (step 4 postponed). Supabase stays for files only, on the
+   Free plan (1 GB, 98 MB used): watch the free-plan pause for inactivity
+   once its database is no longer used, and the backups of step 5 must then
+   also cover the bucket.
 3. **Production VPS**: decided and ordered, OVH VPS-2 in Strasbourg, Debian 13 (2026-11-16). (Decided: current VPS-1 becomes
    staging, a bigger one runs production.)
 4. **Account linking by verified email** across providers, like Supabase
