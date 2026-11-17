@@ -6,8 +6,9 @@ the Strasbourg VPS, 2026-11-16). **Step 2 live** (staging on the Erith VPS,
 #338; staging checked by the product owner with linking across providers).
 **Step 4 live** 2026-11-17 (files to Garage on both VPSes, PR #342,
 release #343; nightly encrypted backup to the staging VPS running).
-**Step 5 detailed** 2026-11-17 (section 2, update; docs PR #344), waiting for
-the product owner's confirmation. Questions: sign-in A (2026-11-16); files to
+**Step 5 built** 2026-11-17 (section 2, update; PR #344, confirmed by the
+product owner the same day): live once `db-setup.sh` runs on each server.
+Questions: sign-in A (2026-11-16); files to
 Garage on the production VPS (2026-11-17, replacing "stay on Supabase for
 now"); backup age check through ticket 75 (question 9, 2026-11-17).
 
@@ -157,7 +158,9 @@ migrations; this replaces the backup bullets above where they differ.
      `postgresql+asyncpg://exlibris:…@db:5432/exlibris` (the old line is kept,
      commented, for rollback), starts the backend and waits for `/health`.
   Safe to re-run until step 5 succeeds; afterwards it refuses, so it can never
-  overwrite the live VPS database with an older Supabase copy.
+  overwrite the live VPS database with an older Supabase copy. Given a dump
+  file (`bash db-setup.sh restore-<day>.dump`) it restores that instead, which
+  is how the runbook restores (built 2026-11-17).
 - **Maintenance window**: the backend is stopped from step 2 to step 5, so
   the API does not answer (the app shows its usual connection error). The
   database is 61 MB on production and 42 MB on staging: about 2–5 minutes, not
@@ -166,15 +169,17 @@ migrations; this replaces the backup bullets above where they differ.
   network with `backend.env`, so it reaches `db:5432` with no change.
 - **Nightly backup**: `backup-files.sh` becomes `backup.sh` and also runs
   `pg_dump -Fc` of the VPS database, into the same encrypted target as the
-  files (rclone crypt, `exlibris-backups/db/<YYYY-MM-DD>.dump`) with the same
+  files (rclone crypt, `exlibris-backups/db/<YYYY-MM-DD>/exlibris.dump`) with the same
   retention and the same password. The `age` tool and the copy pulled over
   SSH (above) are dropped: one tool, one password, one place. The cron line
   installed in step 4 keeps working (the old name stays as a one-line
   wrapper until step 6).
 - **Restore runbook** in `context/restore-runbook.md`: restore the database
   from a given day, restore the files, and rebuild production on a fresh VPS.
-  Tried once on staging (restore yesterday's production dump into a throwaway
-  database there, check row counts, drop it) before production moves.
+  `bash backup.sh check` restores a night's dump into a throwaway database
+  on production and compares row counts with the live one; it runs right
+  after production's first database backup, and again every few months.
+  The move of staging's database is the rehearsal of `db-setup.sh` itself.
 - **Backup age check**: `backup.sh` writes the time of its last success to
   `backup-last-ok`; the monitoring of ticket 75 reads it (question 9).
 - **Order**: staging first (its own Supabase project, as the rehearsal),

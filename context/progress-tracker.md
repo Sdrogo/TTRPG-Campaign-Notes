@@ -277,8 +277,14 @@ image search, read aloud, GDPR (10-01 → 10-10). See the two older archives.
   bucket on Garage (S3) on each VPS, `storage.py` speaks S3 when
   `S3_ENDPOINT` is set, `garage-setup.sh` copied from Supabase (724 objects
   on production) and switched, nightly encrypted bucket backup to the staging
-  VPS (`backup-files.sh`, cron 03:30). Step 5 (DB) detailed in the ticket
-  (PR #344), awaiting confirmation; then step 6 cleanup.
+  VPS (`backup-files.sh`, cron 03:30). Step 5 built 2026-11-17 (PR #344,
+  no migration): `db` compose service (Postgres 17.6, profile `db`),
+  `deploy/db-setup.sh` (dump `public` from Supabase, restore as `exlibris`,
+  row-count check, switch, rollback line kept; also restores a backup file),
+  `deploy/backup.sh` (was `backup-files.sh`; adds the nightly `pg_dump`,
+  `check`/`fetch`/`restore-files`, `backup-last-ok`),
+  `context/restore-runbook.md`. Live once the product owner runs
+  `db-setup.sh` on staging, then production. Then step 6 cleanup.
 - **License** (product owner, 2026-11-15): GPL-3.0 replaced by the
   Functional Source License `FSL-1.1-ALv2` (no commercial competing service;
   each version becomes Apache-2.0 after two years), licensor Andrea Partenope.
