@@ -35,10 +35,14 @@ async def require_admin(
     credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(_bearer_scheme)],
     locale: LocaleDep,
 ) -> str:
-    """The caller's id when they are an admin; 401 without a valid token,
-    404 for anyone else. Ignores `X-View-As`: the page is about the app,
-    not a Room."""
-    caller = authenticated_user(credentials, locale)
+    """The caller's id when they are an admin; 404 for anyone else, a
+    missing or invalid token included, so an anonymous probe can't tell the
+    route from one that doesn't exist. Ignores `X-View-As`: the page is
+    about the app, not a Room."""
+    try:
+        caller = authenticated_user(credentials, locale)
+    except HTTPException as error:
+        raise HTTPException(status.HTTP_404_NOT_FOUND) from error
     if not is_admin(caller.id, settings.admin_user_ids):
         raise HTTPException(status.HTTP_404_NOT_FOUND)
     return caller.id

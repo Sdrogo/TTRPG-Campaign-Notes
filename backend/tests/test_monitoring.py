@@ -412,7 +412,10 @@ async def test_admin_stats_is_hidden_from_non_admins(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setattr(settings, "admin_user_ids", [ADMIN_ID])
-    assert (await client.get("/admin/stats")).status_code == 401
+    # Signed out or with a bad token: 404 too, like a route that doesn't exist.
+    assert (await client.get("/admin/stats")).status_code == 404
+    bad = {"Authorization": "Bearer not-a-token"}
+    assert (await client.get("/admin/stats", headers=bad)).status_code == 404
     other = _headers(make_token, str(uuid.uuid4()))
     assert (await client.get("/admin/stats", headers=other)).status_code == 404
     monkeypatch.setattr(settings, "admin_user_ids", [])
