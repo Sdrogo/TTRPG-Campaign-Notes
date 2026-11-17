@@ -1,8 +1,8 @@
 # 73 - Leave Vercel and Supabase
 
-Status: **confirmed 2026-11-16, step 1 built** (frontend served by Caddy,
-`deploy-prod.yml` builds and ships it; switched in by the product owner on the
-new Strasbourg VPS). All questions answered 2026-11-16 (sign-in A, files
+Status: **confirmed 2026-11-16. Step 1 live** (production frontend and API on
+the Strasbourg VPS, 2026-11-16). **Step 2 live** (staging on the Erith VPS,
+2026-11-17). Next: step 3. All questions answered 2026-11-16 (sign-in A, files
 stay on Supabase for now).
 
 ## Goals
@@ -258,7 +258,7 @@ keeps running between steps.
 | 3 | Sign-in in the backend (option A) | ~3–4 h incl. tests | none; every user is signed out once | OAuth consoles: new redirect URIs, client secrets in both `backend.env`; run the migration on staging, then prod |
 | 4 | Files to object storage, plus the copy script (lists Supabase objects, copies each, checks size; safe to re-run, only copies what is missing) | ~1.5 h | none: copy, deploy, copy again for anything uploaded meanwhile | create the buckets and keys at OVH |
 | 5 | Database to the VPS, plus nightly encrypted off-site backups and the restore runbook | ~1.5 h | **~15–30 min** maintenance (API answers 503 while `pg_dump` / `pg_restore` of ~46 MB runs) | run the dump/restore at a quiet hour with the runbook |
-| 6 | Clean-up: remove Supabase settings and code paths, the CI shim's Supabase roles where no migration needs them, docs (`architecture.md`, privacy notice: processors and data location), tracker | ~1 h | none | delete the Supabase projects and Render service after ~4 weeks, keeping a final dump |
+| 6 | Clean-up: remove the Vercel project and domains, the Render staging service (`ttrpg-campaign-notes-2`) and the suspended Render services, `next`/`api-next` from `CORS_ORIGINS` and Supabase Redirect URLs, `CORS_ORIGIN_REGEX` (Vercel Previews only); remove Supabase settings and code paths, the CI shim's Supabase roles where no migration needs them, docs (`architecture.md`, privacy notice: processors and data location), tracker | ~1 h | none | delete the Supabase projects and Render service after ~4 weeks, keeping a final dump |
 
 Total: about **9–10 hours of Claude build time**, spread over several
 sessions because each step waits for staging checks and the product owner's
