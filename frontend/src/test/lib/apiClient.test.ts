@@ -1,26 +1,22 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { setLanguage } from '../../i18n';
 import { ApiError, apiDownload, apiFetch, apiOpenStream } from '../../lib/apiClient';
-import { supabase } from '../../lib/supabaseClient';
+import { getSession, refreshSession } from '../../lib/auth';
 import { setViewAsUser } from '../../lib/viewAs';
 import { setDemoMode } from '../../lib/demo/demoMode';
 
-vi.mock('../../lib/supabaseClient', () => ({
-  supabase: { auth: { getSession: vi.fn() } },
-}));
+vi.mock('../../lib/auth', () => ({ getSession: vi.fn(), refreshSession: vi.fn() }));
 
-const getSession = vi.mocked(supabase.auth.getSession);
+function session(accessToken: string) {
+  return { access_token: accessToken, user: { id: 'user-1', email: null, provider: 'google' } };
+}
 
 function signedIn(accessToken = 'jwt-token') {
-  getSession.mockResolvedValue({
-    data: { session: { access_token: accessToken } },
-  } as unknown as Awaited<ReturnType<typeof supabase.auth.getSession>>);
+  vi.mocked(getSession).mockResolvedValue(session(accessToken));
 }
 
 function signedOut() {
-  getSession.mockResolvedValue({ data: { session: null } } as unknown as Awaited<
-    ReturnType<typeof supabase.auth.getSession>
-  >);
+  vi.mocked(getSession).mockResolvedValue(null);
 }
 
 // A `Response` body can only be read once, so each call gets a fresh one -
@@ -42,6 +38,7 @@ function callInit(fetchMock: ReturnType<typeof respondWith>) {
 }
 
 beforeEach(() => {
+  vi.mocked(refreshSession).mockReset();
   signedIn();
 });
 
@@ -154,6 +151,46 @@ describe('authorization', () => {
     const fetchMock = vi.mocked(fetch);
     const second = fetchMock.mock.calls[1]?.[1]?.headers as Headers;
     expect(second.get('Authorization')).toBe('Bearer second-token');
+  });
+
+  // A token that expired on the way (a laptop waking up): renew it and try once more.
+  it('retries once with a renewed token after a 401', async () => {
+    signedIn('stale-token');
+    vi.mocked(refreshSession).mockResolvedValue(session('fresh-token'));
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(new Response('{}', { status: 401 }))
+      .mockResolvedValueOnce(new Response('{"ok":true}', { status: 200 }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    await expect(apiFetch('/rooms')).resolves.toEqual({ ok: true });
+
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    const retry = fetchMock.mock.calls[1]?.[1] as RequestInit;
+    expect((retry.headers as Headers).get('Authorization')).toBe('Bearer fresh-token');
+  });
+
+  it('gives up after the retry is refused too', async () => {
+    signedIn('stale-token');
+    vi.mocked(refreshSession).mockResolvedValue(null);
+    const fetchMock = respondWith('{"detail":"Signed out"}', { status: 401 });
+
+    await expect(apiFetch('/rooms')).rejects.toMatchObject({ status: 401 });
+
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    const retry = (fetchMock.mock.calls[1] as unknown as [string, RequestInit])[1];
+    expect((retry.headers as Headers).has('Authorization')).toBe(false);
+  });
+
+  // Signed out already: nothing to renew, the 401 is the answer.
+  it('does not retry a 401 sent without a session', async () => {
+    signedOut();
+    const fetchMock = respondWith('{}', { status: 401 });
+
+    await expect(apiFetch('/rooms')).rejects.toMatchObject({ status: 401 });
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(refreshSession).not.toHaveBeenCalled();
   });
 });
 

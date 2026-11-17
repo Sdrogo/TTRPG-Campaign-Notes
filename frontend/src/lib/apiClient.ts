@@ -1,5 +1,5 @@
 import i18n, { currentLanguage } from '../i18n';
-import { supabase } from './supabaseClient';
+import { getSession, refreshSession } from './auth';
 import { VIEW_AS_HEADER, viewAsUser } from './viewAs';
 import { isDemoMode } from './demo/demoMode';
 
@@ -27,11 +27,9 @@ interface ApiFetchInit extends Omit<RequestInit, 'body'> {
 }
 
 /** Sends the request over the network, with the headers `request` describes. */
-async function send(path: string, init: ApiFetchInit): Promise<Response> {
+async function send(path: string, init: ApiFetchInit, retried = false): Promise<Response> {
   const { json, formData, ignoreViewAs, ...rest } = init;
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
+  const session = retried ? await refreshSession() : await getSession();
 
   const headers = new Headers(rest.headers);
   if (!headers.has('Accept')) {
@@ -49,16 +47,22 @@ async function send(path: string, init: ApiFetchInit): Promise<Response> {
     headers.set('Authorization', `Bearer ${session.access_token}`);
   }
 
-  return fetch(`${import.meta.env.VITE_API_BASE_URL}${path}`, {
+  const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}${path}`, {
     ...rest,
     headers,
     body: json !== undefined ? JSON.stringify(json) : formData,
   });
+  // The token expired on the way (a laptop waking up, a tab left open): ask
+  // for a fresh one and try once more.
+  if (response.status === 401 && session && !retried) {
+    return send(path, init, true);
+  }
+  return response;
 }
 
 /**
  * Sends a request to the backend at `VITE_API_BASE_URL` with the current
- * Supabase access token and returns the response once it is known to be 2xx;
+ * access token (`lib/auth`) and returns the response once it is known to be 2xx;
  * throws `ApiError` otherwise.
  *
  * Sends the UI's current language as `Accept-Language`, so the backend's

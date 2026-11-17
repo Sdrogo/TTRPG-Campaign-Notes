@@ -70,7 +70,9 @@
   "auth": {
     "prompt": "Inicia sesión para continuar.",
     "signInWith": "Iniciar sesión con {{provider}}",
-    "privacy": "Privacidad"
+    "privacy": "Privacidad",
+    "signInAgain": "¿Ya habías iniciado sesión? Hemos cambiado el inicio de sesión: inicia sesión una vez más. Todas tus Salas siguen aquí.",
+    "signInFailed": "No se ha podido iniciar sesión. Inténtalo de nuevo."
   },
   "landing": {
     "tagline": "El cuaderno compartido de tu campaña",

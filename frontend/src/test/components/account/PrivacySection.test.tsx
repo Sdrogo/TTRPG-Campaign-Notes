@@ -4,15 +4,13 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { apiDownload, apiFetch } from '../../../lib/apiClient';
 import { notifyError, notifySuccess } from '../../../lib/notify';
 import { saveBlob } from '../../../lib/roomExport';
-import { supabase } from '../../../lib/supabaseClient';
+import { forgetSession } from '../../../lib/auth';
 import { renderWithProviders } from '../../utils';
 import { PrivacySection } from '../../../components/account/PrivacySection';
 
 vi.mock('../../../lib/apiClient', () => ({ apiFetch: vi.fn(), apiDownload: vi.fn() }));
 vi.mock('../../../lib/roomExport', () => ({ saveBlob: vi.fn() }));
-vi.mock('../../../lib/supabaseClient', () => ({
-  supabase: { auth: { signOut: vi.fn() } },
-}));
+vi.mock('../../../lib/auth', () => ({ signOut: vi.fn(), forgetSession: vi.fn() }));
 vi.mock('../../../lib/notify', () => ({ notifyError: vi.fn(), notifySuccess: vi.fn() }));
 
 const fetchMock = vi.mocked(apiFetch);
@@ -22,9 +20,7 @@ beforeEach(() => {
   vi.mocked(apiDownload).mockReset();
   vi.mocked(notifyError).mockClear();
   vi.mocked(notifySuccess).mockClear();
-  vi.mocked(supabase.auth.signOut).mockResolvedValue({ error: null } as Awaited<
-    ReturnType<typeof supabase.auth.signOut>
-  >);
+  vi.mocked(forgetSession).mockClear();
 });
 
 function render() {

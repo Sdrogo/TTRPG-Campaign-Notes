@@ -70,7 +70,9 @@
   "auth": {
     "prompt": "Melde dich an, um fortzufahren.",
     "signInWith": "Mit {{provider}} anmelden",
-    "privacy": "Datenschutz"
+    "privacy": "Datenschutz",
+    "signInAgain": "Schon einmal angemeldet? Wir haben die Anmeldung umgestellt, bitte melde dich noch einmal an. Deine Räume sind alle noch da.",
+    "signInFailed": "Die Anmeldung hat nicht geklappt. Bitte versuche es noch einmal."
   },
   "landing": {
     "tagline": "Das gemeinsame Notizbuch deiner Kampagne",

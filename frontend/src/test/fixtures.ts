@@ -185,10 +185,9 @@ export function rawAccount(overrides: Record<string, unknown> = {}) {
   };
 }
 
-// A Supabase session, as `useSession` hands it to a page. Only `user.id` and
-// the access token are ever read, so the rest is left off.
+/** A session, as `useSession` hands it to a page (`lib/auth`). */
 export function fakeSession(userId = 'user-1') {
-  return { access_token: `token-${userId}`, user: { id: userId } };
+  return { access_token: `token-${userId}`, user: { id: userId, email: null, provider: 'google' } };
 }
 
 /** One of `GET /reveals/mine`'s entries (spec 22): a Document revealed to the user. */

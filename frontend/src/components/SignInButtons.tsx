@@ -2,7 +2,7 @@ import { Button, Stack } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { AUTH_PROVIDERS, type AuthProvider } from '../lib/authProviders';
 import { markSigningIn } from '../lib/pendingInvite';
-import { supabase } from '../lib/supabaseClient';
+import { signIn } from '../lib/auth';
 
 /**
  * One sign-in button per provider, Google first and filled (D-07). Pressing
@@ -14,13 +14,9 @@ export function SignInButtons() {
 
   const signInWith = (provider: AuthProvider) => {
     markSigningIn();
-    // Come back to whatever origin we're on (production, a Vercel preview,
-    // or localhost) instead of Supabase's single configured Site URL. Each
-    // origin must be listed in Supabase's Redirect URLs allowlist.
-    void supabase.auth.signInWithOAuth({
-      provider: provider.id,
-      options: { redirectTo: window.location.origin },
-    });
+    // Come back to whatever origin we're on (production, staging or
+    // localhost); the backend accepts only origins in its CORS list.
+    signIn(provider.id);
   };
 
   return (

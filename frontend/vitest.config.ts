@@ -11,12 +11,9 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.ts'],
     css: false,
-    // The real values live in `.env`; tests never reach a network, but the
-    // Supabase client is constructed at import time and rejects empty input.
+    // The real value lives in `.env`; tests never reach a network.
     env: {
       VITE_API_BASE_URL: 'http://api.test',
-      VITE_SUPABASE_URL: 'http://supabase.test',
-      VITE_SUPABASE_PUBLISHABLE_KEY: 'test-publishable-key',
     },
     coverage: {
       provider: 'v8',
