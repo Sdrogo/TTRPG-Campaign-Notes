@@ -217,7 +217,10 @@ async def finish_sign_in(
     now = datetime.now(UTC)
     existing, user_id = await _user_for(session, provider_id, identity)
     row = await auth_repo.save_identity(session, existing, provider_id, user_id, identity, now)
-    await users_repo.upsert_user(session, row.user_id, identity.email)
+    # Only a verified address reaches the mirror: an unverified one could be
+    # anyone's (an unset email keeps the one already stored).
+    verified_email = identity.email if identity.email_verified else None
+    await users_repo.upsert_user(session, row.user_id, verified_email)
     refresh_token = new_refresh_token()
     await auth_repo.create_session(
         session, row, hash_refresh_token(refresh_token), request.headers.get("user-agent"), now

@@ -8,7 +8,7 @@ from sqlalchemy import delete, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.providers import ProviderIdentity
-from app.db.models import AuthIdentityRow, AuthSessionRow, UserRow
+from app.db.models import AuthIdentityRow, AuthSessionRow
 from app.domain.sign_in import SESSION_TTL
 
 _USER_AGENT_LENGTH = 300
@@ -27,9 +27,11 @@ async def find_identity(
 
 async def find_user_by_verified_email(session: AsyncSession, email: str) -> uuid.UUID | None:
     """The user whose verified email this is, so signing in with another
-    provider reaches the same account (as Supabase did). Looks at the
-    identities the provider marked verified, then at the `users` mirror,
-    whose email came from Supabase Auth (verified sign-ins only)."""
+    provider reaches the same account (as Supabase did). Only identities the
+    provider marked verified count: never the `users` mirror, which anyone
+    could fill with someone else's address through an unverified sign-in.
+    Supabase-era accounts are covered because the migration copied their
+    identities with the provider's `email_verified`."""
     key = email.strip().lower()
     stmt = (
         select(AuthIdentityRow.user_id)
@@ -37,11 +39,7 @@ async def find_user_by_verified_email(session: AsyncSession, email: str) -> uuid
         .order_by(AuthIdentityRow.created_at)
         .limit(1)
     )
-    user_id = (await session.execute(stmt)).scalar_one_or_none()
-    if user_id is not None:
-        return user_id
-    users = select(UserRow.id).where(func.lower(UserRow.email) == key).order_by(UserRow.created_at)
-    return (await session.execute(users.limit(1))).scalar_one_or_none()
+    return (await session.execute(stmt)).scalar_one_or_none()
 
 
 async def save_identity(

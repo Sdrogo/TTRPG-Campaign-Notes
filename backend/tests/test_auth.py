@@ -262,14 +262,28 @@ async def test_a_verified_email_links_another_provider(
     assert google.user_id == user_id
 
 
-async def test_the_users_mirror_email_links_too(
+async def test_the_users_mirror_email_never_links(
     db_session: AsyncSession, browser: AsyncClient, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     user_id = uuid.uuid4()
     await users_repo.upsert_user(db_session, user_id, "ann@x.io")
     await _sign_in(browser, monkeypatch, _identity())
     identity = (await db_session.execute(select(AuthIdentityRow))).scalar_one()
-    assert identity.user_id == user_id
+    assert identity.user_id != user_id
+
+
+# Pre-hijacking: an unverified sign-in claiming someone's address must not
+# become the account their verified sign-in later lands in.
+async def test_an_unverified_sign_in_cannot_capture_a_later_verified_one(
+    db_session: AsyncSession, browser: AsyncClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    await _sign_in(browser, monkeypatch, _identity("attacker", email_verified=False))
+    await _sign_in(browser, monkeypatch, _identity("victim"))
+    rows = (await db_session.execute(select(AuthIdentityRow))).scalars().all()
+    by_account = {row.provider_user_id: row.user_id for row in rows}
+    assert by_account["attacker"] != by_account["victim"]
+    attacker = await db_session.get(UserRow, by_account["attacker"])
+    assert attacker is not None and attacker.email is None
 
 
 async def test_an_unverified_email_never_links(
