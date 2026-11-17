@@ -252,6 +252,12 @@ image search, read aloud, GDPR (10-01 → 10-10). See the two older archives.
 
 ## Next Up
 
+- **75, Monitoring dashboards** (product owner, 2026-11-17): ticket
+  proposed, no code. Recommended option A: Beszel (servers) + Dozzle (logs)
+  + Uptime Kuma (uptime, certificates, backup heartbeat) on the staging VPS
+  behind Caddy with a password, plus an Admin page in the app for
+  statistics, errors and latency (~4.5–5 h). Waiting for the answers to
+  its six questions (alert channel, access, stats in app vs Grafana, ...).
 - **74, Database migrations from GitHub Actions** (product owner,
   2026-11-16): confirmed and built in PR #334 (`deploy/migrate.sh`, label
   job in `deploy-vps.yml`, `migrate-db.yml` button, `migration-label.yml`
