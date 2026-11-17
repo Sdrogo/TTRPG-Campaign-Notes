@@ -26,6 +26,7 @@ vi.mock('../pages/RoomClocksPage', () => ({ RoomClocksPage: () => <div>clocks</d
 vi.mock('../pages/MentionMapPage', () => ({ MentionMapPage: () => <div>mention map</div> }));
 vi.mock('../pages/RoomLandingPage', () => ({ RoomLandingPage: () => <div>room landing</div> }));
 vi.mock('../pages/RoomSectionPage', () => ({ RoomSectionPage: () => <div>room section</div> }));
+vi.mock('../pages/AdminPage', () => ({ AdminPage: () => <div>admin</div> }));
 vi.mock('../hooks/useSession', () => ({ useSession: vi.fn() }));
 
 beforeEach(() => {
@@ -39,6 +40,7 @@ describe('App routes', () => {
     ['/', 'home'],
     ['/rooms', 'my rooms'],
     ['/account', 'account'],
+    ['/admin', 'admin'],
     ['/invite/ABC123', 'invite'],
     ['/friends/add/FRIEND1', 'add friend'],
     ['/rooms/room-1/setup', 'setup'],

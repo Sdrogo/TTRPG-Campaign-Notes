@@ -5,12 +5,16 @@ import asyncio
 import contextlib
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
+from datetime import UTC, datetime, timedelta
+from pathlib import Path
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException, Response, status
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy import text
 
 from app.api.account import router as account_router
 from app.api.account_data import router as account_data_router
+from app.api.admin import router as admin_router
 from app.api.auth import router as auth_router
 from app.api.characters import router as characters_router
 from app.api.clock_groups import router as clock_groups_router
@@ -37,6 +41,7 @@ from app.api.mention_suggestions import router as mention_suggestions_router
 from app.api.mentions import router as mentions_router
 from app.api.notes import router as notes_router
 from app.api.relationship_maps import router as relationship_maps_router
+from app.api.request_metrics import RequestMetricsMiddleware
 from app.api.reveals import router as reveals_router
 from app.api.room_copy import router as room_copy_router
 from app.api.room_image import router as room_image_router
@@ -51,8 +56,13 @@ from app.api.tags import router as tags_router
 from app.api.versions import router as versions_router
 from app.auth.tokens import require_secret
 from app.config import Settings, settings
+from app.db import session as session_module
 from app.db.export_jobs_repo import run_export_sweeper
+from app.db.monitoring_repo import run_flusher
 from app.db.storage_cleanup import run_sweeper
+from app.logging_setup import configure_logging
+
+configure_logging()
 
 
 @asynccontextmanager
@@ -61,10 +71,15 @@ async def lifespan(_: FastAPI) -> AsyncIterator[None]:
     Room PDF sweep (app/db/export_jobs_repo.py) with the app and cancels them
     on shutdown. First it resumes the imports a restart cut off in their
     image phase (spec 59), so the startup sweep doesn't fail them. Refuses
-    to start without a sign-in secret (ticket 73 step 3)."""
+    to start without a sign-in secret (ticket 73 step 3). Also runs the
+    request statistics flush (ticket 75)."""
     require_secret()
     await resume_import_jobs()
-    sweepers = [asyncio.create_task(run_sweeper()), asyncio.create_task(run_export_sweeper())]
+    sweepers = [
+        asyncio.create_task(run_sweeper()),
+        asyncio.create_task(run_export_sweeper()),
+        asyncio.create_task(run_flusher()),
+    ]
     yield
     for sweeper in sweepers:
         sweeper.cancel()
@@ -105,8 +120,12 @@ app = FastAPI(
     openapi_url=_docs["openapi_url"],
 )
 add_cors(app, settings)
+# Added after CORS, so it is the outer one and also times and counts the
+# preflights and the responses CORS refuses (ticket 75).
+app.add_middleware(RequestMetricsMiddleware)
 
 app.include_router(auth_router)
+app.include_router(admin_router)
 app.include_router(account_router)
 app.include_router(account_data_router)
 app.include_router(rooms_router)
@@ -153,3 +172,46 @@ def health() -> dict[str, str]:
     auth and touches no dependency. Also answers HEAD, which many monitors
     send by default (a GET-only route would answer 405)."""
     return {"status": "ok"}
+
+
+READY_TIMEOUT_SECONDS = 2.0
+
+
+@app.api_route("/health/ready", methods=["GET", "HEAD"])
+async def ready(response: Response) -> dict[str, str]:
+    """Readiness for the uptime monitor (ticket 75 Decision 6): 200 when the
+    database answers `SELECT 1` within 2 seconds, 503 otherwise, so a
+    database outage alerts too. `/health` stays dependency-free for the
+    container's healthcheck, which must not restart the backend because the
+    database is down."""
+    try:
+        async with asyncio.timeout(READY_TIMEOUT_SECONDS):
+            async with session_module.async_session_factory() as session:
+                await session.execute(text("SELECT 1"))
+    except Exception:
+        response.status_code = status.HTTP_503_SERVICE_UNAVAILABLE
+        return {"status": "unavailable"}
+    return {"status": "ok"}
+
+
+@app.api_route("/health/backup", methods=["GET", "HEAD"])
+def backup_health(response: Response) -> dict[str, str]:
+    """The nightly backup's age, for the uptime monitor (ticket 75 Decision
+    6): 200 when the last good run (written by deploy/backup.sh) is newer
+    than `BACKUP_MAX_AGE_HOURS`, 503 when it is older, missing or
+    unreadable. 404 on a server without a backup (`BACKUP_STATUS_FILE`
+    unset). Says nothing but the time of that run."""
+    if not settings.backup_status_file:
+        raise HTTPException(status.HTTP_404_NOT_FOUND)
+    try:
+        raw = Path(settings.backup_status_file).read_text(encoding="utf-8").strip()
+        last_ok = datetime.fromisoformat(raw.replace("Z", "+00:00"))
+    except (OSError, ValueError):
+        response.status_code = status.HTTP_503_SERVICE_UNAVAILABLE
+        return {"status": "missing"}
+    if last_ok.tzinfo is None:
+        last_ok = last_ok.replace(tzinfo=UTC)
+    if datetime.now(UTC) - last_ok > timedelta(hours=settings.backup_max_age_hours):
+        response.status_code = status.HTTP_503_SERVICE_UNAVAILABLE
+        return {"status": "stale", "last_ok": last_ok.isoformat()}
+    return {"status": "ok", "last_ok": last_ok.isoformat()}

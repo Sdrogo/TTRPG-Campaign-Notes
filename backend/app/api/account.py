@@ -15,8 +15,10 @@ from app.api.image_uploads import fetch_url, normalize, read_upload, upload_obje
 from app.api.profiles import ProfileFields, profile_fields, sign_avatars
 from app.api.rate_limits import Group, limit
 from app.auth.dependencies import CurrentUser, CurrentUserDep
+from app.config import settings
 from app.db import storage_cleanup, users_repo
 from app.db.session import SessionDep
+from app.domain.admin_stats import is_admin
 from app.domain.images import AVATAR_DIMENSION, NormalizedImage
 from app.domain.models import UserProfile
 from app.domain.profiles import (
@@ -36,9 +38,12 @@ router = APIRouter(prefix="/account", tags=["account"])
 
 class AccountResponse(ProfileFields):
     """The caller's own profile, in the same shape every other response uses
-    for a user (`ProfileFields`), plus their id."""
+    for a user (`ProfileFields`), plus their id and whether they may open
+    the Admin page (ticket 75: listed in `ADMIN_USER_IDS`); not the Room
+    Administrator role."""
 
     user_id: uuid.UUID
+    app_admin: bool = False
 
 
 class UpdateProfileRequest(BaseModel):
@@ -58,7 +63,11 @@ class AvatarFromUrlRequest(BaseModel):
 async def _response(profile: UserProfile) -> AccountResponse:
     """Serializes the profile with its avatar signed for this response."""
     fields = profile_fields(profile, await sign_avatars([profile]), profile.user_id)
-    return AccountResponse(user_id=profile.user_id, **fields.model_dump())
+    return AccountResponse(
+        user_id=profile.user_id,
+        app_admin=is_admin(str(profile.user_id), settings.admin_user_ids),
+        **fields.model_dump(),
+    )
 
 
 async def _load_for_update(session: AsyncSession, current_user: CurrentUser) -> UserProfile:

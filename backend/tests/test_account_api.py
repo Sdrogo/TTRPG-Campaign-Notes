@@ -79,6 +79,7 @@ async def test_new_user_gets_an_empty_profile_with_their_token_email(
     assert response.status_code == 200
     assert response.json() == {
         "user_id": user_id,
+        "app_admin": False,
         "email": "new@example.com",
         "display_name": None,
         "pronouns": None,

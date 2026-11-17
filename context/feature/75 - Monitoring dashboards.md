@@ -1,7 +1,53 @@
 # 75 - Monitoring dashboards
 
-Status: **proposed 2026-11-17, waiting for the product owner's answers**
-(Questions below). No code yet.
+Status: **built 2026-11-17** (all three units in one PR into staging,
+migration `c6f1a9d3e7b2`). The product owner's answers changed some of the
+proposed Decisions: see "As built" right below, which wins over the
+Decisions where they differ.
+
+## As built (product owner's answers, 2026-11-17)
+
+Answers: 1 email; 2 SSH tunnel with a key, only for the product owner;
+3 Admin page in the app, the product owner's user as admin; 4 staging muted
+at night; 5 the hub on staging, so production carries as little as
+possible; 6 everything at once; 7 monitoring only, never commands.
+
+- **No public host, no Caddy site, no basic auth** (replaces Decisions 1-2).
+  Every dashboard is published on `127.0.0.1` of its server and opened
+  through an SSH tunnel with the product owner's key
+  (`context/monitoring-guide.md`). No DNS records.
+- **Compose profiles** in `deploy/compose.yaml` (replaces Decision 4; no
+  separate compose file): `monitoring` on both servers runs `docker-proxy`
+  (tecnativa v0.5.0, GET only, `127.0.0.1:2375`), `beszel-agent` (0.21.2,
+  host network, settings in `monitoring.env`) and `dozzle` (v11.4.3,
+  actions and shell off, `127.0.0.1:8081`); `monitoring-hub` on staging
+  only runs `beszel` (`127.0.0.1:8090`) and `uptime-kuma` (2.5.11-slim,
+  `127.0.0.1:3001`).
+- **Agents** (Decision 3): the hub reaches production's agent on port
+  45876, which `ufw` opens to the staging IP only (the agent is in the host
+  network, so `ufw` applies). Staging's agent connects to the local hub.
+  **Dozzle runs on each server** against its own `docker-proxy`
+  (`DOZZLE_REMOTE_HOST`), instead of a Dozzle agent, since an agent needs
+  the socket itself: one tunnel per server.
+- **Logs** (Decision 5): backend JSON lines as proposed
+  (`app/logging_setup.py`, one `app.request` line per request with the
+  `X-Request-ID` it also returns; health checks are counted but not
+  logged). **No Caddy access log**: the backend's line covers every API
+  request without storing client IPs. Postgres logs statements over 500 ms
+  without their parameters. Rotation 20 MB x 10.
+- **Alerts by email** (Decision 6): SMTP set in Beszel and Uptime Kuma by
+  the product owner. Staging monitors sit in a nightly maintenance window.
+  **Backup**: instead of a push heartbeat (Uptime Kuma is not reachable
+  from production), `backup.sh` writes `status/backup-last-ok`, the backend
+  reads it (`BACKUP_STATUS_FILE`, mounted read-only) and
+  `GET /health/backup` answers 200, or 503 when missing or older than
+  `BACKUP_MAX_AGE_HOURS` (26), 404 when not configured. Uptime Kuma checks
+  it like any URL. `GET /health/ready` checks the database (2 s).
+- **Admin page** (Decision 7) as proposed: `ADMIN_USER_IDS` in
+  `backend.env`; `GET /account` returns `app_admin`, which shows the link in
+  the Account page; `GET /admin/stats` answers 404 to anyone else. Tables
+  `request_stats_hourly` and `error_events`, flushed every minute by a
+  lifespan task that also removes rows past 90 / 30 days (not the sweeper).
 
 ## Goals
 
