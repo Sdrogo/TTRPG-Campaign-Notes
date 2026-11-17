@@ -1,8 +1,9 @@
 """Writes the request statistics and server errors of ticket 75 to the
 database, and removes old ones: statistics after 90 days, errors after 30.
 
-The middleware (app/api/request_metrics.py, with app/domain/request_stats.py) counts in memory; `run_flusher`
-writes those counts every minute, adding to the hour's row, so several
+The middleware (app/api/request_metrics.py, with app/domain/request_stats.py)
+counts in memory; `run_flusher` writes those counts every minute, adding to
+the hour's row, so several
 processes (a later ticket's several workers) can share one table without
 shared counters."""
 
