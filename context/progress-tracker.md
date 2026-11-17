@@ -259,6 +259,9 @@ image search, read aloud, GDPR (10-01 → 10-10). See the two older archives.
   job in `deploy-vps.yml`, `migrate-db.yml` button, `migration-label.yml`
   check). Product owner: create the `db-migration` label and the
   `migrate-production-approval` environment with a required reviewer.
+- **Docs-only merges skip the deploy** (product owner, 2026-11-17, PR #342):
+  a docs-only release had recreated the prod backend and briefly failed
+  requests with CORS errors; see `context/architecture.md`.
 - **73, Leave Vercel and Supabase** (product owner, 2026-11-15): six steps
   on the VPS, ~9–10 h of Claude build time. Ticket confirmed 2026-11-16;
   step 1 built (frontend served by Caddy, deploy builds and ships it), to be
