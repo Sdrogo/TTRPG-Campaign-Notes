@@ -4,7 +4,7 @@ Status: **confirmed 2026-11-16. Step 1 live** (production frontend and API on
 the Strasbourg VPS, 2026-11-16). **Step 2 live** (staging on the Erith VPS,
 2026-11-17). **Step 3 live** 2026-11-17 (own sign-in; PR #337, release
 #338; staging checked by the product owner with linking across providers).
-Next: step 5 (database), step 4 still postponed. All questions
+Next: step 4 (files to Garage on the VPS, decided 2026-11-17), then step 5 (database). All questions
 answered 2026-11-16 (sign-in A, files stay on Supabase for now).
 
 ## Goals
@@ -134,6 +134,48 @@ Supabase one, so an export made before the move still imports its images
 (they are re-fetched only while the old link is valid; afterwards the import
 reports them as missing, as it does for any expired link today).
 
+**Update 2026-11-17 (product owner): files go to a local S3 service,
+[Garage](https://garagehq.deuxfleurs.fr/), on the production VPS.** Why: the
+data is tiny (80 MB in Supabase on 2026-11-17), and Supabase's free egress was
+already at 4.58 of 5 GB in the current cycle. The objection above no longer
+holds. Production is now the larger Strasbourg VPS, and the nightly backup to
+the staging VPS (another datacenter) covers the files. Garage was preferred to
+a plain folder because it speaks S3, so a move to hosted object storage later
+is only a change of settings.
+
+- **Service**: one more compose service, `garage` (image pinned to an exact
+  version), single node (`replication_factor = 1`), data and metadata in
+  named volumes, S3 API on port 3900 on the internal network only. Its admin
+  API is not published.
+- **Public links**: Caddy serves a new host, `files.exlibris.world` (staging:
+  `files-staging.exlibris.world`), proxied to Garage's S3 port. Browsers fetch
+  images there through **presigned GET links**: same short lifetime and cache
+  as today's Supabase links, path-style, signed for that public host. The
+  frontend CSP (`img-src`, `connect-src`) gains the host. The bucket stays
+  private: nothing can be read without a valid signature.
+- **Backend**: `storage.py` keeps its functions (upload, remove, download,
+  signed links) and speaks S3:
+  - `botocore` signs the requests;
+  - httpx sends them to `http://garage:3900`;
+  - presigned GETs are signed for the public host.
+  - Settings: `S3_ENDPOINT`, `S3_PUBLIC_URL`, `S3_REGION` (`garage`),
+    `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY` and `STORAGE_BUCKET`.
+  - `own_object_path` accepts both the new link shape and the old Supabase
+    one.
+- **Setup per server**: a script run once creates the layout, the bucket and
+  a key that can only use that bucket, and prints the key for `backend.env`.
+- **Copy**: a script lists the Supabase bucket, copies whatever is missing
+  into Garage and checks sizes. It is safe to re-run. Order: copy, deploy,
+  copy again.
+- **Order**: step 4 goes before step 5. It needs no downtime, and it already
+  ships the nightly backup job: files first, and step 5 adds the database
+  dump. The job mirrors the bucket (S3 to S3) onto the staging VPS and keeps
+  7 daily, 4 weekly and 6 monthly copies.
+- **Rollback**: point the settings back to Supabase Storage. Objects are
+  copied, never moved, until step 6.
+- **Product owner's part**: DNS records for the two `files` hosts; run the
+  setup script and paste the key into each `backend.env`; run the copy.
+
 ### 4. Sign-in: compared, with automatic user migration
 
 **Can existing users move automatically? Yes, with every option below.**
@@ -262,7 +304,7 @@ keeps running between steps.
 | 1 | New production VPS (OVH VPS-2, Strasbourg): same setup as today's (Docker, Caddy, deploy workflow pointed at it), plus the frontend served by Caddy (`vercel.json` headers move to the Caddyfile); API and frontend switched to it | ~1.5 h | none (DNS switch, TTL 300; old box and Vercel keep serving meanwhile) | order and harden the new VPS (same steps as 2026-10-08), GitHub secrets, DNS switch; delete the Vercel project after a quiet week. **Built 2026-11-16**: `deploy/Caddyfile` `{$FRONTEND_HOSTS}` site, `deploy.sh` (`site/releases/<sha>-<time>`, `site/current`), `deploy-prod.yml` (frontend build, `CHECK_*_HOST`) |
 | 2 | Current VPS-1 turned into staging (frontend, backend, Postgres, deploy on `staging`); still using the staging Supabase Auth and Storage | ~1 h | none | DNS records for the two staging names; staging `backend.env`; then Render staging can go. **Built 2026-11-16** without Postgres: staging keeps the staging Supabase database until step 5, which moves staging's database first as its rehearsal. `deploy-vps.yml` (shared), `deploy-staging.yml`, Caddy 413 CORS for the staging origin |
 | 3 | Sign-in in the backend (option A) | ~3–4 h incl. tests | none; every user is signed out once | OAuth consoles: new redirect URIs, client secrets in both `backend.env`; run the migration on staging, then prod. **Built 2026-11-17**: `app/api/auth.py`, `app/auth/{tokens,providers}.py`, `app/domain/sign_in.py`, `app/db/auth_repo.py`, migration `b5e2c8f1a4d7` (copies `auth.identities`), `frontend/src/lib/auth.ts`; supabase-js and the `VITE_SUPABASE_*` variables removed; landing notice "sign in once more" (remove in step 6) |
-| 4 | Files to object storage, plus the copy script (lists Supabase objects, copies each, checks size; safe to re-run, only copies what is missing) | ~1.5 h | none: copy, deploy, copy again for anything uploaded meanwhile | create the buckets and keys at OVH |
+| 4 | Files to Garage, a local S3 service on the production VPS (decided 2026-11-17; was hosted object storage), plus the copy script (lists Supabase objects, copies each, checks size; safe to re-run, only copies what is missing) | ~1.5 h | none: copy, deploy, copy again for anything uploaded meanwhile | DNS for `files` and `files-staging`, run the setup and copy scripts on each VPS (guide) |
 | 5 | Database to the VPS, plus nightly encrypted off-site backups and the restore runbook | ~1.5 h | **~15–30 min** maintenance (API answers 503 while `pg_dump` / `pg_restore` of ~46 MB runs) | run the dump/restore at a quiet hour with the runbook |
 | 6 | Clean-up: remove the Vercel project and domains, the Render staging service (`ttrpg-campaign-notes-2`) and the suspended Render services, `next`/`api-next` from `CORS_ORIGINS` and Supabase Redirect URLs, `CORS_ORIGIN_REGEX` (Vercel Previews only); remove Supabase settings and code paths, the old Supabase callback URIs in the Google/Discord/GitHub consoles, the "sign in once more" landing notice (`auth.signInAgain`), the `VITE_SUPABASE_*` variables in the GitHub environments, the CI shim's Supabase roles where no migration needs them, docs (`architecture.md`, privacy notice: processors and data location), tracker | ~1 h | none | delete the Supabase projects and Render service after ~4 weeks, keeping a final dump |
 
@@ -320,11 +362,10 @@ Room PDFs) VPS-3 or VPS-4 is an in-place upgrade away, not a migration; several 
 ## Questions for the product owner
 
 1. **Sign-in**: decided 2026-11-16, **A** (our own, in the backend).
-2. **Files**: decided 2026-11-16, **stay on Supabase Storage for now**, move
-   later if needed (step 4 postponed). Supabase stays for files only, on the
-   Free plan (1 GB, 98 MB used): watch the free-plan pause for inactivity
-   once its database is no longer used, and the backups of step 5 must then
-   also cover the bucket.
+2. **Files**: decided 2026-11-16, stay on Supabase Storage for now.
+   **Changed 2026-11-17: files move to Garage (local S3) on the production
+   VPS** (step 4 is back in; see section 3, update). Reason: little data, and Supabase's free
+   egress nearly used up (4.58/5 GB).
 3. **Production VPS**: decided and ordered, OVH VPS-2 in Strasbourg, Debian 13 (2026-11-16). (Decided: current VPS-1 becomes
    staging, a bigger one runs production.)
 4. **Account linking by verified email**: decided 2026-11-16, **yes**, like
