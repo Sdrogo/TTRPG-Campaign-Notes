@@ -34,7 +34,11 @@ env files.
 | `SUPABASE_URL` | Supabase project URL (Storage) |
 | `SUPABASE_SECRET_KEY` | Supabase secret key, for Storage |
 | `STORAGE_BUCKET` | Private bucket for images and files (`document-images`) |
-| `DATABASE_URL` | `postgresql+asyncpg://…`, Supabase's **Session Pooler** (the direct host is IPv6-only) |
+| `S3_ENDPOINT` | Set: the bucket is on S3 (Garage, `http://garage:3900` on the VPS) instead of Supabase Storage. Unset: Supabase |
+| `S3_PUBLIC_URL` | The host browsers fetch signed links from (`https://files.exlibris.world`) |
+| `S3_REGION` | Signing region, `garage` (default) |
+| `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY` | The key `deploy/garage-setup.sh` creates, limited to the bucket |
+| `DATABASE_URL` | `postgresql+asyncpg://…`. On a VPS after ticket 73 step 5, `…@db:5432/exlibris`, written by `deploy/db-setup.sh`; before that, Supabase's **Session Pooler** (the direct host is IPv6-only) |
 | `CORS_ORIGINS` | Exact allowed origins: a JSON list or comma-separated, no trailing `/` |
 | `CORS_ORIGIN_REGEX` | Optional pattern for generated hosts (staging's Vercel Previews); blank = none |
 | `API_PUBLIC_URL` | The API's public address; providers send users back to `<API_PUBLIC_URL>/auth/<provider>/callback` |

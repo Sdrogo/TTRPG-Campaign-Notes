@@ -1,13 +1,22 @@
-"""Supabase Storage over its REST API, with the backend's secret key. The
-images bucket is private, so every image a response carries is a signed,
-expiring link."""
+"""The images bucket: Garage, an S3 service on the VPS, when `S3_ENDPOINT` is
+set (ticket 73 step 4), otherwise Supabase Storage over its REST API with the
+backend's secret key. The bucket is private either way, so every image a
+response carries is a signed, expiring link.
+
+On S3, botocore signs each request and httpx sends it to the internal
+endpoint (`http://garage:3900`). Read links are presigned GETs for the public
+host (`S3_PUBLIC_URL`, served by Caddy), path-style: signing them needs no
+request at all."""
 
 import logging
 import time
-from collections.abc import Collection
+from collections.abc import Collection, Mapping
 from urllib.parse import quote, unquote, urlsplit
 
 import httpx
+from botocore.auth import S3SigV4Auth, S3SigV4QueryAuth
+from botocore.awsrequest import AWSRequest
+from botocore.credentials import Credentials
 
 from app.config import settings
 
@@ -32,13 +41,95 @@ def _object_url(path: str) -> str:  # pragma: no cover - real Storage HTTP only
     return f"{settings.supabase_url}/storage/v1/object/{settings.storage_bucket}/{path}"
 
 
-async def upload(  # pragma: no cover - real Storage HTTP only
+def uses_s3() -> bool:
+    """Whether the bucket is the S3 one (Garage) rather than Supabase's."""
+    return bool(settings.s3_endpoint)
+
+
+# How long a browser may keep an object it fetched through a signed link,
+# as Supabase Storage told it (its default `cacheControl` of 3600 seconds).
+OBJECT_CACHE_CONTROL = "max-age=3600"
+
+
+def _s3_credentials() -> Credentials:
+    return Credentials(settings.s3_access_key_id, settings.s3_secret_access_key)
+
+
+def _s3_object_url(base: str, path: str) -> str:
+    """Path-style URL of one object of the bucket under `base`."""
+    return f"{base.rstrip('/')}/{settings.storage_bucket}/{quote(path)}"
+
+
+def s3_signed_headers(
+    method: str, path: str, body: bytes = b"", headers: Mapping[str, str] | None = None
+) -> dict[str, str]:
+    """The headers that authorize one request on `path` at the internal
+    endpoint (AWS Signature V4, payload hash included)."""
+    request = AWSRequest(
+        method=method,
+        url=_s3_object_url(settings.s3_endpoint, path),
+        data=body,
+        headers=dict(headers or {}),
+    )
+    S3SigV4Auth(_s3_credentials(), "s3", settings.s3_region).add_auth(request)
+    return dict(request.headers.items())
+
+
+def content_disposition(file_name: str) -> str:
+    """`attachment` with the name twice: an ASCII stand-in for old clients,
+    and the exact UTF-8 name (RFC 6266)."""
+    fallback = "".join(
+        char if 32 <= ord(char) < 127 and char not in '"\\' else "_" for char in file_name
+    )
+    return f"attachment; filename=\"{fallback}\"; filename*=UTF-8''{quote(file_name, safe='')}"
+
+
+def s3_presigned_url(path: str, expires_in: int, download_name: str | None = None) -> str:
+    """A GET link to `path` on the public host, valid for `expires_in`
+    seconds. With `download_name`, Garage serves it as an attachment of that
+    name; the override is part of the signature, so it can't be changed."""
+    params = (
+        {}
+        if download_name is None
+        else {"response-content-disposition": content_disposition(download_name)}
+    )
+    request = AWSRequest(
+        method="GET", url=_s3_object_url(settings.s3_public_url, path), params=params
+    )
+    S3SigV4QueryAuth(_s3_credentials(), "s3", settings.s3_region, expires=expires_in).add_auth(
+        request
+    )
+    return str(request.url)
+
+
+async def upload(path: str, data: bytes, content_type: str) -> None:
+    """Server-side upload with the backend's own key: the client never
+    touches the bucket itself (architecture.md, Invariant 2), and only bytes
+    that already went through `app/domain/images.normalize_image` land in
+    it."""
+    if uses_s3():
+        await _s3_upload(path, data, content_type)
+    else:
+        await _supabase_upload(path, data, content_type)
+
+
+async def _s3_upload(  # pragma: no cover - real Storage HTTP only
     path: str, data: bytes, content_type: str
 ) -> None:
-    """Server-side upload with the backend's secret key: the client never
-    touches Storage itself (architecture.md, Invariant 2), and only bytes
-    that already went through `app/domain/images.normalize_image` land in
-    the bucket."""
+    headers = s3_signed_headers(
+        "PUT", path, data, {"Content-Type": content_type, "Cache-Control": OBJECT_CACHE_CONTROL}
+    )
+    async with httpx.AsyncClient(timeout=30) as client:
+        response = await client.put(
+            _s3_object_url(settings.s3_endpoint, path), headers=headers, content=data
+        )
+    if response.is_error:
+        raise StorageError(f"Failed to upload {path}: {response.status_code}")
+
+
+async def _supabase_upload(  # pragma: no cover - real Storage HTTP only
+    path: str, data: bytes, content_type: str
+) -> None:
     headers = {**_headers(), "Content-Type": content_type, "x-upsert": "false"}
     async with httpx.AsyncClient(timeout=30) as client:
         response = await client.post(_object_url(path), headers=headers, content=data)
@@ -46,9 +137,26 @@ async def upload(  # pragma: no cover - real Storage HTTP only
         raise StorageError(f"Failed to upload {path}: {response.text}")
 
 
-async def remove(path: str) -> None:  # pragma: no cover - real Storage HTTP only
+async def remove(path: str) -> None:
     """Deletes one object. Idempotent: an object that is already gone counts as
     removed."""
+    if uses_s3():
+        await _s3_remove(path)
+    else:
+        await _supabase_remove(path)
+
+
+async def _s3_remove(path: str) -> None:  # pragma: no cover - real Storage HTTP only
+    # S3 answers 204 whether or not the object was there.
+    async with httpx.AsyncClient(timeout=30) as client:
+        response = await client.delete(
+            _s3_object_url(settings.s3_endpoint, path), headers=s3_signed_headers("DELETE", path)
+        )
+    if response.is_error and response.status_code != 404:
+        raise StorageError(f"Failed to delete {path}: {response.status_code}")
+
+
+async def _supabase_remove(path: str) -> None:  # pragma: no cover - real Storage HTTP only
     async with httpx.AsyncClient(timeout=30) as client:
         response = await client.delete(_object_url(path), headers=_headers())
     # A 404 means the object is already gone, which is the state we want.
@@ -67,11 +175,19 @@ _now = time.monotonic
 _signed_cache: dict[str, tuple[str, float]] = {}
 
 
-async def create_signed_urls(  # pragma: no cover - real Storage HTTP only
+async def create_signed_urls(paths: Collection[str], expires_in: int) -> dict[str, str]:
+    """Signed read links for `paths`. On S3 they are signed here, with no
+    request (so a missing object gets a link that answers 404). Supabase
+    signs them in one request and leaves out a path it can't sign (e.g. the
+    object is gone)."""
+    if uses_s3():
+        return {path: s3_presigned_url(path, expires_in) for path in paths}
+    return await _supabase_create_signed_urls(paths, expires_in)
+
+
+async def _supabase_create_signed_urls(  # pragma: no cover - real Storage HTTP only
     paths: Collection[str], expires_in: int
 ) -> dict[str, str]:
-    """Asks Storage to sign `paths` in one request. A path Storage can't sign
-    (e.g. the object is gone) is left out."""
     url = f"{settings.supabase_url}/storage/v1/object/sign/{settings.storage_bucket}"
     async with httpx.AsyncClient(timeout=10) as client:
         response = await client.post(
@@ -128,37 +244,53 @@ def forget_signed_urls(paths: Collection[str]) -> None:
 
 
 def own_object_path(url: str) -> str | None:
-    """The object path behind a signed link of this app's own images bucket
-    (`<supabase_url>/storage/v1/object/sign/<bucket>/<path>?token=...`), or
-    None for any other URL. Only reads the URL: whether the link's token is
-    still valid, and whether anyone may see that object, is the caller's
-    business."""
-    if not settings.supabase_url:
-        return None
-    prefix = (
-        f"{settings.supabase_url.rstrip('/')}/storage/v1/object/sign/{settings.storage_bucket}/"
-    )
+    """The object path behind a signed link of this app's own images bucket,
+    or None for any other URL. Both shapes count, so an export made before
+    the move to Garage still finds its images (the objects keep their paths):
+    - S3: `<s3_public_url>/<bucket>/<path>?X-Amz-...`;
+    - Supabase: `<supabase_url>/storage/v1/object/sign/<bucket>/<path>?token=...`.
+
+    Only reads the URL: whether the link's signature is still valid, and
+    whether anyone may see that object, is the caller's business."""
+    prefixes = []
+    if settings.s3_public_url:
+        prefixes.append(f"{settings.s3_public_url.rstrip('/')}/{settings.storage_bucket}/")
+    if settings.supabase_url:
+        prefixes.append(
+            f"{settings.supabase_url.rstrip('/')}/storage/v1/object/sign/{settings.storage_bucket}/"
+        )
     parts = urlsplit(url)
     bare = f"{parts.scheme}://{parts.netloc}{parts.path}"
-    if not bare.startswith(prefix):
-        return None
-    path = unquote(bare.removeprefix(prefix))
-    if not path or ".." in path.split("/"):
-        return None
-    return path
+    for prefix in prefixes:
+        if bare.startswith(prefix):
+            path = unquote(bare.removeprefix(prefix))
+            if not path or ".." in path.split("/"):
+                return None
+            return path
+    return None
 
 
-async def download(  # pragma: no cover - real Storage HTTP only
-    path: str, max_bytes: int
-) -> bytes:
+async def download(path: str, max_bytes: int) -> bytes:
     """The bytes of one object of the images bucket, read with the backend's
-    secret key (no signed link, so nothing expires). Callers must have checked
+    own key (no signed link, so nothing expires). Callers must have checked
     the requester may see it. A body over `max_bytes` is refused as it streams
     in; raises `StorageError` on any failure."""
+    if uses_s3():
+        return await _read_limited(
+            _s3_object_url(settings.s3_endpoint, path), s3_signed_headers("GET", path), max_bytes
+        )
+    return await _read_limited(_object_url(path), _headers(), max_bytes)
+
+
+async def _read_limited(  # pragma: no cover - real Storage HTTP only
+    url: str, headers: Mapping[str, str], max_bytes: int
+) -> bytes:
+    """GETs `url` without following redirects, refusing a body over
+    `max_bytes` as it streams in."""
     try:
         async with (
             httpx.AsyncClient(timeout=30) as client,
-            client.stream("GET", _object_url(path), headers=_headers()) as response,
+            client.stream("GET", url, headers=dict(headers)) as response,
         ):
             if response.is_error:
                 raise StorageError(f"Storage answered {response.status_code}")
@@ -173,32 +305,28 @@ async def download(  # pragma: no cover - real Storage HTTP only
 
 
 def as_download(signed_url: str, file_name: str) -> str:
-    """A signed link that makes Storage serve the object as an attachment
+    """A signed link that makes the bucket serve the object as an attachment
     named `file_name` (`Content-Disposition: attachment`), so the browser
     downloads it instead of rendering it. PDF Attachments are always served
     this way (D-22): a PDF can carry scripts and must never open as a page.
-    Supabase reads the `download` query parameter of a signed link; the link
-    already carries `?token=`."""
+    On S3 the override is part of the signature, so the link is signed again
+    with it, for the time a fresh link gets. Supabase reads the `download`
+    query parameter of a signed link; the link already carries `?token=`."""
+    if uses_s3():
+        path = own_object_path(signed_url)
+        if path is not None:
+            return s3_presigned_url(path, SIGNED_URL_TTL_SECONDS, download_name=file_name)
     return f"{signed_url}&download={quote(file_name, safe='')}"
 
 
-async def download_signed(  # pragma: no cover - real Storage HTTP only
-    url: str, max_bytes: int
-) -> bytes:
+async def download_signed(url: str, max_bytes: int) -> bytes:
     """The bytes behind a signed link the backend itself created, for the Room
-    PDF job (spec 23b): images to downscale, PDF Attachments to append.
-    Redirects aren't followed, and a body over `max_bytes` is refused as it
-    streams in. Raises `StorageError` on any failure, so the job can leave
-    that one file out."""
-    try:
-        async with httpx.AsyncClient(timeout=30) as client, client.stream("GET", url) as response:
-            if response.is_error:
-                raise StorageError(f"Storage answered {response.status_code}")
-            body = bytearray()
-            async for chunk in response.aiter_bytes():
-                body.extend(chunk)
-                if len(body) > max_bytes:
-                    raise StorageError("The object is larger than the limit")
-            return bytes(body)
-    except httpx.HTTPError as exc:
-        raise StorageError(f"Could not download: {exc}") from exc
+    PDF job (spec 23b): images to downscale, PDF Attachments to append. A
+    link of this app's own bucket is read inside the server, with the
+    backend's key; any other is fetched as it is. Redirects aren't followed,
+    and a body over `max_bytes` is refused as it streams in. Raises
+    `StorageError` on any failure, so the job can leave that one file out."""
+    path = own_object_path(url) if uses_s3() else None
+    if path is not None:
+        return await download(path, max_bytes)
+    return await _read_limited(url, {}, max_bytes)

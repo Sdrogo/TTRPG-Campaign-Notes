@@ -49,17 +49,19 @@ release, list what is pending here and remind the product owner to label the
 release PR.
 
 - **Head in the repository**: `b5e2c8f1a4d7` (own sign-in, ticket 73 step 3).
-- **Staging database**: `e7b3d9a1c5f2 (head)`, applied 2026-11-09 with
+- **Staging database**: `b5e2c8f1a4d7 (head)`, 2026-11-17 from Actions (PR #337).
+  Before: `e7b3d9a1c5f2`, applied 2026-11-09 with
   `backend/.env.staging` loaded (`d4a8f2c6b9e1` applied the same day,
   `c1d7e3a9f5b2` on 2026-11-03).
-- **Production database**: `e7b3d9a1c5f2 (head)`, applied 2026-11-09 with
+- **Production database**: `b5e2c8f1a4d7 (head)`, 2026-11-17 from Actions (release PR #338).
+  Before: `e7b3d9a1c5f2`, applied 2026-11-09 with
   `backend/.env` loaded (product owner's go-ahead), before the release PR
   #316: `d4a8f2c6b9e1` (arrow bend, spec 67) then `e7b3d9a1c5f2` (color
   legend, spec 68). Earlier: `c1d7e3a9f5b2` on 2026-11-03 before the release
   that shipped it (PR #302), with `e8c4a2f6b1d9` and `e9c4a2f7b1d8` the same day.
-- **Pending**: `b5e2c8f1a4d7` (own sign-in tables, copies Supabase's
-  `auth.identities`) on staging, then production: label the PR / release PR
-  `db-migration`.
+- **Pending**: none. `b5e2c8f1a4d7` (own sign-in, ticket 73 step 3) ran
+  from Actions on 2026-11-17: staging with PR #337, production with release
+  PR #338 (31 identities copied).
 
 When a new migration lands, update the three lines above and add it to the
 top of the chain below. Per-migration apply history (who, when, which env
@@ -263,6 +265,9 @@ image search, read aloud, GDPR (10-01 → 10-10). See the two older archives.
   job in `deploy-vps.yml`, `migrate-db.yml` button, `migration-label.yml`
   check). Product owner: create the `db-migration` label and the
   `migrate-production-approval` environment with a required reviewer.
+- **Docs-only merges skip the deploy** (product owner, 2026-11-17, PR #342):
+  a docs-only release had recreated the prod backend and briefly failed
+  requests with CORS errors; see `context/architecture.md`.
 - **73, Leave Vercel and Supabase** (product owner, 2026-11-15): six steps
   on the VPS, ~9–10 h of Claude build time. Ticket confirmed 2026-11-16;
   step 1 built (frontend served by Caddy, deploy builds and ships it), to be
@@ -271,11 +276,21 @@ image search, read aloud, GDPR (10-01 → 10-10). See the two older archives.
   replaces its frontend build (it was kept, so new `VITE_*` values were lost).
   Step 2 built (same PR): one shared deploy workflow, `deploy-staging.yml` for
   the Erith VPS as staging (frontend + API, still on the staging Supabase);
-  switched in 2026-11-17. Step 3 built 2026-11-17 (own OAuth sign-in,
-  supabase-js removed, migration `b5e2c8f1a4d7`): needs the OAuth console
-  redirect URIs and the new `backend.env` settings on both VPSes **before**
-  its deploy (the app refuses to start without `AUTH_TOKEN_SECRET`).
-  Next: step 5 (DB), step 4 postponed, then step 6 cleanup.
+  switched in 2026-11-17. Step 3 live 2026-11-17 (own OAuth sign-in,
+  supabase-js removed, migration `b5e2c8f1a4d7`; PR #337, release #338);
+  both VPSes have `AUTH_TOKEN_SECRET` and the provider credentials.
+  Step 4 live 2026-11-17 (PR #342, release #343, no migration): images
+  bucket on Garage (S3) on each VPS, `storage.py` speaks S3 when
+  `S3_ENDPOINT` is set, `garage-setup.sh` copied from Supabase (724 objects
+  on production) and switched, nightly encrypted bucket backup to the staging
+  VPS (`backup-files.sh`, cron 03:30). Step 5 built 2026-11-17 (PR #344,
+  no migration): `db` compose service (Postgres 17.6, profile `db`),
+  `deploy/db-setup.sh` (dump `public` from Supabase, restore as `exlibris`,
+  row-count check, switch, rollback line kept; also restores a backup file),
+  `deploy/backup.sh` (was `backup-files.sh`; adds the nightly `pg_dump`,
+  `check`/`fetch`/`restore-files`, `backup-last-ok`),
+  `context/restore-runbook.md`. Live once the product owner runs
+  `db-setup.sh` on staging, then production. Then step 6 cleanup.
 - **License** (product owner, 2026-11-15): GPL-3.0 replaced by the
   Functional Source License `FSL-1.1-ALv2` (no commercial competing service;
   each version becomes Apache-2.0 after two years), licensor Andrea Partenope.

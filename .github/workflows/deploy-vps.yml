@@ -41,6 +41,13 @@ on:
         required: false
         type: boolean
         default: false
+      skip_docs_only:
+        description: >-
+          Deploy nothing when the commit changes only documentation (Markdown
+          outside the app code, context/, LICENSE). Only for a merge commit.
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -52,14 +59,19 @@ jobs:
   # Ticket 74: the label on the merged PR is the product owner's go for the
   # migrations. Found from the merge commit; any other way in migrates
   # nothing.
+  #
+  # A merge that changes only documentation deploys nothing: a deploy
+  # recreates the backend, and for a few seconds Caddy answers with an error
+  # that browsers report as a CORS failure. Run workflow always deploys.
   label:
-    name: Check the db-migration label
+    name: Check the db-migration label and the changed files
     runs-on: ubuntu-latest
     permissions:
       contents: read
       pull-requests: read
     outputs:
       migrate: ${{ steps.find.outputs.migrate }}
+      deploy: ${{ steps.changes.outputs.deploy }}
     steps:
       - name: Find the merged PR's labels
         id: find
@@ -79,9 +91,44 @@ jobs:
           echo "migrate=$migrate" >> "$GITHUB_OUTPUT"
           echo "migrations: $migrate"
 
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        if: inputs.skip_docs_only
+        with:
+          ref: ${{ inputs.ref }}
+          fetch-depth: 2
+          persist-credentials: false
+
+      # A merge commit's first parent is the branch before the merge, so the
+      # diff is everything the merged PR brought, a whole release included.
+      - name: Look for anything besides documentation
+        id: changes
+        env:
+          WANTED: ${{ inputs.skip_docs_only }}
+          MIGRATE: ${{ steps.find.outputs.migrate }}
+        run: |
+          deploy=true
+          if [ "$WANTED" = true ] && [ "$MIGRATE" != true ]; then
+            files="$(git diff --name-only HEAD^1 HEAD)"
+            printf 'changed files:\n%s\n' "$files"
+            # Markdown inside the app code may be bundled, so it counts.
+            other="$(printf '%s\n' "$files" | while read -r f; do
+              case "$f" in
+                frontend/src/*|frontend/public/*|backend/app/*) echo "$f" ;;
+                context/*|LICENSE|*.md) ;;
+                *) echo "$f" ;;
+              esac
+            done)"
+            if [ -n "$files" ] && [ -z "$other" ]; then
+              deploy=false
+            fi
+          fi
+          echo "deploy=$deploy" >> "$GITHUB_OUTPUT"
+          echo "deploy: $deploy"
+
   deploy:
     name: Build and deploy
     needs: label
+    if: needs.label.outputs.deploy == 'true'
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
     timeout-minutes: 20
@@ -151,14 +198,17 @@ jobs:
           scp -i ~/.ssh/deploy_key deploy/compose.yaml deploy/migrate.sh migrations.tgz "$TARGET:/opt/exlibris/"
           ssh -i ~/.ssh/deploy_key "$TARGET" "bash /opt/exlibris/migrate.sh $SHA"
 
-      # compose.yaml, the Caddyfile and deploy.sh come from this commit, so
-      # the server always runs the versions in the repository.
+      # compose.yaml, the Caddyfile, Garage's settings and the scripts come
+      # from this commit, so the server always runs the versions in the
+      # repository.
       - name: Deploy on the VPS
         env:
           SHA: ${{ steps.commit.outputs.sha }}
           TARGET: ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}
         run: |
-          files=(deploy/compose.yaml deploy/Caddyfile deploy/deploy.sh deploy/migrate.sh)
+          files=(deploy/compose.yaml deploy/Caddyfile deploy/deploy.sh deploy/migrate.sh
+            deploy/garage.toml deploy/garage-setup.sh deploy/backup-target-setup.sh
+            deploy/backup.sh deploy/backup-files.sh deploy/db-setup.sh)
           [ -f frontend.tgz ] && files+=(frontend.tgz)
           scp -i ~/.ssh/deploy_key "${files[@]}" "$TARGET:/opt/exlibris/"
           ssh -i ~/.ssh/deploy_key "$TARGET" "bash /opt/exlibris/deploy.sh $SHA"
