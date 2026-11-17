@@ -21,8 +21,6 @@ npm run dev          # http://localhost:5173
 
 | Variable | Meaning |
 | --- | --- |
-| `VITE_SUPABASE_URL` | Supabase project URL |
-| `VITE_SUPABASE_PUBLISHABLE_KEY` | Supabase publishable (public) key |
 | `VITE_API_BASE_URL` | Backend URL, `http://localhost:8000` locally |
 
 The backend must run too, and must allow this origin (its default CORS origin is

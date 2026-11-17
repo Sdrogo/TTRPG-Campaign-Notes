@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import {
+  Alert,
   Anchor,
   Box,
   Button,
@@ -96,11 +97,13 @@ interface LandingPageProps {
  */
 export function LandingPage({ signedIn }: LandingPageProps) {
   const { t } = useTranslation();
-  const { hash } = useLocation();
+  const { hash, search } = useLocation();
+  // The backend sends a failed or cancelled sign-in back here with this flag.
+  const signInFailed = new URLSearchParams(search).has('signInError');
 
   useEffect(() => {
-    if (hash === `#${SIGN_IN_ANCHOR}`) scrollToSignIn();
-  }, [hash]);
+    if (hash === `#${SIGN_IN_ANCHOR}` || signInFailed) scrollToSignIn();
+  }, [hash, signInFailed]);
 
   return (
     <>
@@ -224,7 +227,17 @@ export function LandingPage({ signedIn }: LandingPageProps) {
                   {t('landing.signInTitle')}
                 </Title>
                 <Text c="dimmed">{t('auth.prompt')}</Text>
+                {/* Ticket 73 step 3: the move to our own sign-in ended every
+                    session once. Drop this with the ticket's cleanup. */}
+                <Text size="sm" c="dimmed">
+                  {t('auth.signInAgain')}
+                </Text>
               </Stack>
+              {signInFailed && (
+                <Alert color="red" role="alert" w="100%" maw={320}>
+                  {t('auth.signInFailed')}
+                </Alert>
+              )}
               <SignInButtons />
             </Box>
           )}

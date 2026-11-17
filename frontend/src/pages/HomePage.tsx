@@ -21,7 +21,7 @@ export function HomePage() {
   const [justSignedIn] = useState(readSigningIn);
 
   // Signed in, it has done its job; signed out once the session has loaded
-  // (Supabase reads the OAuth return before that), the sign-in was cancelled
+  // (the backend has set its cookie before that), the sign-in was cancelled
   // and must not redirect a later visit.
   useEffect(() => {
     if (!sessionLoading) clearSigningIn();

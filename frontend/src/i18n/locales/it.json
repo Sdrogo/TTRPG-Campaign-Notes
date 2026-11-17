@@ -70,7 +70,9 @@
   "auth": {
     "prompt": "Accedi per continuare.",
     "signInWith": "Accedi con {{provider}}",
-    "privacy": "Privacy"
+    "privacy": "Privacy",
+    "signInAgain": "Avevi già fatto l'accesso? Abbiamo cambiato il modo di accedere: accedi un'altra volta. Le tue Stanze sono tutte qui.",
+    "signInFailed": "L'accesso non è andato a buon fine. Riprova."
   },
   "landing": {
     "tagline": "Il taccuino condiviso della tua campagna",

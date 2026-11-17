@@ -32,3 +32,14 @@ CREATE TABLE auth.users (
   id uuid PRIMARY KEY,
   email varchar(255)
 );
+
+-- Supabase Auth's identities, reduced to the columns migration b5e2c8f1a4d7
+-- copies into `auth_identities` (ticket 73 step 3). Empty in CI.
+CREATE TABLE auth.identities (
+  provider_id text NOT NULL,
+  user_id uuid NOT NULL,
+  identity_data jsonb NOT NULL,
+  provider text NOT NULL,
+  last_sign_in_at timestamptz,
+  created_at timestamptz
+);

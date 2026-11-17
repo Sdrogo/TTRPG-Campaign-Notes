@@ -2,7 +2,12 @@
   "errors": {
     "auth": {
       "missingToken": "Missing bearer token",
-      "invalidToken": "Invalid or expired token"
+      "invalidToken": "Invalid or expired token",
+      "noProvider": "This sign-in method isn't available",
+      "badReturnAddress": "Sign-in can only return to Ex Libris",
+      "signInExpired": "The sign-in took too long or was opened in another browser. Try again",
+      "badOrigin": "Request refused: it doesn't come from Ex Libris",
+      "signedOut": "You are signed out"
     },
     "room": {
       "notFound": "Room not found",
@@ -132,8 +137,7 @@
       },
       "fieldTooLong": "{field} must be at most {max} characters",
       "deletionNotConfirmed": "Type DELETE to confirm the account deletion",
-      "successorNeeded": "Before deleting your account, make someone else Master or Administrator in: {rooms}",
-      "signInDeletionFailed": "Your data was deleted, but your sign-in account could not be removed. Try again in a moment"
+      "successorNeeded": "Before deleting your account, make someone else Master or Administrator in: {rooms}"
     },
     "friend": {
       "notFound": "Friend or friend request not found",

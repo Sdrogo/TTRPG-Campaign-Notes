@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { apiFetch } from '../../lib/apiClient';
 import { notifyError, notifySuccess } from '../../lib/notify';
-import { supabase } from '../../lib/supabaseClient';
+import { signOut as authSignOut } from '../../lib/auth';
 import { useSession } from '../../hooks/useSession';
 import i18n from '../../i18n';
 import { fakeSession, rawAccount, rawMyReveal } from '../fixtures';
@@ -14,9 +14,7 @@ import { setDemoMode } from '../../lib/demo/demoMode';
 vi.mock('../../lib/apiClient', () => ({ apiFetch: vi.fn() }));
 vi.mock('../../lib/notify', () => ({ notifyError: vi.fn(), notifySuccess: vi.fn() }));
 vi.mock('../../hooks/useSession', () => ({ useSession: vi.fn() }));
-vi.mock('../../lib/supabaseClient', () => ({
-  supabase: { auth: { signOut: vi.fn() } },
-}));
+vi.mock('../../lib/auth', () => ({ signOut: vi.fn(), forgetSession: vi.fn() }));
 
 vi.mock('react-router-dom', async () => ({
   ...(await vi.importActual<typeof import('react-router-dom')>('react-router-dom')),
@@ -25,7 +23,7 @@ vi.mock('react-router-dom', async () => ({
 
 const fetchMock = vi.mocked(apiFetch);
 const sessionMock = vi.mocked(useSession);
-const signOut = vi.mocked(supabase.auth.signOut);
+const signOut = vi.mocked(authSignOut);
 
 type SessionState = ReturnType<typeof useSession>;
 
@@ -89,14 +87,10 @@ describe('AccountPage', () => {
     expect(email.parentElement?.querySelector('svg')).toHaveAttribute('aria-hidden', 'true');
   });
 
-  it('uses account-neutral wording for linked Google and GitHub identities', async () => {
+  it('uses account-neutral wording for a Google session', async () => {
     const session = {
       ...fakeSession(),
-      user: {
-        id: 'user-1',
-        app_metadata: { provider: 'google' },
-        identities: [{ provider: 'google' }, { provider: 'github' }],
-      },
+      user: { id: 'user-1', email: 'io@example.com', provider: 'google' },
     };
     sessionMock.mockReturnValue({ session, loading: false } as SessionState);
     render();
@@ -285,8 +279,8 @@ describe('signing out', () => {
     expect(await screen.findByRole('button', { name: 'Sign out' })).toBeInTheDocument();
   });
 
-  it('signs out through Supabase', async () => {
-    signOut.mockResolvedValue({ error: null } as Awaited<ReturnType<typeof supabase.auth.signOut>>);
+  it('signs out through the backend', async () => {
+    signOut.mockResolvedValue(undefined);
     const { user } = render();
     await screen.findByRole('heading', { name: 'Account' });
 
@@ -296,9 +290,7 @@ describe('signing out', () => {
   });
 
   it('reports a failed sign-out', async () => {
-    signOut.mockResolvedValue({ error: new Error('network') } as unknown as Awaited<
-      ReturnType<typeof supabase.auth.signOut>
-    >);
+    signOut.mockRejectedValue(new Error('network'));
     const { user } = render();
     await screen.findByRole('heading', { name: 'Account' });
 

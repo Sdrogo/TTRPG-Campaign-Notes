@@ -70,7 +70,9 @@
   "auth": {
     "prompt": "Log in om door te gaan.",
     "signInWith": "Inloggen met {{provider}}",
-    "privacy": "Privacy"
+    "privacy": "Privacy",
+    "signInAgain": "Eerder ingelogd? We hebben het inloggen veranderd, log dus nog één keer in. Al je Kamers zijn er nog.",
+    "signInFailed": "Inloggen is niet gelukt. Probeer het opnieuw."
   },
   "landing": {
     "tagline": "Het gedeelde notitieboek van je campagne",

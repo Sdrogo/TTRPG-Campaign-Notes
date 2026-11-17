@@ -1,4 +1,4 @@
-import type { Session } from '@supabase/supabase-js';
+import type { AuthSession } from '../auth';
 
 // The Demo (spec 45_2): the real pages over a sample Room kept in the
 // browser. This module is the small, always-loaded part: the on/off flag that
@@ -47,20 +47,10 @@ export function setDemoMode(on: boolean): boolean {
  * The session `useSession` hands out while the Demo is on: the sample Room's
  * Master. Only `user.id` is read by the pages; it is never sent anywhere.
  */
-export const DEMO_SESSION = {
+export const DEMO_SESSION: AuthSession = {
   access_token: 'demo',
-  refresh_token: 'demo',
-  token_type: 'bearer',
-  expires_in: 3600,
-  expires_at: Number.MAX_SAFE_INTEGER,
-  user: {
-    id: DEMO_USER_ID,
-    aud: 'authenticated',
-    app_metadata: {},
-    user_metadata: {},
-    created_at: '2026-10-25T00:00:00Z',
-  },
-} as Session;
+  user: { id: DEMO_USER_ID, email: null, provider: 'demo' },
+};
 
 /** Leaves the Demo with a full page load, so no sample data stays in any cache. */
 export function exitDemo(to: string) {

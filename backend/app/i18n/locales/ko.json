@@ -2,7 +2,12 @@
   "errors": {
     "auth": {
       "missingToken": "Bearer 토큰이 없습니다",
-      "invalidToken": "토큰이 유효하지 않거나 만료되었습니다"
+      "invalidToken": "토큰이 유효하지 않거나 만료되었습니다",
+      "noProvider": "이 로그인 방법은 사용할 수 없습니다",
+      "badReturnAddress": "로그인 후에는 Ex Libris로만 돌아갈 수 있습니다",
+      "signInExpired": "로그인이 너무 오래 걸렸거나 다른 브라우저에서 열렸습니다. 다시 시도하세요",
+      "badOrigin": "요청이 거부되었습니다: Ex Libris에서 보낸 요청이 아닙니다",
+      "signedOut": "로그아웃된 상태입니다"
     },
     "room": {
       "notFound": "룸을 찾을 수 없습니다",
@@ -132,8 +137,7 @@
       },
       "fieldTooLong": "{field}은(는) 최대 {max}자까지 가능합니다",
       "deletionNotConfirmed": "계정 삭제를 확인하려면 DELETE를 입력하세요",
-      "successorNeeded": "계정을 삭제하기 전에 다음 룸에서 다른 사람을 Master 또는 Admin으로 지정하세요: {rooms}",
-      "signInDeletionFailed": "데이터는 삭제되었지만 로그인 계정을 삭제하지 못했습니다. 잠시 후 다시 시도하세요"
+      "successorNeeded": "계정을 삭제하기 전에 다음 룸에서 다른 사람을 Master 또는 Admin으로 지정하세요: {rooms}"
     },
     "friend": {
       "notFound": "친구 또는 친구 요청을 찾을 수 없습니다",

@@ -70,7 +70,9 @@
   "auth": {
     "prompt": "请登录后继续。",
     "signInWith": "使用 {{provider}} 登录",
-    "privacy": "隐私"
+    "privacy": "隐私",
+    "signInAgain": "之前登录过？我们更改了登录方式，请再登录一次。你的所有房间都还在。",
+    "signInFailed": "登录未成功，请重试。"
   },
   "landing": {
     "tagline": "你的战役共享笔记本",

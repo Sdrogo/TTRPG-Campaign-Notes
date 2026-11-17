@@ -1,53 +1,44 @@
 from collections.abc import AsyncIterator, Callable, Collection, Iterator
 from contextlib import asynccontextmanager
-from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 
 import jwt
 import pytest
 import pytest_asyncio
-from cryptography.hazmat.primitives.asymmetric import ec
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from app.api import rate_limits
-from app.auth import jwt as auth_jwt
+from app.auth import tokens
 from app.config import settings
 from app.db import session as session_module
 from app.db import storage
 from app.db.session import discard_after_commit, engine, get_session, run_after_commit
 from app.main import app
 
-_private_key = ec.generate_private_key(ec.SECP256R1())
-_public_key = _private_key.public_key()
-
-
-@dataclass
-class _FakeSigningKey:
-    key: object
-
-
-class _FakeJwkClient:
-    def get_signing_key_from_jwt(self, token: str) -> _FakeSigningKey:
-        return _FakeSigningKey(key=_public_key)
+TEST_TOKEN_SECRET = "test-secret-" + "x" * 40
 
 
 @pytest.fixture(autouse=True)
-def _patch_jwk_client(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr(auth_jwt, "_jwk_client", lambda: _FakeJwkClient())
+def _auth_token_secret(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(settings, "auth_token_secret", TEST_TOKEN_SECRET)
 
 
 @pytest.fixture
 def make_token() -> Callable[..., str]:
+    """An access token as `/auth/refresh` issues it (app/auth/tokens.py),
+    with any claim overridden."""
+
     def _make_token(user_id: str, email: str | None = None, **overrides: object) -> str:
         payload = {
             "sub": user_id,
             "email": email,
-            "aud": "authenticated",
-            "iss": settings.supabase_issuer,
+            "provider": "google",
+            "aud": tokens.ACCESS_AUDIENCE,
+            "iss": tokens.ISSUER,
             "exp": datetime.now(UTC) + timedelta(hours=1),
             **overrides,
         }
-        return jwt.encode(payload, _private_key, algorithm="ES256")
+        return jwt.encode(payload, TEST_TOKEN_SECRET, algorithm="HS256")
 
     return _make_token
 

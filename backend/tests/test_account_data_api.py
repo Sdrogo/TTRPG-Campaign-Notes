@@ -5,17 +5,18 @@ import io
 import uuid
 from collections.abc import AsyncIterator, Callable
 from dataclasses import dataclass
+from datetime import UTC, datetime, timedelta
 
-import pytest
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
 from PIL import Image
 from sqlalchemy import ColumnElement, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.db import auth_admin
 from app.db.models import (
     AuditLogRow,
+    AuthIdentityRow,
+    AuthSessionRow,
     CommentReactionRow,
     DocumentOwnerRow,
     FriendCodeRow,
@@ -36,16 +37,22 @@ async def client() -> AsyncIterator[AsyncClient]:
         yield ac
 
 
-@pytest.fixture
-def deleted_auth_users(monkeypatch: pytest.MonkeyPatch) -> list[str]:
-    """Stands in for Supabase Auth's admin API: records who was deleted."""
-    deleted: list[str] = []
-
-    async def fake_delete(user_id: str) -> None:
-        deleted.append(user_id)
-
-    monkeypatch.setattr(auth_admin, "delete_auth_user", fake_delete)
-    return deleted
+async def _signed_in(db_session: AsyncSession, user_id: str) -> None:
+    """A sign-in identity and session for the user (ticket 73 step 3)."""
+    identity = AuthIdentityRow(
+        provider="google", provider_user_id=f"g-{user_id}", user_id=uuid.UUID(user_id)
+    )
+    db_session.add(identity)
+    await db_session.flush()
+    db_session.add(
+        AuthSessionRow(
+            user_id=identity.user_id,
+            identity_id=identity.id,
+            token_hash=user_id.replace("-", "").ljust(64, "0"),
+            expires_at=datetime.now(UTC) + timedelta(days=1),
+        )
+    )
+    await db_session.flush()
 
 
 @dataclass
@@ -147,7 +154,6 @@ async def test_deletion_needs_the_confirmation_word(
     db_session: AsyncSession,
     make_token: Callable[..., str],
     client: AsyncClient,
-    deleted_auth_users: list[str],
 ) -> None:
     user = _user(make_token)
     await _room(client, user, "Mine")
@@ -156,7 +162,6 @@ async def test_deletion_needs_the_confirmation_word(
     )
     assert response.status_code == 422
     assert await _count(db_session, MembershipRow, MembershipRow.user_id == uuid.UUID(user.id))
-    assert deleted_auth_users == []
 
 
 async def test_deleting_erases_the_person_and_keeps_shared_content(
@@ -164,7 +169,6 @@ async def test_deleting_erases_the_person_and_keeps_shared_content(
     make_token: Callable[..., str],
     client: AsyncClient,
     fake_storage: dict[str, bytes],
-    deleted_auth_users: list[str],
 ) -> None:
     """Spec 31_1: the solo Room goes, the shared one is left (audited), what
     they wrote there stays, and every personal row and the avatar go."""
@@ -199,9 +203,14 @@ async def test_deleting_erases_the_person_and_keeps_shared_content(
     assert avatar.status_code == 200, avatar.text
     assert any(path.startswith("avatars/") for path in fake_storage)
 
+    await _signed_in(db_session, player.id)
+    await _signed_in(db_session, master.id)
+
     assert await _delete_account(client, player) == 204
 
-    assert deleted_auth_users == [player.id]
+    assert not await _count(db_session, AuthIdentityRow, AuthIdentityRow.user_id == player_id)
+    assert not await _count(db_session, AuthSessionRow, AuthSessionRow.user_id == player_id)
+    assert await _count(db_session, AuthSessionRow, AuthSessionRow.user_id == uuid.UUID(master.id))
     assert await db_session.get(RoomRow, uuid.UUID(solo)) is None
     assert await db_session.get(RoomRow, uuid.UUID(shared)) is not None
     assert not await _count(db_session, MembershipRow, MembershipRow.user_id == player_id)
@@ -240,7 +249,6 @@ async def test_the_last_master_of_a_shared_room_must_hand_over_first(
     db_session: AsyncSession,
     make_token: Callable[..., str],
     client: AsyncClient,
-    deleted_auth_users: list[str],
 ) -> None:
     """D-16: 409 naming the Room, and nothing is deleted."""
     master = _user(make_token)
@@ -257,31 +265,6 @@ async def test_the_last_master_of_a_shared_room_must_hand_over_first(
     assert response.json()["detail"].endswith("in: Barovia")
     assert await db_session.get(RoomRow, uuid.UUID(solo)) is not None
     assert await db_session.get(UserRow, uuid.UUID(master.id)) is not None
-    assert deleted_auth_users == []
-
-
-async def test_a_failed_sign_in_deletion_is_reported_and_can_be_retried(
-    db_session: AsyncSession,
-    make_token: Callable[..., str],
-    client: AsyncClient,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    user = _user(make_token)
-    room = await _room(client, user, "Mine")
-    calls: list[str] = []
-
-    async def failing_delete(user_id: str) -> None:
-        calls.append(user_id)
-        if len(calls) == 1:
-            raise auth_admin.AuthAdminError("down")
-
-    monkeypatch.setattr(auth_admin, "delete_auth_user", failing_delete)
-
-    assert await _delete_account(client, user) == 502
-    # The data went anyway (committed before Auth was called).
-    assert await db_session.get(RoomRow, uuid.UUID(room)) is None
-    assert await _delete_account(client, user) == 204
-    assert calls == [user.id, user.id]
 
 
 async def test_export_holds_the_callers_data_and_nothing_hidden_from_them(

@@ -1,38 +1,30 @@
 import { act, renderHook, waitFor } from '@testing-library/react';
-import type { Session } from '@supabase/supabase-js';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { supabase } from '../../lib/supabaseClient';
+import { type AuthSession, getSession, onSessionChange } from '../../lib/auth';
 import { useSession } from '../../hooks/useSession';
 import { DEMO_SESSION, setDemoMode } from '../../lib/demo/demoMode';
 
-vi.mock('../../lib/supabaseClient', () => ({
-  supabase: { auth: { getSession: vi.fn(), onAuthStateChange: vi.fn() } },
-}));
-
-const getSession = vi.mocked(supabase.auth.getSession);
-const onAuthStateChange = vi.mocked(supabase.auth.onAuthStateChange);
+vi.mock('../../lib/auth', () => ({ getSession: vi.fn(), onSessionChange: vi.fn() }));
 
 const unsubscribe = vi.fn();
-// Captured so a test can push an auth event the way Supabase would.
-let emit: (event: string, session: Session | null) => void = () => {};
+// Captured so a test can push a change the way `lib/auth` would.
+let emit: (session: AuthSession | null) => void = () => {};
 
-function session(id: string) {
-  return { access_token: id, user: { id } } as unknown as Session;
+function session(id: string): AuthSession {
+  return { access_token: id, user: { id, email: null, provider: 'google' } };
 }
 
 beforeEach(() => {
   unsubscribe.mockReset();
-  onAuthStateChange.mockImplementation((callback) => {
-    emit = callback as unknown as typeof emit;
-    return { data: { subscription: { unsubscribe } } } as unknown as ReturnType<
-      typeof supabase.auth.onAuthStateChange
-    >;
+  vi.mocked(onSessionChange).mockImplementation((listener) => {
+    emit = listener;
+    return unsubscribe;
   });
 });
 
 describe('useSession', () => {
   it('starts out loading with no session', () => {
-    getSession.mockReturnValue(new Promise(() => {}) as ReturnType<typeof supabase.auth.getSession>);
+    vi.mocked(getSession).mockReturnValue(new Promise(() => {}));
 
     const { result } = renderHook(() => useSession());
 
@@ -41,9 +33,7 @@ describe('useSession', () => {
   });
 
   it('settles with the restored session', async () => {
-    getSession.mockResolvedValue({ data: { session: session('restored') } } as Awaited<
-      ReturnType<typeof supabase.auth.getSession>
-    >);
+    vi.mocked(getSession).mockResolvedValue(session('restored'));
 
     const { result } = renderHook(() => useSession());
 
@@ -53,10 +43,8 @@ describe('useSession', () => {
 
   // Nobody signed in: still "done loading", just with no session. The app
   // routes to the login page off `loading === false`, so this has to settle.
-  it('settles with null when there is no stored session', async () => {
-    getSession.mockResolvedValue({ data: { session: null } } as Awaited<
-      ReturnType<typeof supabase.auth.getSession>
-    >);
+  it('settles with null when nobody is signed in', async () => {
+    vi.mocked(getSession).mockResolvedValue(null);
 
     const { result } = renderHook(() => useSession());
 
@@ -64,46 +52,47 @@ describe('useSession', () => {
     expect(result.current.session).toBeNull();
   });
 
-  it('picks up a later sign-in from the auth listener', async () => {
-    getSession.mockResolvedValue({ data: { session: null } } as Awaited<
-      ReturnType<typeof supabase.auth.getSession>
-    >);
+  it('picks up a renewed token', async () => {
+    vi.mocked(getSession).mockResolvedValue(session('old'));
     const { result } = renderHook(() => useSession());
     await waitFor(() => expect(result.current.loading).toBe(false));
 
-    act(() => emit('SIGNED_IN', session('fresh')));
+    act(() => emit(session('fresh')));
 
     expect(result.current.session?.access_token).toBe('fresh');
   });
 
   it('drops the session on sign-out', async () => {
-    getSession.mockResolvedValue({ data: { session: session('old') } } as Awaited<
-      ReturnType<typeof supabase.auth.getSession>
-    >);
+    vi.mocked(getSession).mockResolvedValue(session('old'));
     const { result } = renderHook(() => useSession());
     await waitFor(() => expect(result.current.session).not.toBeNull());
 
-    act(() => emit('SIGNED_OUT', null));
+    act(() => emit(null));
 
     expect(result.current.session).toBeNull();
   });
 
   // Leaking the listener would keep updating an unmounted component and, in
   // StrictMode, stack a second subscription on every remount.
-  it('unsubscribes on unmount', async () => {
-    getSession.mockResolvedValue({ data: { session: null } } as Awaited<
-      ReturnType<typeof supabase.auth.getSession>
-    >);
+  it('unsubscribes on unmount and ignores a late answer', async () => {
+    let answer: (value: AuthSession | null) => void = () => {};
+    vi.mocked(getSession).mockReturnValue(
+      new Promise((resolve) => {
+        answer = resolve;
+      }),
+    );
     const { unmount, result } = renderHook(() => useSession());
-    await waitFor(() => expect(result.current.loading).toBe(false));
 
     unmount();
+    emit(session('late'));
+    await act(async () => answer(session('late')));
 
     expect(unsubscribe).toHaveBeenCalledTimes(1);
+    expect(result.current.session).toBeNull();
   });
 
   it('is the sample Room Master while the Demo is on', () => {
-    getSession.mockReturnValue(new Promise(() => {}) as ReturnType<typeof supabase.auth.getSession>);
+    vi.mocked(getSession).mockReturnValue(new Promise(() => {}));
     setDemoMode(true);
 
     const { result } = renderHook(() => useSession());
