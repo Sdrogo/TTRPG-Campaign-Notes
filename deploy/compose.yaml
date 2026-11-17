@@ -1,10 +1,11 @@
 # Production backend on the VPS (context/vps-migration-plan.md). Lives in
 # /opt/exlibris on the server next to:
 #   backend.env  the backend's settings (secrets, chmod 600, never in git)
+#   garage.env   Garage's RPC secret (chmod 600, written by garage-setup.sh)
 #   .env         non-secret settings for this file: API_HOSTS,
-#                FRONTEND_HOSTS, FRONTEND_REDIRECT_HOSTS, CSP_CONNECT_SRC,
-#                and BACKEND_TAG once
-#                deploy.sh has run
+#                FRONTEND_HOSTS, FRONTEND_REDIRECT_HOSTS, FILES_HOSTS,
+#                CSP_CONNECT_SRC, COMPOSE_PROFILES (`files` once Garage is
+#                set up) and BACKEND_TAG once deploy.sh has run
 #   site/        the built frontend: releases/<sha>-<time>, and `current`, a link
 #                to the live one (deploy.sh)
 # The deploy workflow copies this file, the Caddyfile and deploy.sh here on
@@ -50,6 +51,9 @@ services:
       # elsewhere (Vercel, before the DNS switch).
       FRONTEND_HOSTS: ${FRONTEND_HOSTS:-http://frontend-disabled.invalid}
       FRONTEND_REDIRECT_HOSTS: ${FRONTEND_REDIRECT_HOSTS:-http://redirect-disabled.invalid}
+      # The bucket's public host (ticket 73 step 4), where browsers fetch
+      # signed links; also allowed in the frontend's CSP. Off by default.
+      FILES_HOSTS: ${FILES_HOSTS:-http://files-disabled.invalid}
       CSP_CONNECT_SRC: ${CSP_CONNECT_SRC:-https://api.exlibris.world https://mlksmacrcjurfuxtwdjw.supabase.co wss://mlksmacrcjurfuxtwdjw.supabase.co}
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
@@ -61,7 +65,28 @@ services:
     restart: unless-stopped
     logging: *logging
 
+  # The images bucket (ticket 73 step 4). Only in the `files` profile, which
+  # garage-setup.sh turns on in .env (COMPOSE_PROFILES=files): a server
+  # without it never starts Garage. No `ports:`: the backend reaches it at
+  # garage:3900, browsers through Caddy (FILES_HOSTS).
+  garage:
+    image: dxflrs/garage:v2.5.0
+    profiles: [files]
+    env_file:
+      - path: garage.env
+        required: false
+    volumes:
+      - ./garage.toml:/etc/garage.toml:ro
+      - garage_meta:/var/lib/garage/meta
+      - garage_data:/var/lib/garage/data
+    restart: unless-stopped
+    logging: *logging
+
 volumes:
+  # The bucket: its index and its objects. Backed up every night by
+  # backup-files.sh to the other VPS.
+  garage_meta:
+  garage_data:
   # The certificates. Losing it only means Caddy asks for new ones.
   caddy_data:
   caddy_config:

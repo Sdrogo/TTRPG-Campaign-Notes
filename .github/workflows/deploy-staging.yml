@@ -45,5 +45,7 @@ jobs:
       # A merge (not Run workflow) migrates first when its PR has the
       # db-migration label (ticket 74).
       migrate_if_labeled: ${{ github.event_name == 'workflow_run' }}
+      # A merge that changes only documentation deploys nothing.
+      skip_docs_only: ${{ github.event_name == 'workflow_run' }}
       tag_alias: staging
     secrets: inherit

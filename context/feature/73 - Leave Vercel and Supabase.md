@@ -4,8 +4,10 @@ Status: **confirmed 2026-11-16. Step 1 live** (production frontend and API on
 the Strasbourg VPS, 2026-11-16). **Step 2 live** (staging on the Erith VPS,
 2026-11-17). **Step 3 live** 2026-11-17 (own sign-in; PR #337, release
 #338; staging checked by the product owner with linking across providers).
-Next: step 5 (database), step 4 still postponed. All questions
-answered 2026-11-16 (sign-in A, files stay on Supabase for now).
+**Step 4 built** 2026-11-17 (files to Garage on the VPS, PR #342): live once
+the product owner runs `garage-setup.sh` on each server. Next: step 5
+(database). All questions answered: sign-in A (2026-11-16); files to Garage on
+the production VPS (2026-11-17, replacing "stay on Supabase for now").
 
 ## Goals
 
@@ -18,7 +20,8 @@ answered 2026-11-16 (sign-in A, files stay on Supabase for now).
   modo automatico?"
 - End state: the whole production stack (frontend, API, database, sign-in,
   files) runs on hardware the product owner rents by the year (the OVHcloud
-  VPS) plus, at most, pay-per-use object storage behind the standard S3 API.
+  VPS). Files are in Garage, a local S3 service (decided 2026-11-17), so
+  hosted pay-per-use object storage stays a settings change away.
   No platform subscription, nothing that pauses or caps the app when it grows.
 - Every existing user keeps their account, Rooms and files without doing
   anything except signing in once more.
@@ -103,18 +106,23 @@ again, and €15+ a month for less than this box gives.
 with this step, not after it:
 
 - nightly `pg_dump -Fc` from a small cron container, encrypted (`age`) and
-  copied off the VPS to the staging VPS in another datacenter (5) and to the
-  object storage of 3, kept 7 daily, 4 weekly, 6 monthly;
-- the files themselves live in the object storage, which keeps its own copies;
-  a weekly sync of the bucket into a second bucket/region covers deletion by
-  mistake;
+  copied off the VPS to the staging VPS in another datacenter (5), kept
+  7 daily, 4 weekly, 6 monthly;
+- the files live in Garage on the production VPS (section 3, update): the
+  only copies are its volume and the nightly mirror on the staging VPS, with
+  the same retention. That mirror also covers deletion by mistake. Both
+  copies are at OVH, so a second provider (any S3 service) can be added
+  later as a third copy;
 - OVH's included daily VPS backup stays on as a second, coarse layer;
 - a restore runbook in `context/`, tried once on staging before the cutover,
   then every few months; the `/health` cron also checks the dump's age (a
   `/health/backup` reading the last success time, or the backup job pinging a
   dead-man's-switch monitor).
 
-### 3. Files: S3-compatible object storage (recommended)
+### 3. Files: S3-compatible object storage
+
+*Superseded on 2026-11-17 by the update at the end of this section (Garage on
+the production VPS); kept for the reasoning.*
 
 `storage.py` keeps its functions (upload, remove, download, signed links) and
 speaks the S3 API instead (presigned GET links replace Supabase's signed
@@ -133,6 +141,48 @@ The per-object cap becomes ours to set, so the Room PDF no longer needs to fit
 Supabase one, so an export made before the move still imports its images
 (they are re-fetched only while the old link is valid; afterwards the import
 reports them as missing, as it does for any expired link today).
+
+**Update 2026-11-17 (product owner): files go to a local S3 service,
+[Garage](https://garagehq.deuxfleurs.fr/), on the production VPS.** Why: the
+data is tiny (80 MB in Supabase on 2026-11-17), and Supabase's free egress was
+already at 4.58 of 5 GB in the current cycle. The objection above no longer
+holds. Production is now the larger Strasbourg VPS, and the nightly backup to
+the staging VPS (another datacenter) covers the files. Garage was preferred to
+a plain folder because it speaks S3, so a move to hosted object storage later
+is only a change of settings.
+
+- **Service**: one more compose service, `garage` (image pinned to an exact
+  version), single node (`replication_factor = 1`), data and metadata in
+  named volumes, S3 API on port 3900 on the internal network only. Its admin
+  API is not published.
+- **Public links**: Caddy serves a new host, `files.exlibris.world` (staging:
+  `files-staging.exlibris.world`), proxied to Garage's S3 port. Browsers fetch
+  images there through **presigned GET links**: same short lifetime and cache
+  as today's Supabase links, path-style, signed for that public host. The
+  frontend CSP (`img-src`, `connect-src`) gains the host. The bucket stays
+  private: nothing can be read without a valid signature.
+- **Backend**: `storage.py` keeps its functions (upload, remove, download,
+  signed links) and speaks S3:
+  - `botocore` signs the requests;
+  - httpx sends them to `http://garage:3900`;
+  - presigned GETs are signed for the public host.
+  - Settings: `S3_ENDPOINT`, `S3_PUBLIC_URL`, `S3_REGION` (`garage`),
+    `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY` and `STORAGE_BUCKET`.
+  - `own_object_path` accepts both the new link shape and the old Supabase
+    one.
+- **Setup per server**: a script run once creates the layout, the bucket and
+  a key that can only use that bucket, and prints the key for `backend.env`.
+- **Copy**: a script lists the Supabase bucket, copies whatever is missing
+  into Garage and checks sizes. It is safe to re-run. Order: copy, deploy,
+  copy again.
+- **Order**: step 4 goes before step 5. It needs no downtime, and it already
+  ships the nightly backup job: files first, and step 5 adds the database
+  dump. The job mirrors the bucket (S3 to S3) onto the staging VPS and keeps
+  7 daily, 4 weekly and 6 monthly copies.
+- **Rollback**: point the settings back to Supabase Storage. Objects are
+  copied, never moved, until step 6.
+- **Product owner's part**: DNS records for the two `files` hosts; run the
+  setup script and paste the key into each `backend.env`; run the copy.
 
 ### 4. Sign-in: compared, with automatic user migration
 
@@ -241,9 +291,11 @@ VPS-1 2 vCore / 4 GB / 40 GB €4.49 a month (the one in use), VPS-2 4 / 8 / 75
   frontend, backend, Postgres and its own bucket, deployed on every green push
   to `staging` as `staging.exlibris.world` and `api-staging.exlibris.world`.
   A runaway staging job can no longer touch production.
-- **Off-site backups**: being in another datacenter (same provider, so the object storage copy stays required too), the staging VPS also
-  receives an encrypted copy of production's nightly dump (pulled over SSH),
-  besides the object storage copy; it is where a restore is rehearsed and,
+- **Off-site backups**: the staging VPS is in another datacenter (same
+  provider). It receives an encrypted copy of production's nightly dump
+  (pulled over SSH) and the nightly mirror of the files bucket. It is the
+  only off-box copy since files moved to Garage (2026-11-17). It is where a
+  restore is rehearsed and,
   if production dies, the box that can be promoted (runbook in step 5 of the order of work).
 - The production move to the new VPS is the same zero-downtime switch done on
   2026-10-08 (new box serves the same image, DNS switch, old box kept for
@@ -262,7 +314,7 @@ keeps running between steps.
 | 1 | New production VPS (OVH VPS-2, Strasbourg): same setup as today's (Docker, Caddy, deploy workflow pointed at it), plus the frontend served by Caddy (`vercel.json` headers move to the Caddyfile); API and frontend switched to it | ~1.5 h | none (DNS switch, TTL 300; old box and Vercel keep serving meanwhile) | order and harden the new VPS (same steps as 2026-10-08), GitHub secrets, DNS switch; delete the Vercel project after a quiet week. **Built 2026-11-16**: `deploy/Caddyfile` `{$FRONTEND_HOSTS}` site, `deploy.sh` (`site/releases/<sha>-<time>`, `site/current`), `deploy-prod.yml` (frontend build, `CHECK_*_HOST`) |
 | 2 | Current VPS-1 turned into staging (frontend, backend, Postgres, deploy on `staging`); still using the staging Supabase Auth and Storage | ~1 h | none | DNS records for the two staging names; staging `backend.env`; then Render staging can go. **Built 2026-11-16** without Postgres: staging keeps the staging Supabase database until step 5, which moves staging's database first as its rehearsal. `deploy-vps.yml` (shared), `deploy-staging.yml`, Caddy 413 CORS for the staging origin |
 | 3 | Sign-in in the backend (option A) | ~3–4 h incl. tests | none; every user is signed out once | OAuth consoles: new redirect URIs, client secrets in both `backend.env`; run the migration on staging, then prod. **Built 2026-11-17**: `app/api/auth.py`, `app/auth/{tokens,providers}.py`, `app/domain/sign_in.py`, `app/db/auth_repo.py`, migration `b5e2c8f1a4d7` (copies `auth.identities`), `frontend/src/lib/auth.ts`; supabase-js and the `VITE_SUPABASE_*` variables removed; landing notice "sign in once more" (remove in step 6) |
-| 4 | Files to object storage, plus the copy script (lists Supabase objects, copies each, checks size; safe to re-run, only copies what is missing) | ~1.5 h | none: copy, deploy, copy again for anything uploaded meanwhile | create the buckets and keys at OVH |
+| 4 | Files to Garage, a local S3 service on the production VPS (decided 2026-11-17; was hosted object storage), plus the copy script (lists Supabase objects, copies each, checks size; safe to re-run, only copies what is missing) | ~1.5 h | none: copy, deploy, copy again for anything uploaded meanwhile | DNS for `files` and `files-staging`, run the setup and copy scripts on each VPS (guide) |
 | 5 | Database to the VPS, plus nightly encrypted off-site backups and the restore runbook | ~1.5 h | **~15–30 min** maintenance (API answers 503 while `pg_dump` / `pg_restore` of ~46 MB runs) | run the dump/restore at a quiet hour with the runbook |
 | 6 | Clean-up: remove the Vercel project and domains, the Render staging service (`ttrpg-campaign-notes-2`) and the suspended Render services, `next`/`api-next` from `CORS_ORIGINS` and Supabase Redirect URLs, `CORS_ORIGIN_REGEX` (Vercel Previews only); remove Supabase settings and code paths, the old Supabase callback URIs in the Google/Discord/GitHub consoles, the "sign in once more" landing notice (`auth.signInAgain`), the `VITE_SUPABASE_*` variables in the GitHub environments, the CI shim's Supabase roles where no migration needs them, docs (`architecture.md`, privacy notice: processors and data location), tracker | ~1 h | none | delete the Supabase projects and Render service after ~4 weeks, keeping a final dump |
 
@@ -286,7 +338,7 @@ test.
 |---|---|
 | OVH VPS-2 Strasbourg, production | €7.21 |
 | VPS-1, staging (already paid) | €4.49 |
-| Object storage, OVH Multi Zone Standard (files) + Infrequent Access (backups): ~€0.014 / ~€0.0095 per GiB a month, traffic and API requests free (OVH price list, checked 2026-11-16) | a few cents today; ~€0.70 at 50 GB |
+| ~~Object storage, OVH Multi Zone Standard (files) + Infrequent Access (backups)~~ superseded 2026-11-17: files in Garage on the VPS | €0 |
 | **Total** | **~€12**, against ~€45 to stay on Vercel Pro + Supabase Pro |
 
 The VPS is the next ceiling: at some point (hundreds of active users, large
@@ -313,18 +365,18 @@ Room PDFs) VPS-3 or VPS-4 is an in-place upgrade away, not a migration; several 
   which has an EU adequacy decision. The privacy notice and the GDPR dossier
   list where data lives and who processes it, so both are updated in step 6
   (fewer processors: Supabase and Vercel leave the list).
-- **Disk**: production's 75 GB (staging's 40 GB) holds the database and Docker images; files and backups are
-  off the disk, so it is not a near-term limit. The `/health` cron can alert on
+- **Disk**: production's 75 GB (staging's 40 GB) holds the database, Docker
+  images and, since step 4, the files (80 MB in 2026-11) and on staging their
+  backup copies, so it is not a near-term limit. The `/health` cron can alert on
   free space.
 
 ## Questions for the product owner
 
 1. **Sign-in**: decided 2026-11-16, **A** (our own, in the backend).
-2. **Files**: decided 2026-11-16, **stay on Supabase Storage for now**, move
-   later if needed (step 4 postponed). Supabase stays for files only, on the
-   Free plan (1 GB, 98 MB used): watch the free-plan pause for inactivity
-   once its database is no longer used, and the backups of step 5 must then
-   also cover the bucket.
+2. **Files**: decided 2026-11-16, stay on Supabase Storage for now.
+   **Changed 2026-11-17: files move to Garage (local S3) on the production
+   VPS** (step 4 is back in; see section 3, update). Reason: little data, and Supabase's free
+   egress nearly used up (4.58/5 GB).
 3. **Production VPS**: decided and ordered, OVH VPS-2 in Strasbourg, Debian 13 (2026-11-16). (Decided: current VPS-1 becomes
    staging, a bigger one runs production.)
 4. **Account linking by verified email**: decided 2026-11-16, **yes**, like

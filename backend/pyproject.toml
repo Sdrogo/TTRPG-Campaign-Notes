@@ -12,6 +12,8 @@ dependencies = [
     "asyncpg>=0.30",
     "alembic>=1.13",
     "httpx>=0.27",
+    # Signs the requests to the S3 bucket (ticket 73 step 4: Garage).
+    "botocore>=1.35",
     "pillow>=13.0.0",
     "python-multipart>=0.0.20",
     # The Room PDF (spec 23b): WeasyPrint renders it (needs Pango, so the
@@ -38,6 +40,11 @@ dev = [
 strict = true
 python_version = "3.12"
 enable_error_code = ["deprecated"]
+
+# botocore ships no type information.
+[[tool.mypy.overrides]]
+module = ["botocore", "botocore.*"]
+ignore_missing_imports = true
 
 # WeasyPrint ships no type information.
 [[tool.mypy.overrides]]
