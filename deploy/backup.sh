@@ -51,8 +51,13 @@ if [ ! -s backup-password ]; then
   echo "new backup password in $PWD/backup-password: copy it to the password manager"
 fi
 
+# Whether this server has a database comes from its settings, not from a
+# running container: a stopped database must fail the backup, not skip it.
 has_db=false
-[ -n "$(docker compose ps -q db 2>/dev/null)" ] && has_db=true
+if [[ ",$(sed -n 's/^COMPOSE_PROFILES=//p' .env 2>/dev/null)," == *,db,* ]]; then
+  has_db=true
+  [ -n "$(docker compose ps -q --status running db)" ] || { echo "the db service is not running" >&2; exit 1; }
+fi
 
 garage() { docker compose exec -T garage /garage "$@" 2>/dev/null; }
 # A key of this server's Garage that can only read the bucket, made on the
