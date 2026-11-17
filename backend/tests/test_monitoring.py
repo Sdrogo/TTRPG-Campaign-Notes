@@ -365,7 +365,7 @@ async def test_an_error_after_the_response_started_is_raised() -> None:
     async def send(message: dict[str, object]) -> None:
         sent.append(message)
 
-    middleware = request_metrics.RequestMetricsMiddleware(inner)  # type: ignore[arg-type]
+    middleware = request_metrics.RequestMetricsMiddleware(inner)
     with pytest.raises(RuntimeError):
         await middleware({"type": "http", "method": "GET"}, None, send)  # type: ignore[arg-type]
     assert len(sent) == 1
