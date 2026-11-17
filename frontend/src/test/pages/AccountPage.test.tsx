@@ -70,6 +70,20 @@ describe('AccountPage', () => {
     expect(screen.getByText('Accedi per gestire il tuo account.')).toBeInTheDocument();
   });
 
+  it('links an app admin to the Admin page, and nobody else', async () => {
+    fetchMock.mockResolvedValue(rawAccount({ app_admin: true }));
+    render();
+
+    expect(await screen.findByRole('link', { name: /Apri la pagina Admin/ })).toHaveAttribute('href', '/admin');
+  });
+
+  it('shows no Admin link to a user who is not an admin', async () => {
+    render();
+
+    await screen.findByRole('heading', { name: 'Account' });
+    expect(screen.queryByRole('link', { name: /Apri la pagina Admin/ })).not.toBeInTheDocument();
+  });
+
   it('shows the profile once loaded', async () => {
     render();
 

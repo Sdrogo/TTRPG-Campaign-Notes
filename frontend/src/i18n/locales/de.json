@@ -355,6 +355,11 @@
       "deleteWord": "LÖSCHEN",
       "confirm": "Endgültig löschen",
       "deleted": "Dein Konto wurde gelöscht"
+    },
+    "admin": {
+      "title": "Admin",
+      "description": "Die Zahlen der App: Nutzer, Räume, Zugriffe und Fehler. Nur du siehst sie.",
+      "open": "Admin-Seite öffnen"
     }
   },
   "rooms": {
@@ -2139,6 +2144,65 @@
       "groupChip": "Gruppe „{{name}}“",
       "missing": "Nicht mehr verfügbar",
       "noneLeft": "Keine weitere Uhr oder Gruppe."
+    }
+  },
+  "admin": {
+    "title": "Admin",
+    "subtitle": "Die Zahlen der ganzen App, Stand {{time}}. Nur Zählungen, nie Inhalte.",
+    "signInRequired": "Melde dich an, um diese Seite zu öffnen.",
+    "notAvailable": "Diese Seite ist nicht verfügbar.",
+    "loadError": "Die Zahlen konnten nicht geladen werden. Versuch es gleich noch einmal.",
+    "overview": {
+      "title": "Überblick",
+      "users": "Nutzer",
+      "newUsers": "Neue Nutzer",
+      "activeUsers": "Aktive Nutzer",
+      "last7and30": "letzte 7 / 30 Tage",
+      "rooms": "Räume",
+      "documents": "Dokumente",
+      "maps": "Karten",
+      "geographic": "davon {{value}} geografisch",
+      "sessionZeros": "Session 0",
+      "clocks": "Uhren",
+      "files": "Dateien",
+      "images": "Bilder",
+      "database": "Datenbank"
+    },
+    "growth": {
+      "title": "Wachstum",
+      "description": "Pro Woche, die letzten 26 Wochen.",
+      "newUsers": "Neue Nutzer pro Woche",
+      "newRooms": "Neue Räume pro Woche"
+    },
+    "traffic": {
+      "title": "Zugriffe",
+      "description": "Anfragen an die API in den letzten {{days}} Tagen und wie schnell sie beantwortet wurden.",
+      "perHour": "Anfragen pro Stunde",
+      "empty": "Noch keine Anfragen gezählt.",
+      "group": "Bereich",
+      "requests": "Anfragen",
+      "clientErrors": "4xx",
+      "serverErrors": "5xx",
+      "median": "Median",
+      "p95": "95 %"
+    },
+    "errors": {
+      "title": "Serverfehler",
+      "description": "Die letzten 100, 30 Tage aufbewahrt. Mit der Anfrage-ID findest du das ganze Log in Dozzle.",
+      "empty": "Keine Serverfehler. 🎉",
+      "time": "Wann",
+      "route": "Route",
+      "status": "Status",
+      "type": "Fehler",
+      "requestId": "Anfrage-ID"
+    },
+    "jobs": {
+      "title": "Hintergrundaufgaben",
+      "exports": "Raum-PDFs",
+      "imports": "Importe",
+      "running": "Laufend: {{value}}",
+      "done": "Fertig (7 Tage): {{value}}",
+      "failed": "Fehlgeschlagen (7 Tage): {{value}}"
     }
   }
 }

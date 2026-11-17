@@ -1,5 +1,6 @@
 import { Button, Divider, Grid, Group, Text, TextInput } from '@mantine/core';
-import { EnvelopeSimpleIcon, SignOutIcon } from '@phosphor-icons/react';
+import { Link } from 'react-router-dom';
+import { ChartBarIcon, EnvelopeSimpleIcon, SignOutIcon } from '@phosphor-icons/react';
 import { useSession } from '../hooks/useSession';
 import { isDemoMode } from '../lib/demo/demoMode';
 import {
@@ -168,6 +169,16 @@ function AccountContent({ profile }: { profile: AccountProfile }) {
           </Grid.Col>
         </Grid>
       </AccountSection>
+
+      {profile.appAdmin && (
+        <AccountSection title={t('account.admin.title')} description={t('account.admin.description')}>
+          <Group>
+            <Button component={Link} to="/admin" variant="light" leftSection={<ChartBarIcon size={18} />}>
+              {t('account.admin.open')}
+            </Button>
+          </Group>
+        </AccountSection>
+      )}
 
       <PrivacySection />
     </PageLayout>

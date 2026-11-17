@@ -24,6 +24,10 @@ const DocumentDetailPage = lazy(() =>
 const AccountPage = lazy(() =>
   import('./pages/AccountPage').then((m) => ({ default: m.AccountPage })),
 );
+// Ticket 75: only for the users the backend lists as admins.
+const AdminPage = lazy(() =>
+  import('./pages/AdminPage').then((m) => ({ default: m.AdminPage })),
+);
 const AddFriendPage = lazy(() =>
   import('./pages/AddFriendPage').then((m) => ({ default: m.AddFriendPage })),
 );
@@ -77,6 +81,7 @@ function App() {
         <Route path="/" element={<HomePage />} />
         <Route path="/rooms" element={<MyRoomsPage />} />
         <Route path="/account" element={<AccountPage />} />
+        <Route path="/admin" element={<AdminPage />} />
         <Route path="/invite/:code" element={<AcceptInvitePage />} />
         <Route path="/friends/add/:code" element={<AddFriendPage />} />
         <Route path="/privacy" element={<PrivacyPage />} />
