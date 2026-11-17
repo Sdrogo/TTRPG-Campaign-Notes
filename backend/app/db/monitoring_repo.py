@@ -1,7 +1,7 @@
 """Writes the request statistics and server errors of ticket 75 to the
 database, and removes old ones: statistics after 90 days, errors after 30.
 
-The middleware (app/api/request_stats.py) counts in memory; `run_flusher`
+The middleware (app/api/request_metrics.py, with app/domain/request_stats.py) counts in memory; `run_flusher`
 writes those counts every minute, adding to the hour's row, so several
 processes (a later ticket's several workers) can share one table without
 shared counters."""
@@ -103,17 +103,27 @@ async def flush(session: AsyncSession) -> None:
     await save_errors(session, errors)
 
 
+async def _flush_once(cleanup: bool) -> None:  # pragma: no cover - wraps flush/remove_old
+    try:
+        async with session_module.async_session_factory() as session:
+            await flush(session)
+            if cleanup:
+                await remove_old(session, datetime.now(UTC))
+            await session.commit()
+    except Exception:
+        logger.exception("Request statistics flush failed")
+
+
 async def run_flusher() -> None:  # pragma: no cover - the loop around flush/remove_old
-    """Runs for the app's lifetime (started from app/main.py's lifespan)."""
+    """Runs for the app's lifetime (started from app/main.py's lifespan).
+    When the app stops (a deploy, a restart) it writes what it holds one
+    last time, so no minute of counts is lost."""
     rounds = 0
-    while True:
-        await asyncio.sleep(FLUSH_INTERVAL_SECONDS)
-        try:
-            async with session_module.async_session_factory() as session:
-                await flush(session)
-                if rounds % _CLEANUP_EVERY == 0:
-                    await remove_old(session, datetime.now(UTC))
-                await session.commit()
-        except Exception:
-            logger.exception("Request statistics flush failed")
-        rounds += 1
+    try:
+        while True:
+            await asyncio.sleep(FLUSH_INTERVAL_SECONDS)
+            await _flush_once(rounds % _CLEANUP_EVERY == 0)
+            rounds += 1
+    except asyncio.CancelledError:
+        await _flush_once(False)
+        raise
