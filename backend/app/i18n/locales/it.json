@@ -2,7 +2,12 @@
   "errors": {
     "auth": {
       "missingToken": "Token di autenticazione mancante",
-      "invalidToken": "Token non valido o scaduto"
+      "invalidToken": "Token non valido o scaduto",
+      "noProvider": "Questo metodo di accesso non è disponibile",
+      "badReturnAddress": "L'accesso può tornare solo a Ex Libris",
+      "signInExpired": "L'accesso è durato troppo o è stato aperto in un altro browser. Riprova",
+      "badOrigin": "Richiesta rifiutata: non arriva da Ex Libris",
+      "signedOut": "Non hai effettuato l'accesso"
     },
     "room": {
       "notFound": "Room non trovata",
@@ -132,8 +137,7 @@
       },
       "fieldTooLong": "{field} deve avere al massimo {max} caratteri",
       "deletionNotConfirmed": "Scrivi DELETE per confermare l'eliminazione dell'account",
-      "successorNeeded": "Prima di eliminare l'account, nomina un altro Master o Amministratore in: {rooms}",
-      "signInDeletionFailed": "I tuoi dati sono stati eliminati, ma non è stato possibile rimuovere l'account di accesso. Riprova tra poco"
+      "successorNeeded": "Prima di eliminare l'account, nomina un altro Master o Amministratore in: {rooms}"
     },
     "friend": {
       "notFound": "Amico o richiesta di amicizia non trovati",

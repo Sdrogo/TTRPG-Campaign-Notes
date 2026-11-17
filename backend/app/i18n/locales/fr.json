@@ -2,7 +2,12 @@
   "errors": {
     "auth": {
       "missingToken": "Jeton d'authentification manquant",
-      "invalidToken": "Jeton invalide ou expiré"
+      "invalidToken": "Jeton invalide ou expiré",
+      "noProvider": "Ce mode de connexion n'est pas disponible",
+      "badReturnAddress": "La connexion ne peut revenir qu'à Ex Libris",
+      "signInExpired": "La connexion a pris trop de temps ou a été ouverte dans un autre navigateur. Réessaie",
+      "badOrigin": "Requête refusée : elle ne vient pas d'Ex Libris",
+      "signedOut": "Tu es déconnecté"
     },
     "room": {
       "notFound": "Salle introuvable",
@@ -132,8 +137,7 @@
       },
       "fieldTooLong": "{field} doit avoir {max} caractères au maximum",
       "deletionNotConfirmed": "Écris DELETE pour confirmer la suppression du compte",
-      "successorNeeded": "Avant de supprimer le compte, nomme un autre Master ou administrateur dans : {rooms}",
-      "signInDeletionFailed": "Tes données ont été supprimées, mais le compte de connexion n'a pas pu être retiré. Réessaie dans un instant"
+      "successorNeeded": "Avant de supprimer le compte, nomme un autre Master ou administrateur dans : {rooms}"
     },
     "friend": {
       "notFound": "Ami ou demande d'ami introuvable",

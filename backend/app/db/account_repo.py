@@ -8,6 +8,7 @@ from collections.abc import Sequence
 from sqlalchemy import delete, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.db import auth_repo
 from app.db.comments_repo import comment_from_row
 from app.db.models import (
     CommentReactionRow,
@@ -48,7 +49,7 @@ async def erase_personal_rows(session: AsyncSession, user_id: uuid.UUID) -> None
     Memberships are gone already (left or deleted with their Room); what
     else they wrote stays, with no profile behind it. Ids left in audit
     entries, versions and `created_by` columns no longer lead to anyone
-    once the auth account is deleted too."""
+    once their sign-in identities and sessions are deleted too (here)."""
     await session.execute(
         delete(FriendshipRow).where(
             or_(FriendshipRow.user_low == user_id, FriendshipRow.user_high == user_id)
@@ -74,6 +75,7 @@ async def erase_personal_rows(session: AsyncSession, user_id: uuid.UUID) -> None
     await session.execute(delete(SessionZeroCardRow).where(SessionZeroCardRow.author_id == user_id))
     await session.execute(delete(InvitationRow).where(InvitationRow.invitee_user_id == user_id))
     await session.execute(delete(UserRow).where(UserRow.id == user_id))
+    await auth_repo.delete_user_sign_in(session, user_id)
     await session.flush()
 
 

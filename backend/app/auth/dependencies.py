@@ -10,7 +10,7 @@ from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel
 
-from app.auth.jwt import InvalidTokenError, decode_supabase_jwt
+from app.auth.tokens import InvalidTokenError, decode_access_token
 from app.db import rooms_repo
 from app.db.session import SessionDep
 from app.domain.errors import DomainError
@@ -34,23 +34,16 @@ class CurrentUser(BaseModel):
 
     id: str
     email: str | None = None
-    # From the OAuth identity (Google, Discord, Facebook, GitHub or X) that
-    # Supabase puts in `user_metadata`; only used to pre-fill the profile the
-    # first time (see app/api/account.py). Named for Google, the first provider.
+    # From the provider profile (Google, Discord or GitHub) the session was
+    # opened with; only used to pre-fill the profile the first time (see
+    # app/api/account.py). Named for Google, the first provider.
     google_name: str | None = None
     google_picture_url: str | None = None
 
 
-def _first_string(metadata: object, *keys: str) -> str | None:
-    """The first non-blank string among `keys` in the token's `user_metadata`.
-    The same claim goes by different names across providers."""
-    if not isinstance(metadata, dict):
-        return None
-    for key in keys:
-        value = metadata.get(key)
-        if isinstance(value, str) and value.strip():
-            return value
-    return None
+def _string_claim(payload: dict[str, object], key: str) -> str | None:
+    value = payload.get(key)
+    return value if isinstance(value, str) and value.strip() else None
 
 
 def authenticated_user(
@@ -63,18 +56,16 @@ def authenticated_user(
             status.HTTP_401_UNAUTHORIZED, translate("errors.auth.missingToken", locale)
         )
     try:
-        payload = decode_supabase_jwt(credentials.credentials)
+        payload = decode_access_token(credentials.credentials)
     except InvalidTokenError as exc:
         raise HTTPException(
             status.HTTP_401_UNAUTHORIZED, translate("errors.auth.invalidToken", locale)
         ) from exc
-    metadata = payload.get("user_metadata")
     return CurrentUser(
         id=payload["sub"],
-        email=payload.get("email"),
-        # GitHub and X users may have no display name, only a handle.
-        google_name=_first_string(metadata, "full_name", "name", "user_name", "preferred_username"),
-        google_picture_url=_first_string(metadata, "avatar_url", "picture"),
+        email=_string_claim(payload, "email"),
+        google_name=_string_claim(payload, "name"),
+        google_picture_url=_string_claim(payload, "picture"),
     )
 
 

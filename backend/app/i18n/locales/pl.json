@@ -2,7 +2,12 @@
   "errors": {
     "auth": {
       "missingToken": "Brak tokenu uwierzytelniającego",
-      "invalidToken": "Token jest nieprawidłowy lub wygasł"
+      "invalidToken": "Token jest nieprawidłowy lub wygasł",
+      "noProvider": "Ta metoda logowania jest niedostępna",
+      "badReturnAddress": "Logowanie może wrócić tylko do Ex Libris",
+      "signInExpired": "Logowanie trwało zbyt długo lub zostało otwarte w innej przeglądarce. Spróbuj ponownie",
+      "badOrigin": "Żądanie odrzucone: nie pochodzi z Ex Libris",
+      "signedOut": "Nie jesteś zalogowany"
     },
     "room": {
       "notFound": "Nie znaleziono pokoju",
@@ -132,8 +137,7 @@
       },
       "fieldTooLong": "Pole {field} może mieć najwyżej {max} znaków",
       "deletionNotConfirmed": "Wpisz DELETE, aby potwierdzić usunięcie konta",
-      "successorNeeded": "Przed usunięciem konta wskaż innego Mastera lub Administratora w: {rooms}",
-      "signInDeletionFailed": "Twoje dane zostały usunięte, ale nie udało się usunąć konta logowania. Spróbuj ponownie za chwilę"
+      "successorNeeded": "Przed usunięciem konta wskaż innego Mastera lub Administratora w: {rooms}"
     },
     "friend": {
       "notFound": "Nie znaleziono znajomego ani zaproszenia do znajomych",

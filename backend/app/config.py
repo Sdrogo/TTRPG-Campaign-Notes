@@ -14,6 +14,8 @@ class Settings(BaseSettings):
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
+    # Supabase Storage only (the images bucket); sign-in left Supabase in
+    # ticket 73 step 3.
     supabase_url: str = ""
     supabase_secret_key: str = ""
     storage_bucket: str = "document-images"
@@ -38,6 +40,26 @@ class Settings(BaseSettings):
     # search calls Openverse anonymously, under its lower rate limits.
     openverse_client_id: str = ""
     openverse_client_secret: str = ""
+    # Sign-in (ticket 73 step 3): the backend runs the OAuth flow itself.
+    # The API's public address, which the providers send users back to
+    # (`<api_public_url>/auth/<provider>/callback`, registered in each
+    # provider's console).
+    api_public_url: str = "http://localhost:8000"
+    # Signs the access tokens and the short sign-in cookie (HS256). At least
+    # 32 characters, random (`openssl rand -base64 48`); changing it signs
+    # everyone out of their current access token, not of their session.
+    auth_token_secret: str = ""
+    # The refresh-token cookie is `Secure`; off only for plain-HTTP setups
+    # other than localhost (browsers accept Secure cookies on localhost).
+    auth_cookie_secure: bool = True
+    # Each provider's OAuth app. A provider with no client id is not offered:
+    # its sign-in route answers 404.
+    google_client_id: str = ""
+    google_client_secret: str = ""
+    discord_client_id: str = ""
+    discord_client_secret: str = ""
+    github_client_id: str = ""
+    github_client_secret: str = ""
 
     @field_validator("cors_origin_regex", mode="before")
     @classmethod
@@ -85,17 +107,6 @@ class Settings(BaseSettings):
             return value
 
         return [origin for origin in (str(item).strip().rstrip("/") for item in items) if origin]
-
-    @property
-    def supabase_jwks_url(self) -> str:
-        """Where Supabase publishes the public keys its access tokens are
-        signed with."""
-        return f"{self.supabase_url}/auth/v1/.well-known/jwks.json"
-
-    @property
-    def supabase_issuer(self) -> str:
-        """The `iss` claim a Supabase access token must carry."""
-        return f"{self.supabase_url}/auth/v1"
 
 
 settings = Settings()
