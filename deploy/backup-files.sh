@@ -15,9 +15,12 @@
 #   bash backup-files.sh install  every night at 03:30 (server time), from
 #                                 this user's crontab; logs to
 #                                 backup-files.log
-# Restore (on the server whose Garage lost its objects): the same settings
-# as below, then
-#   rclone sync safe:<day>/ source:document-images
+# Restore, on the server whose Garage lost its objects (after
+# garage-setup.sh there): the settings below, except that `source:` uses
+# that server's own S3_ACCESS_KEY_ID / S3_SECRET_ACCESS_KEY from backend.env
+# (backup-reader can only read), and the crypt password is the copy in the
+# password manager (backup-password is gone if this server was lost). Then
+#   rclone copy safe:<day>/ source:document-images
 set -euo pipefail
 cd "$(dirname "$0")"
 
