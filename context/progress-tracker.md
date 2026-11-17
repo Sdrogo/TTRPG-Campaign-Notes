@@ -270,7 +270,8 @@ image search, read aloud, GDPR (10-01 → 10-10). See the two older archives.
   switched in 2026-11-17. Step 3 live 2026-11-17 (own OAuth sign-in,
   supabase-js removed, migration `b5e2c8f1a4d7`; PR #337, release #338);
   both VPSes have `AUTH_TOKEN_SECRET` and the provider credentials.
-  Next: step 5 (DB), step 4 postponed, then step 6 cleanup.
+  Next: step 4 (files to Garage on the prod VPS, decided 2026-11-17: Supabase
+  egress at 4.58/5 GB), then step 5 (DB), then step 6 cleanup.
 - **License** (product owner, 2026-11-15): GPL-3.0 replaced by the
   Functional Source License `FSL-1.1-ALv2` (no commercial competing service;
   each version becomes Apache-2.0 after two years), licensor Andrea Partenope.
