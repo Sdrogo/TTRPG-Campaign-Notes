@@ -70,7 +70,9 @@
   "auth": {
     "prompt": "계속하려면 로그인하세요.",
     "signInWith": "{{provider}}(으)로 로그인",
-    "privacy": "개인정보"
+    "privacy": "개인정보",
+    "signInAgain": "전에 로그인한 적이 있나요? 로그인 방식이 바뀌어 한 번 더 로그인해 주세요. 룸은 모두 그대로 있습니다.",
+    "signInFailed": "로그인하지 못했습니다. 다시 시도해 주세요."
   },
   "landing": {
     "tagline": "캠페인을 위한 공유 노트",

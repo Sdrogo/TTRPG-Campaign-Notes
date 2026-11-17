@@ -2,7 +2,12 @@
   "errors": {
     "auth": {
       "missingToken": "Authenticatietoken ontbreekt",
-      "invalidToken": "Token ongeldig of verlopen"
+      "invalidToken": "Token ongeldig of verlopen",
+      "noProvider": "Deze inlogmethode is niet beschikbaar",
+      "badReturnAddress": "Inloggen kan alleen terugkeren naar Ex Libris",
+      "signInExpired": "Het inloggen duurde te lang of werd in een andere browser geopend. Probeer het opnieuw",
+      "badOrigin": "Verzoek geweigerd: het komt niet van Ex Libris",
+      "signedOut": "Je bent uitgelogd"
     },
     "room": {
       "notFound": "Kamer niet gevonden",
@@ -132,8 +137,7 @@
       },
       "fieldTooLong": "{field} mag maximaal {max} tekens hebben",
       "deletionNotConfirmed": "Typ DELETE om het verwijderen van het account te bevestigen",
-      "successorNeeded": "Benoem eerst een andere Master of Admin voordat je het account verwijdert in: {rooms}",
-      "signInDeletionFailed": "Je gegevens zijn verwijderd, maar het inlogaccount kon niet worden verwijderd. Probeer het zo meteen opnieuw"
+      "successorNeeded": "Benoem eerst een andere Master of Admin voordat je het account verwijdert in: {rooms}"
     },
     "friend": {
       "notFound": "Vriend of vriendschapsverzoek niet gevonden",

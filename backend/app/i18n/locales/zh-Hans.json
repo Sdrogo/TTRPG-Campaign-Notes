@@ -2,7 +2,12 @@
   "errors": {
     "auth": {
       "missingToken": "缺少 Bearer 令牌",
-      "invalidToken": "令牌无效或已过期"
+      "invalidToken": "令牌无效或已过期",
+      "noProvider": "此登录方式不可用",
+      "badReturnAddress": "登录只能返回 Ex Libris",
+      "signInExpired": "登录耗时过长或在其他浏览器中打开。请重试",
+      "badOrigin": "请求被拒绝：并非来自 Ex Libris",
+      "signedOut": "你尚未登录"
     },
     "room": {
       "notFound": "未找到房间",
@@ -132,8 +137,7 @@
       },
       "fieldTooLong": "{field}最多 {max} 个字符",
       "deletionNotConfirmed": "请输入 DELETE 以确认删除账户",
-      "successorNeeded": "删除账户之前，请先在以下房间中指定其他人为 Master 或管理员：{rooms}",
-      "signInDeletionFailed": "你的数据已删除，但你的登录账户无法移除。请稍后再试"
+      "successorNeeded": "删除账户之前，请先在以下房间中指定其他人为 Master 或管理员：{rooms}"
     },
     "friend": {
       "notFound": "未找到好友或好友请求",

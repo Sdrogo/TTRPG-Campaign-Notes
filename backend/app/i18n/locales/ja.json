@@ -2,7 +2,12 @@
   "errors": {
     "auth": {
       "missingToken": "Bearerトークンがありません",
-      "invalidToken": "トークンが無効か期限切れです"
+      "invalidToken": "トークンが無効か期限切れです",
+      "noProvider": "このログイン方法は利用できません",
+      "badReturnAddress": "ログイン後は Ex Libris にのみ戻れます",
+      "signInExpired": "ログインに時間がかかりすぎたか、別のブラウザーで開かれました。もう一度お試しください",
+      "badOrigin": "リクエストを拒否しました: Ex Libris からのものではありません",
+      "signedOut": "ログアウトしています"
     },
     "room": {
       "notFound": "ルームが見つかりません",
@@ -132,8 +137,7 @@
       },
       "fieldTooLong": "{field}は最大{max}文字です",
       "deletionNotConfirmed": "アカウントの削除を確認するには、DELETEと入力してください",
-      "successorNeeded": "アカウントを削除する前に、次のルームで他の人をMasterまたはAdminにしてください: {rooms}",
-      "signInDeletionFailed": "データは削除されましたが、ログイン用アカウントを削除できませんでした。しばらくしてからもう一度お試しください"
+      "successorNeeded": "アカウントを削除する前に、次のルームで他の人をMasterまたはAdminにしてください: {rooms}"
     },
     "friend": {
       "notFound": "フレンドまたはフレンド申請が見つかりません",

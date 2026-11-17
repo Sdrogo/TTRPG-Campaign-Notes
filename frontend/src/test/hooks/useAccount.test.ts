@@ -2,7 +2,7 @@ import { waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { apiDownload, apiFetch } from '../../lib/apiClient';
 import { saveBlob } from '../../lib/roomExport';
-import { supabase } from '../../lib/supabaseClient';
+import { forgetSession, signOut as authSignOut } from '../../lib/auth';
 import { rawAccount } from '../fixtures';
 import { renderHookWithProviders } from '../utils';
 import {
@@ -18,9 +18,7 @@ import {
 
 vi.mock('../../lib/apiClient', () => ({ apiFetch: vi.fn(), apiDownload: vi.fn() }));
 vi.mock('../../lib/roomExport', () => ({ saveBlob: vi.fn() }));
-vi.mock('../../lib/supabaseClient', () => ({
-  supabase: { auth: { signOut: vi.fn() } },
-}));
+vi.mock('../../lib/auth', () => ({ signOut: vi.fn(), forgetSession: vi.fn() }));
 
 const navigate = vi.fn();
 vi.mock('react-router-dom', async () => ({
@@ -29,7 +27,7 @@ vi.mock('react-router-dom', async () => ({
 }));
 
 const fetchMock = vi.mocked(apiFetch);
-const signOut = vi.mocked(supabase.auth.signOut);
+const signOut = vi.mocked(authSignOut);
 
 beforeEach(() => {
   fetchMock.mockReset();
@@ -146,7 +144,7 @@ describe('useSignOut', () => {
   // Cached Rooms and profiles belong to the user who just left; the next
   // person signing in on this browser must not see them.
   it('clears the whole cache and returns home', async () => {
-    signOut.mockResolvedValue({ error: null } as Awaited<ReturnType<typeof supabase.auth.signOut>>);
+    signOut.mockResolvedValue(undefined);
     const { result, queryClient } = renderHookWithProviders(() => useSignOut());
     queryClient.setQueryData(['rooms'], [{ id: 'room-1' }]);
 
@@ -158,10 +156,8 @@ describe('useSignOut', () => {
     });
   });
 
-  it('throws when Supabase refuses to sign out, leaving the cache alone', async () => {
-    signOut.mockResolvedValue({ error: new Error('network') } as unknown as Awaited<
-      ReturnType<typeof supabase.auth.signOut>
-    >);
+  it('throws when the backend refuses to sign out, leaving the cache alone', async () => {
+    signOut.mockRejectedValue(new Error('network'));
     const { result, queryClient } = renderHookWithProviders(() => useSignOut());
     queryClient.setQueryData(['rooms'], [{ id: 'room-1' }]);
 
@@ -192,7 +188,6 @@ describe('useDeleteAccount', () => {
   // session locally (the server no longer has it) and every cached response.
   it('deletes the account, signs out locally, clears the cache and returns home', async () => {
     fetchMock.mockResolvedValue(undefined);
-    signOut.mockResolvedValue({ error: null } as Awaited<ReturnType<typeof supabase.auth.signOut>>);
     const { result, queryClient } = renderHookWithProviders(() => useDeleteAccount());
     queryClient.setQueryData(['rooms'], [{ id: 'room-1' }]);
 
@@ -202,7 +197,8 @@ describe('useDeleteAccount', () => {
       method: 'DELETE',
       json: { confirmation: 'DELETE' },
     });
-    expect(signOut).toHaveBeenCalledWith({ scope: 'local' });
+    expect(forgetSession).toHaveBeenCalled();
+    expect(signOut).not.toHaveBeenCalled();
     await waitFor(() => {
       expect(queryClient.getQueryData(['rooms'])).toBeUndefined();
       expect(navigate).toHaveBeenCalledWith('/');

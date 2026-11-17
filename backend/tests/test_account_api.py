@@ -298,8 +298,7 @@ GOOGLE_PICTURE = "https://lh3.googleusercontent.com/a/ACg8oc123=s96-c"
 def _google_headers(
     make_token: Callable[..., str], user_id: str, name: str | None = "Ireena Kolyana"
 ) -> dict[str, str]:
-    metadata = {"full_name": name, "avatar_url": GOOGLE_PICTURE, "email": "i@example.com"}
-    token = make_token(user_id, email="i@example.com", user_metadata=metadata)
+    token = make_token(user_id, email="i@example.com", name=name, picture=GOOGLE_PICTURE)
     return {"Authorization": f"Bearer {token}"}
 
 

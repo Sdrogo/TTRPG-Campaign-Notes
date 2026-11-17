@@ -2,7 +2,12 @@
   "errors": {
     "auth": {
       "missingToken": "Authentifizierungs-Token fehlt",
-      "invalidToken": "Token ungültig oder abgelaufen"
+      "invalidToken": "Token ungültig oder abgelaufen",
+      "noProvider": "Diese Anmeldemethode ist nicht verfügbar",
+      "badReturnAddress": "Die Anmeldung kann nur zu Ex Libris zurückkehren",
+      "signInExpired": "Die Anmeldung hat zu lange gedauert oder wurde in einem anderen Browser geöffnet. Versuch es noch einmal",
+      "badOrigin": "Anfrage abgelehnt: Sie kommt nicht von Ex Libris",
+      "signedOut": "Du bist abgemeldet"
     },
     "room": {
       "notFound": "Raum nicht gefunden",
@@ -132,8 +137,7 @@
       },
       "fieldTooLong": "{field} darf höchstens {max} Zeichen haben",
       "deletionNotConfirmed": "Gib DELETE ein, um das Löschen des Kontos zu bestätigen",
-      "successorNeeded": "Bevor du dein Konto löschst, ernenne jemand anderen zum Master oder Admin in: {rooms}",
-      "signInDeletionFailed": "Deine Daten wurden gelöscht, aber das Anmeldekonto konnte nicht entfernt werden. Versuch es gleich noch einmal"
+      "successorNeeded": "Bevor du dein Konto löschst, ernenne jemand anderen zum Master oder Admin in: {rooms}"
     },
     "friend": {
       "notFound": "Freund oder Freundschaftsanfrage nicht gefunden",

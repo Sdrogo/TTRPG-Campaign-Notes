@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { AUTH_PROVIDERS, authProviderOf } from '../../lib/authProviders';
 
 describe('AUTH_PROVIDERS', () => {
-  // These are the providers enabled in the Supabase dashboard (spec 08).
-  it('lists every provider enabled in Supabase, Google first', () => {
+  // These are the providers the backend signs in with (spec 08, ticket 73).
+  it('lists every provider the backend offers, Google first', () => {
     expect(AUTH_PROVIDERS.map((provider) => provider.id)).toEqual([
       'google',
       'discord',

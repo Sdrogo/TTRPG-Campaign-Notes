@@ -12,9 +12,8 @@ name: Deploy to a VPS
 # `vps-staging`): secrets VPS_HOST, VPS_USER, VPS_SSH_KEY (a key used only by
 # these workflows) and VPS_KNOWN_HOSTS (`<ip> ssh-ed25519 <key>`, from the
 # server's /etc/ssh/ssh_host_ed25519_key.pub). And variables (not secrets:
-# they end up in the public bundle) VITE_API_BASE_URL, VITE_SUPABASE_URL and
-# VITE_SUPABASE_PUBLISHABLE_KEY for the frontend build: with no
-# VITE_API_BASE_URL the frontend is neither built nor shipped (a server that
+# it ends up in the public bundle) VITE_API_BASE_URL for the frontend build:
+# with no VITE_API_BASE_URL the frontend is neither built nor shipped (a server that
 # doesn't serve it yet). CHECK_FRONTEND_HOST turns on the outside check of
 # the frontend under that name; CHECK_API_HOST (default api.exlibris.world)
 # is the API's. Both let a new server be tried under other names before the
@@ -114,16 +113,7 @@ jobs:
         working-directory: frontend
         env:
           VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL }}
-          VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
-          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ vars.VITE_SUPABASE_PUBLISHABLE_KEY }}
-          ENVIRONMENT: ${{ inputs.environment }}
         run: |
-          for name in VITE_API_BASE_URL VITE_SUPABASE_URL VITE_SUPABASE_PUBLISHABLE_KEY; do
-            if [ -z "${!name}" ]; then
-              echo "variable $name is not set in the $ENVIRONMENT environment" >&2
-              exit 1
-            fi
-          done
           npm ci
           npm run build
           tar -czf ../frontend.tgz -C dist .

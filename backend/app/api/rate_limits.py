@@ -54,8 +54,8 @@ def limit(group: Group) -> Any:
 
 def reset_all() -> None:
     """Forgets every count, the general write limit's included (tests)."""
+    from app.api.auth import REFRESH_THROTTLE, SIGN_IN_THROTTLE
     from app.auth.dependencies import WRITE_THROTTLE
 
-    for throttle in THROTTLES.values():
+    for throttle in (*THROTTLES.values(), WRITE_THROTTLE, SIGN_IN_THROTTLE, REFRESH_THROTTLE):
         throttle.reset()
-    WRITE_THROTTLE.reset()

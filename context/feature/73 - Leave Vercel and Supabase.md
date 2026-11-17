@@ -1,9 +1,10 @@
 # 73 - Leave Vercel and Supabase
 
-Status: **confirmed 2026-11-16, step 1 built** (frontend served by Caddy,
-`deploy-prod.yml` builds and ships it; switched in by the product owner on the
-new Strasbourg VPS). All questions answered 2026-11-16 (sign-in A, files
-stay on Supabase for now).
+Status: **confirmed 2026-11-16. Step 1 live** (production frontend and API on
+the Strasbourg VPS, 2026-11-16). **Step 2 live** (staging on the Erith VPS,
+2026-11-17). **Step 3 built** 2026-11-17 (own sign-in, PR into staging),
+waiting for the OAuth consoles and `backend.env` settings. All questions
+answered 2026-11-16 (sign-in A, files stay on Supabase for now).
 
 ## Goals
 
@@ -162,7 +163,11 @@ than adding one, and it fixes the open PKCE item from spec 72 (tokens in the
 URL fragment) as a side effect. B is the fallback if the product owner
 prefers zero frontend change over zero extra component.
 
-How A would work (details go to the build units):
+How A works (built 2026-11-17; `context/architecture.md` → Authentication
+has the final design). Two changes from the plan below: the access token is
+**HS256** with `AUTH_TOKEN_SECRET` (one backend verifies what it signs, so a
+key pair adds nothing), and the OAuth calls use **httpx** directly instead of
+Authlib (three fixed providers, a few dozen lines, one dependency fewer).
 
 - **Routes**: `GET /auth/{provider}/start?return_to=` → redirect to the
   provider; `GET /auth/{provider}/callback` → verify `state` + PKCE, read the
@@ -255,10 +260,10 @@ keeps running between steps.
 |---|---|---|---|---|
 | 1 | New production VPS (OVH VPS-2, Strasbourg): same setup as today's (Docker, Caddy, deploy workflow pointed at it), plus the frontend served by Caddy (`vercel.json` headers move to the Caddyfile); API and frontend switched to it | ~1.5 h | none (DNS switch, TTL 300; old box and Vercel keep serving meanwhile) | order and harden the new VPS (same steps as 2026-10-08), GitHub secrets, DNS switch; delete the Vercel project after a quiet week. **Built 2026-11-16**: `deploy/Caddyfile` `{$FRONTEND_HOSTS}` site, `deploy.sh` (`site/releases/<sha>-<time>`, `site/current`), `deploy-prod.yml` (frontend build, `CHECK_*_HOST`) |
 | 2 | Current VPS-1 turned into staging (frontend, backend, Postgres, deploy on `staging`); still using the staging Supabase Auth and Storage | ~1 h | none | DNS records for the two staging names; staging `backend.env`; then Render staging can go. **Built 2026-11-16** without Postgres: staging keeps the staging Supabase database until step 5, which moves staging's database first as its rehearsal. `deploy-vps.yml` (shared), `deploy-staging.yml`, Caddy 413 CORS for the staging origin |
-| 3 | Sign-in in the backend (option A) | ~3–4 h incl. tests | none; every user is signed out once | OAuth consoles: new redirect URIs, client secrets in both `backend.env`; run the migration on staging, then prod |
+| 3 | Sign-in in the backend (option A) | ~3–4 h incl. tests | none; every user is signed out once | OAuth consoles: new redirect URIs, client secrets in both `backend.env`; run the migration on staging, then prod. **Built 2026-11-17**: `app/api/auth.py`, `app/auth/{tokens,providers}.py`, `app/domain/sign_in.py`, `app/db/auth_repo.py`, migration `b5e2c8f1a4d7` (copies `auth.identities`), `frontend/src/lib/auth.ts`; supabase-js and the `VITE_SUPABASE_*` variables removed; landing notice "sign in once more" (remove in step 6) |
 | 4 | Files to object storage, plus the copy script (lists Supabase objects, copies each, checks size; safe to re-run, only copies what is missing) | ~1.5 h | none: copy, deploy, copy again for anything uploaded meanwhile | create the buckets and keys at OVH |
 | 5 | Database to the VPS, plus nightly encrypted off-site backups and the restore runbook | ~1.5 h | **~15–30 min** maintenance (API answers 503 while `pg_dump` / `pg_restore` of ~46 MB runs) | run the dump/restore at a quiet hour with the runbook |
-| 6 | Clean-up: remove Supabase settings and code paths, the CI shim's Supabase roles where no migration needs them, docs (`architecture.md`, privacy notice: processors and data location), tracker | ~1 h | none | delete the Supabase projects and Render service after ~4 weeks, keeping a final dump |
+| 6 | Clean-up: remove the Vercel project and domains, the Render staging service (`ttrpg-campaign-notes-2`) and the suspended Render services, `next`/`api-next` from `CORS_ORIGINS` and Supabase Redirect URLs, `CORS_ORIGIN_REGEX` (Vercel Previews only); remove Supabase settings and code paths, the old Supabase callback URIs in the Google/Discord/GitHub consoles, the "sign in once more" landing notice (`auth.signInAgain`), the `VITE_SUPABASE_*` variables in the GitHub environments, the CI shim's Supabase roles where no migration needs them, docs (`architecture.md`, privacy notice: processors and data location), tracker | ~1 h | none | delete the Supabase projects and Render service after ~4 weeks, keeping a final dump |
 
 Total: about **9–10 hours of Claude build time**, spread over several
 sessions because each step waits for staging checks and the product owner's

@@ -3,7 +3,6 @@ app keeps about them (right of access and portability, art. 15 and 20) and
 the deletion of their account (right to erasure, art. 17). Like the rest of
 `/account`, both act on the caller only."""
 
-import logging
 import uuid
 from collections import defaultdict
 from datetime import UTC, datetime
@@ -12,12 +11,12 @@ from fastapi import APIRouter, status
 from pydantic import BaseModel
 
 from app.api.access import visible_documents
-from app.api.errors import http_error, translated_error
+from app.api.errors import translated_error
 from app.api.rooms import purge_room
 from app.auth.dependencies import CurrentUserDep
 from app.db import (
     account_repo,
-    auth_admin,
+    auth_repo,
     clocks_repo,
     documents_repo,
     friends_repo,
@@ -41,8 +40,6 @@ from app.domain.account import (
 from app.domain.friends import view_for
 from app.domain.models import Document, Friendship, Membership
 from app.i18n.dependencies import LocaleDep
-
-logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/account", tags=["account"])
 
@@ -189,6 +186,25 @@ class ExportedFriend(BaseModel):
     since: datetime
 
 
+class ExportedSignIn(BaseModel):
+    """A provider account the user signs in with (ticket 73 step 3)."""
+
+    provider: str
+    email: str | None
+    name: str | None
+    created_at: datetime
+    last_sign_in_at: datetime | None
+
+
+class ExportedSession(BaseModel):
+    """A browser the user signed in on, as the backend records it."""
+
+    created_at: datetime
+    expires_at: datetime
+    signed_out_at: datetime | None
+    user_agent: str | None
+
+
 class PersonalDataExport(BaseModel):
     """Everything the app keeps about the caller as a person. The Room
     content they see as a whole is in each Room's export (spec 23)."""
@@ -209,6 +225,8 @@ class PersonalDataExport(BaseModel):
     clock_marks: list[ExportedClockMark]
     friends: list[ExportedFriend]
     friend_code: str | None
+    sign_ins: list[ExportedSignIn]
+    sessions: list[ExportedSession]
 
 
 class DeleteAccountRequest(BaseModel):
@@ -229,7 +247,7 @@ async def export_personal_data(
     """Spec 31_2 (GDPR art. 15 and 20): the caller's personal data as JSON -
     profile, Rooms and roles, the Documents they created, own or play, every
     Comment they wrote, their reactions, uploads, Session 0 post-its, Friends
-    and friend code.
+    and friend code, and the provider accounts and browsers they sign in with.
     Document names are given only for Documents they still see
     (Invariant 1); their own Comments are always theirs to read (VR-02)."""
     user_id = uuid.UUID(current_user.id)
@@ -277,6 +295,8 @@ async def export_personal_data(
     others = {_other(f, user_id) for f, _ in friend_rows}
     friend_profiles = await users_repo.get_profiles(session, others)
     code = await friends_repo.get_code(session, user_id)
+    identities = await auth_repo.list_identities(session, user_id)
+    sessions = await auth_repo.list_sessions(session, user_id)
 
     return PersonalDataExport(
         format_version=EXPORT_FORMAT_VERSION,
@@ -416,6 +436,25 @@ async def export_personal_data(
             for friendship, view in friend_rows
         ],
         friend_code=code.code if code else None,
+        sign_ins=[
+            ExportedSignIn(
+                provider=identity.provider,
+                email=identity.email,
+                name=identity.name,
+                created_at=identity.created_at,
+                last_sign_in_at=identity.last_sign_in_at,
+            )
+            for identity in identities
+        ],
+        sessions=[
+            ExportedSession(
+                created_at=auth_session.created_at,
+                expires_at=auth_session.expires_at,
+                signed_out_at=auth_session.revoked_at,
+                user_agent=auth_session.user_agent,
+            )
+            for auth_session in sessions
+        ],
     )
 
 
@@ -461,14 +500,6 @@ async def delete_account(
     profile = await users_repo.get_profile(session, user_id, for_update=True)
     if profile.avatar_path is not None:
         await storage_cleanup.schedule_removal(session, [profile.avatar_path])
+    # Also deletes their sign-in identities and sessions (ticket 73 step 3):
+    # the cookie in their browser then opens nothing.
     await account_repo.erase_personal_rows(session, user_id)
-    # Committed before the sign-in account goes: if Auth fails, the data is
-    # gone anyway and the user, still signed in, can simply ask again.
-    await session.commit()
-    try:
-        await auth_admin.delete_auth_user(current_user.id)
-    except Exception as exc:
-        logger.exception("Could not delete a sign-in account after erasing its data")
-        raise http_error(
-            status.HTTP_502_BAD_GATEWAY, "errors.account.signInDeletionFailed", locale
-        ) from exc

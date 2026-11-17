@@ -4,7 +4,7 @@ import { Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { apiFetch } from '../../lib/apiClient';
 import { savePendingFriendCode, savePendingInvite } from '../../lib/pendingInvite';
-import { supabase } from '../../lib/supabaseClient';
+import { signIn } from '../../lib/auth';
 import { useSession } from '../../hooks/useSession';
 import { fakeSession } from '../fixtures';
 import { renderWithProviders } from '../utils';
@@ -12,13 +12,11 @@ import { HomePage } from '../../pages/HomePage';
 
 vi.mock('../../lib/apiClient', () => ({ apiFetch: vi.fn() }));
 vi.mock('../../hooks/useSession', () => ({ useSession: vi.fn() }));
-vi.mock('../../lib/supabaseClient', () => ({
-  supabase: { auth: { signInWithOAuth: vi.fn() } },
-}));
+vi.mock('../../lib/auth', () => ({ signIn: vi.fn() }));
 
 const fetchMock = vi.mocked(apiFetch);
 const sessionMock = vi.mocked(useSession);
-const signInWithOAuth = vi.mocked(supabase.auth.signInWithOAuth);
+const signInMock = vi.mocked(signIn);
 
 type SessionState = ReturnType<typeof useSession>;
 
@@ -30,7 +28,7 @@ beforeEach(() => {
   sessionStorage.clear();
   fetchMock.mockReset();
   fetchMock.mockResolvedValue([]);
-  signInWithOAuth.mockReset();
+  signInMock.mockReset();
   sessionMock.mockReturnValue({ session: null, loading: false } as SessionState);
 });
 
@@ -86,33 +84,27 @@ describe('HomePage', () => {
     expect(filled.map((button) => button.textContent)).toEqual(['Accedi con Google']);
   });
 
-  // Supabase has one configured Site URL, but the app also runs on Vercel
-  // previews and localhost, so the redirect has to be the current origin.
-  it('signs in with Google, returning to the current origin', async () => {
+  // `lib/auth` sends the current origin along, so production, staging and
+  // localhost each come back to themselves.
+  it('signs in with Google', async () => {
     const user = userEvent.setup();
     renderWithProviders(<HomePage />);
 
     await user.click(screen.getByRole('button', { name: /Accedi con Google/ }));
 
-    expect(signInWithOAuth).toHaveBeenCalledWith({
-      provider: 'google',
-      options: { redirectTo: window.location.origin },
-    });
+    expect(signInMock).toHaveBeenCalledWith('google');
   });
 
   it.each([
     ['Discord', 'discord'],
     ['GitHub', 'github'],
-  ])('signs in with %s, returning to the current origin', async (label, provider) => {
+  ])('signs in with %s', async (label, provider) => {
     const user = userEvent.setup();
     renderWithProviders(<HomePage />);
 
     await user.click(screen.getByRole('button', { name: `Accedi con ${label}` }));
 
-    expect(signInWithOAuth).toHaveBeenCalledWith({
-      provider,
-      options: { redirectTo: window.location.origin },
-    });
+    expect(signInMock).toHaveBeenCalledWith(provider);
   });
 
   // Spec 45: the landing page is for everyone; a signed-in user gets the
@@ -256,6 +248,22 @@ describe('HomePage', () => {
     it('is scrolled to when the address names it', () => {
       renderWithProviders(<HomePage />, { route: '/#sign-in' });
 
+      expect(scrollIntoView).toHaveBeenCalledTimes(1);
+    });
+
+    // Ticket 73 step 3: everyone signs in again once after the move.
+    it('asks returning users to sign in once more', () => {
+      renderWithProviders(<HomePage />);
+
+      expect(screen.getByText(/accedi un'altra volta/)).toBeInTheDocument();
+      expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    });
+
+    // The backend sends a failed or cancelled sign-in back with this flag.
+    it('says a sign-in failed and scrolls to the buttons', () => {
+      renderWithProviders(<HomePage />, { route: '/?signInError=1' });
+
+      expect(screen.getByRole('alert')).toHaveTextContent("L'accesso non è andato a buon fine.");
       expect(scrollIntoView).toHaveBeenCalledTimes(1);
     });
   });

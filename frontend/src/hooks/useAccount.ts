@@ -4,7 +4,7 @@ import { apiDownload, apiFetch } from '../lib/apiClient';
 import { DELETION_CONFIRMATION, personalDataFileName } from '../lib/privacy';
 import { saveBlob } from '../lib/roomExport';
 import { toUserIdentity } from '../lib/profile';
-import { supabase } from '../lib/supabaseClient';
+import { forgetSession, signOut } from '../lib/auth';
 import { isMembersQueryKey } from './useMembers';
 import type { AccountProfile, ProfilePatch, RawUserIdentity } from '../types/profile';
 
@@ -90,12 +90,7 @@ export function useSignOut() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   return useMutation({
-    mutationFn: async () => {
-      const { error } = await supabase.auth.signOut();
-      if (error) {
-        throw error;
-      }
-    },
+    mutationFn: signOut,
     onSuccess: () => {
       queryClient.clear();
       navigate('/');
@@ -116,8 +111,8 @@ export function useExportPersonalData() {
 /**
  * Permanently deletes the signed-in user's account (spec 31_1, GDPR art. 17),
  * then forgets the session on this device and every cached response. The
- * sign-in account is already gone on the server, so the sign-out is local
- * only: asking Supabase to end a session it no longer has would fail.
+ * backend has already ended every session of the account, so nothing is
+ * left to sign out of there.
  */
 export function useDeleteAccount() {
   const queryClient = useQueryClient();
@@ -128,7 +123,7 @@ export function useDeleteAccount() {
         method: 'DELETE',
         json: { confirmation: DELETION_CONFIRMATION },
       });
-      await supabase.auth.signOut({ scope: 'local' });
+      forgetSession();
     },
     onSuccess: () => {
       queryClient.clear();

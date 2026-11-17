@@ -70,7 +70,9 @@
   "auth": {
     "prompt": "Zaloguj się, aby kontynuować.",
     "signInWith": "Zaloguj się przez {{provider}}",
-    "privacy": "Prywatność"
+    "privacy": "Prywatność",
+    "signInAgain": "Logowałeś się już wcześniej? Zmieniliśmy sposób logowania, zaloguj się jeszcze raz. Wszystkie twoje pokoje nadal tu są.",
+    "signInFailed": "Logowanie się nie powiodło. Spróbuj ponownie."
   },
   "landing": {
     "tagline": "Wspólny notatnik twojej kampanii",

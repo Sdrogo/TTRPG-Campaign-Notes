@@ -70,7 +70,9 @@
   "auth": {
     "prompt": "Connecte-toi pour continuer.",
     "signInWith": "Se connecter avec {{provider}}",
-    "privacy": "Confidentialité"
+    "privacy": "Confidentialité",
+    "signInAgain": "Déjà connecté ? Nous avons changé la connexion : connecte-toi encore une fois. Toutes tes Salles sont toujours là.",
+    "signInFailed": "La connexion n'a pas abouti. Réessaie."
   },
   "landing": {
     "tagline": "Le carnet partagé de ta campagne",

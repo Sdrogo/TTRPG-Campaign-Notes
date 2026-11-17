@@ -41,14 +41,14 @@ Full history is archived; read it only when you need that detail:
 
 ## Migrations and Releases
 
-Alembic migrations are **not** applied on deploy: the product owner applies
-them by hand (`alembic upgrade head` with the matching env file loaded,
-`architecture.md` → Local env files and → Environments). Staging gets a
-migration before its PR merges into `staging`; production gets it before the
-release to `main` that ships it. Before any release, list what is pending
-here and remind the product owner.
+Since 2026-11-17 (ticket 74, staging on its VPS) migrations run from GitHub
+Actions: a PR merged with the `db-migration` label migrates staging, the
+release PR with the label migrates production, and Actions → *Migrate
+database* runs them on demand (`architecture.md` → Environments). Before any
+release, list what is pending here and remind the product owner to label the
+release PR.
 
-- **Head in the repository**: `e7b3d9a1c5f2` (relation color legend, spec 68).
+- **Head in the repository**: `b5e2c8f1a4d7` (own sign-in, ticket 73 step 3).
 - **Staging database**: `e7b3d9a1c5f2 (head)`, applied 2026-11-09 with
   `backend/.env.staging` loaded (`d4a8f2c6b9e1` applied the same day,
   `c1d7e3a9f5b2` on 2026-11-03).
@@ -57,14 +57,16 @@ here and remind the product owner.
   #316: `d4a8f2c6b9e1` (arrow bend, spec 67) then `e7b3d9a1c5f2` (color
   legend, spec 68). Earlier: `c1d7e3a9f5b2` on 2026-11-03 before the release
   that shipped it (PR #302), with `e8c4a2f6b1d9` and `e9c4a2f7b1d8` the same day.
-- **Pending**: none. Staging and production are both at the repository head.
+- **Pending**: `b5e2c8f1a4d7` (own sign-in tables, copies Supabase's
+  `auth.identities`) on staging, then production: label the PR / release PR
+  `db-migration`.
 
 When a new migration lands, update the three lines above and add it to the
 top of the chain below. Per-migration apply history (who, when, which env
 file) up to 2026-11-04 is in the 2026-11-04 archive.
 
 Chain, newest first (where each came from):
-`e7b3d9a1c5f2` color legend and presets (68) ← `d4a8f2c6b9e1` arrow bend (67)
+`b5e2c8f1a4d7` own sign-in (73 step 3) ← `e7b3d9a1c5f2` color legend and presets (68) ← `d4a8f2c6b9e1` arrow bend (67)
 ← `c1d7e3a9f5b2` Clocks (61) ← `e9c4a2f7b1d8` import job progress (59) ←
 `e8c4a2f6b1d9` Section tools + block `collapsed`, drops
 `rooms.maps_position` (60_2) ← `d5b8e1f3a9c7` Room landing page (55) ←
@@ -263,8 +265,11 @@ image search, read aloud, GDPR (10-01 → 10-10). See the two older archives.
   replaces its frontend build (it was kept, so new `VITE_*` values were lost).
   Step 2 built (same PR): one shared deploy workflow, `deploy-staging.yml` for
   the Erith VPS as staging (frontend + API, still on the staging Supabase);
-  switched in by hand by the product owner. Still open:
-  sign-in option, files provider, linking (steps 3–4).
+  switched in 2026-11-17. Step 3 built 2026-11-17 (own OAuth sign-in,
+  supabase-js removed, migration `b5e2c8f1a4d7`): needs the OAuth console
+  redirect URIs and the new `backend.env` settings on both VPSes **before**
+  its deploy (the app refuses to start without `AUTH_TOKEN_SECRET`).
+  Next: step 5 (DB), step 4 postponed, then step 6 cleanup.
 - **License** (product owner, 2026-11-15): GPL-3.0 replaced by the
   Functional Source License `FSL-1.1-ALv2` (no commercial competing service;
   each version becomes Apache-2.0 after two years), licensor Andrea Partenope.

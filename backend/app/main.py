@@ -49,6 +49,7 @@ from app.api.session_zero_polls import router as session_zero_polls_router
 from app.api.session_zero_questions import router as session_zero_questions_router
 from app.api.tags import router as tags_router
 from app.api.versions import router as versions_router
+from app.auth.tokens import require_secret
 from app.config import Settings, settings
 from app.db.export_jobs_repo import run_export_sweeper
 from app.db.storage_cleanup import run_sweeper
@@ -59,7 +60,9 @@ async def lifespan(_: FastAPI) -> AsyncIterator[None]:
     """Starts the Storage cleanup sweep (app/db/storage_cleanup.py) and the
     Room PDF sweep (app/db/export_jobs_repo.py) with the app and cancels them
     on shutdown. First it resumes the imports a restart cut off in their
-    image phase (spec 59), so the startup sweep doesn't fail them."""
+    image phase (spec 59), so the startup sweep doesn't fail them. Refuses
+    to start without a sign-in secret (ticket 73 step 3)."""
+    require_secret()
     await resume_import_jobs()
     sweepers = [asyncio.create_task(run_sweeper()), asyncio.create_task(run_export_sweeper())]
     yield

@@ -70,7 +70,9 @@
   "auth": {
     "prompt": "Sign in to continue.",
     "signInWith": "Sign in with {{provider}}",
-    "privacy": "Privacy"
+    "privacy": "Privacy",
+    "signInAgain": "Signed in before? We changed how sign-in works, so please sign in once more. Your Rooms are all still here.",
+    "signInFailed": "The sign-in didn't go through. Please try again."
   },
   "landing": {
     "tagline": "The shared notebook of your campaign",
