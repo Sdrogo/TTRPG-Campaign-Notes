@@ -119,7 +119,7 @@ psql_admin() { docker compose exec -T -e PGOPTIONS=--client-min-messages=warning
 row_counts() {
   local query
   query="$(psql_admin -d "$1" -At -c "SELECT string_agg(format('SELECT %L, count(*) FROM public.%I', tablename, tablename), ' UNION ALL ') || ' ORDER BY 1' FROM pg_tables WHERE schemaname = 'public'")"
-  psql_admin -d "$1" -At -F ' ' -c "$query"
+  psql_admin -d "$1" -At -F ' ' -c "$query" | LC_ALL=C sort
 }
 
 # The given day, or the newest copy in that root.

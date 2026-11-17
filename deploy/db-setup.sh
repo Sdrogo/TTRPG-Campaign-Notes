@@ -145,13 +145,14 @@ echo "restored from $dump_file ($(du -h "$dump_file" | cut -f1))"
 
 echo "== 4. Row counts"
 # One query that counts every table of `public`, built from the restored
-# tables. From Supabase it runs on both sides (a table missing there fails
+# tables, sorted here (byte order): Supabase and this server sort names
+# differently. From Supabase it runs on both sides (a table missing there fails
 # here); from a file there is no other side, so it only prints the totals.
 count_sql="SELECT string_agg(format('SELECT %L, count(*) FROM public.%I', tablename, tablename), ' UNION ALL ') || ' ORDER BY 1' FROM pg_tables WHERE schemaname = 'public'"
 query="$(pg sh -c 'psql -At -d "$TARGET_URL" -c "$0"' "$count_sql")"
-target_counts="$(pg sh -c 'psql -At -F " " -d "$TARGET_URL" -c "$0"' "$query")"
+target_counts="$(pg sh -c 'psql -At -F " " -d "$TARGET_URL" -c "$0"' "$query" | LC_ALL=C sort)"
 if $from_supabase; then
-  source_counts="$(pg sh -c 'psql -At -F " " -d "$SOURCE_URL" -c "$0"' "$query")"
+  source_counts="$(pg sh -c 'psql -At -F " " -d "$SOURCE_URL" -c "$0"' "$query" | LC_ALL=C sort)"
   if [ "$source_counts" != "$target_counts" ]; then
     diff <(echo "$source_counts") <(echo "$target_counts") >&2 || true
     echo "the row counts differ (left Supabase, right this server)" >&2
