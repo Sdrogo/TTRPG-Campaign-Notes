@@ -78,3 +78,31 @@ def test_engine_pool_follows_the_settings() -> None:
     from app.db.session import engine
 
     assert engine.pool.size() == settings.db_pool_size  # type: ignore[attr-defined]
+
+
+def test_s3_is_off_by_default(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.delenv("S3_ENDPOINT", raising=False)
+    assert load_settings().s3_endpoint == ""
+
+
+def test_an_s3_endpoint_needs_its_public_host_and_key(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Without them the first upload or image would fail; startup does instead."""
+    monkeypatch.setenv("S3_ENDPOINT", "http://garage:3900")
+    monkeypatch.setenv("S3_ACCESS_KEY_ID", "GKkey")
+    monkeypatch.delenv("S3_PUBLIC_URL", raising=False)
+    monkeypatch.delenv("S3_SECRET_ACCESS_KEY", raising=False)
+
+    with pytest.raises(ValueError, match="S3_PUBLIC_URL, S3_SECRET_ACCESS_KEY"):
+        load_settings()
+
+
+def test_a_complete_s3_setting_loads(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("S3_ENDPOINT", "http://garage:3900")
+    monkeypatch.setenv("S3_PUBLIC_URL", "https://files.example.test")
+    monkeypatch.setenv("S3_ACCESS_KEY_ID", "GKkey")
+    monkeypatch.setenv("S3_SECRET_ACCESS_KEY", "secret")
+
+    loaded = load_settings()
+
+    assert loaded.s3_endpoint == "http://garage:3900"
+    assert loaded.s3_region == "garage"

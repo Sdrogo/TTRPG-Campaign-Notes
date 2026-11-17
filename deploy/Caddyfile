@@ -7,7 +7,9 @@
 # The frontend (ticket 73 step 1, replacing Vercel): the built SPA, unpacked
 # by deploy.sh into site/releases/<sha>-<time> and switched in through the
 # site/current link. The headers are the ones vercel.json set, plus HSTS;
-# CSP_CONNECT_SRC lists the API and Supabase origins the app talks to.
+# CSP_CONNECT_SRC lists the API and Supabase origins the app talks to, and
+# FILES_HOSTS the bucket's host (the app fetches some files, e.g. PDFs to
+# preview).
 {$FRONTEND_HOSTS} {
 	header {
 		Strict-Transport-Security "max-age=31536000"
@@ -15,7 +17,7 @@
 		X-Frame-Options "DENY"
 		Referrer-Policy "strict-origin-when-cross-origin"
 		Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=(), usb=()"
-		Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' {$CSP_CONNECT_SRC}; media-src 'self' blob:; worker-src 'self' blob:; object-src 'none'; frame-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests"
+		Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' {$CSP_CONNECT_SRC} {$FILES_HOSTS}; media-src 'self' blob:; worker-src 'self' blob:; object-src 'none'; frame-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests"
 		-Server
 	}
 
@@ -44,6 +46,25 @@
 # one origin. Off by default, like FRONTEND_HOSTS.
 {$FRONTEND_REDIRECT_HOSTS} {
 	redir https://exlibris.world{uri} permanent
+}
+
+# The images bucket (ticket 73 step 4): Garage's S3 API. Browsers only
+# fetch signed links here; the backend talks to garage:3900 directly. Every
+# request needs a valid signature (the bucket is private), so the nightly
+# backup from the other VPS also writes through this host. CORS for any
+# origin, as Supabase Storage answered: a link is only usable while its
+# signature is. The sandbox CSP keeps a file opened here from running
+# anything.
+{$FILES_HOSTS} {
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options "nosniff"
+		Content-Security-Policy "default-src 'none'; frame-ancestors 'none'; sandbox"
+		Referrer-Policy "no-referrer"
+		Access-Control-Allow-Origin "*"
+		-Server
+	}
+	reverse_proxy garage:3900
 }
 
 # The API.

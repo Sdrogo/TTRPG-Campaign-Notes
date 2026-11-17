@@ -5,7 +5,8 @@ import { describe, expect, it } from 'vitest';
 // Ticket 73 step 1: Caddy on the VPS serves the frontend with the headers
 // vercel.json sends. Until Vercel goes, both files must agree, so a change to
 // one that misses the other fails here. Only connect-src differs: on the VPS
-// it comes from CSP_CONNECT_SRC in the server's .env.
+// it comes from CSP_CONNECT_SRC in the server's .env, plus FILES_HOSTS, the
+// images bucket's host (ticket 73 step 4).
 interface VercelConfig {
   headers: { source: string; headers: { key: string; value: string }[] }[];
 }
@@ -51,7 +52,7 @@ describe('Caddyfile frontend headers', () => {
     expect(withoutConnectSrc(caddyCsp)).toEqual(
       withoutConnectSrc(vercelHeader('Content-Security-Policy')),
     );
-    expect(caddyCsp).toContain("connect-src 'self' {$CSP_CONNECT_SRC};");
+    expect(caddyCsp).toContain("connect-src 'self' {$CSP_CONNECT_SRC} {$FILES_HOSTS};");
   });
 
   it('adds HSTS, which Vercel added on its own', () => {

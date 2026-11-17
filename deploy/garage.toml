@@ -1,0 +1,21 @@
+# Garage, the S3 service that holds the images bucket (ticket 73 step 4).
+# Single node: one copy of each object here, and the nightly mirror to the
+# other VPS (backup-files.sh) is the second. The RPC secret is not in this
+# file: it comes from garage.env on the server (garage-setup.sh writes it).
+# The deploy copies this file to /opt/exlibris on every deploy.
+metadata_dir = "/var/lib/garage/meta"
+data_dir = "/var/lib/garage/data"
+db_engine = "lmdb"
+# A copy of the metadata database every 6 hours, which Garage can restore
+# from if the live one is damaged (e.g. by a crash mid-write).
+metadata_auto_snapshot_interval = "6h"
+replication_factor = 1
+
+# IPv4: Docker's default network has no IPv6, and Garage stops on a bind
+# to [::] there.
+rpc_bind_addr = "0.0.0.0:3901"
+rpc_public_addr = "127.0.0.1:3901"
+
+[s3_api]
+s3_region = "garage"
+api_bind_addr = "0.0.0.0:3900"

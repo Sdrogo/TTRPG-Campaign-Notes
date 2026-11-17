@@ -269,5 +269,12 @@ jobs:
             -e FRONTEND_HOSTS="example.com" \
             -e FRONTEND_REDIRECT_HOSTS="www.example.com" \
             -e CSP_CONNECT_SRC="https://api.example.com" \
+            -e FILES_HOSTS="https://files.example.com" \
             -v "$PWD/deploy/Caddyfile:/etc/caddy/Caddyfile:ro" \
             caddy:2 caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile
+
+      # The scripts the deploy copies to the servers (shellcheck comes with
+      # the runner image). deploy.sh lists its own release folders with `ls`,
+      # whose names it makes itself (SC2010, SC2012).
+      - name: Deploy scripts pass shellcheck
+        run: shellcheck -e SC2010,SC2012 deploy/*.sh

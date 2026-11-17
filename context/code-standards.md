@@ -319,8 +319,8 @@ pytest, split by what a test needs rather than by what it covers.
 **`backend/app/`**
 - `api/` — FastAPI routers, one per resource; thin, no business rules.
 - `domain/` — business rules and invariants; framework-independent.
-- `db/` — Postgres queries/repositories and Supabase Storage calls.
-- `auth/` — Supabase JWT verification and user/session resolution.
+- `db/` — Postgres queries/repositories and bucket calls (Garage over S3, or Supabase Storage until ticket 73 step 6).
+- `auth/` — our own access tokens (ticket 73 step 3) and user/session resolution.
 
 **`context/`**
 - Shared spec and context files (this folder) — read by both
