@@ -355,6 +355,24 @@ async def test_a_health_checks_503_is_counted_but_not_stored_as_an_error(
     assert [r.levelno for r in caplog.records if r.name == "app.request"] == [logging.ERROR]
 
 
+async def test_an_error_after_the_response_started_is_raised() -> None:
+    sent: list[dict[str, object]] = []
+
+    async def inner(scope: object, receive: object, send: Callable[..., object]) -> None:
+        await send({"type": "http.response.start", "status": 200, "headers": []})  # type: ignore[misc]
+        raise RuntimeError("mid-stream")
+
+    async def send(message: dict[str, object]) -> None:
+        sent.append(message)
+
+    middleware = request_metrics.RequestMetricsMiddleware(inner)  # type: ignore[arg-type]
+    with pytest.raises(RuntimeError):
+        await middleware({"type": "http", "method": "GET"}, None, send)  # type: ignore[arg-type]
+    assert len(sent) == 1
+    (event,) = request_stats.pending_errors
+    assert event.exc_type == "RuntimeError"
+
+
 # --- readiness ---------------------------------------------------------------
 
 

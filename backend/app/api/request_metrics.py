@@ -73,7 +73,9 @@ class RequestMetricsMiddleware:
         except Exception as exc:
             status = 500
             exc_type = type(exc).__name__
-            # Logged here so the traceback carries the request id.
+            # Logged here so the traceback carries the request id. The 500
+            # itself is sent by Starlette's outer error handler, without the
+            # `X-Request-ID` header: the log line and the error event have it.
             logger.exception("Unhandled error")
             raise
         finally:

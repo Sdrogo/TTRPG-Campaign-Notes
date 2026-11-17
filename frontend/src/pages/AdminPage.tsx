@@ -64,9 +64,11 @@ function formatNumber(value: number): string {
 }
 
 function formatTime(iso: string, withTime = true): string {
+  // A week is a UTC Monday (the backend counts weeks in UTC): shown in UTC,
+  // so it doesn't read as the Sunday before west of UTC.
   const options: Intl.DateTimeFormatOptions = withTime
     ? { dateStyle: 'short', timeStyle: 'short' }
-    : { dateStyle: 'short' };
+    : { dateStyle: 'short', timeZone: 'UTC' };
   return new Intl.DateTimeFormat(currentLanguage(), options).format(new Date(iso));
 }
 
