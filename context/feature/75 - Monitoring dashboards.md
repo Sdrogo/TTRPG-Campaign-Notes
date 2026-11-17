@@ -126,7 +126,15 @@ and ~1 GB+ for error tracking alone; the Admin page's error list covers it.
    in, its port is opened in `ufw` to the staging IP only, and the agent
    runs with `network_mode: host` so `ufw` applies, since Docker bypasses
    `ufw` for published ports). The Dozzle agent listens on its port with
-   the same rule (staging IP only). Docker socket mounted **read-only**.
+   the same rule (staging IP only).
+   **No agent gets the Docker socket itself**: a `:ro` mount does not make
+   the Docker API read-only (whoever can connect can still start a
+   privileged container, i.e. root on the host). Every server instead runs a
+   filtering socket proxy (`tecnativa/docker-socket-proxy`, pinned) on an
+   internal network, allowing only read calls (`CONTAINERS=1`, `INFO=1`,
+   `EVENTS=1`, `POST=0`), and the agents and Dozzle talk to the proxy
+   (`DOCKER_HOST=tcp://docker-proxy:2375`). Same on staging for the hub's
+   local agent and the Dozzle UI.
 4. **Files**: `deploy/monitoring/compose.yaml` + a `Caddyfile.monitoring`
    snippet for the staging server; the two agents as services in
    `deploy/compose.yaml` behind a compose profile `monitoring`, turned on by
@@ -225,10 +233,15 @@ of both. Each unit goes to staging first, as usual.
   dashboards. Mitigated by the external cron monitor staying on production
   and by staging having no other critical role. Moving the hub is a copy of
   one folder.
-- **Docker socket access**: the agents read the socket (read-only mount),
-  which still lets them see every container's settings, `backend.env`
-  values included. Pinned official images, no published socket, agents
-  reachable only from the staging IP.
+- **Docker socket access**: full socket access means root on the host, so
+  a compromised agent or Dozzle image would mean root on both VPSes. The
+  socket proxy of Decision 3 limits them to read calls: they can no
+  longer create or change containers. What remains: read calls still show
+  every container's settings, `backend.env` values included (container
+  inspect returns the environment), and container logs. Pinned images,
+  proxy on an internal network only, agents reachable only from the
+  staging IP. Question 7 asks the product owner to accept this remaining
+  exposure.
 - **Basic auth on public hosts**: brute force is the risk; bcrypt hash, a
   long password, Caddy rate limiting is not built in, so each tool's own
   login stays on as the second lock. Alternative in Question 2.
@@ -251,6 +264,12 @@ of both. Each unit goes to staging first, as usual.
    datacenter) or on production?
 6. **Order**: 75_1–75_2 now and 75_3 after ticket 73 step 5 (recommended,
    the database work comes first), or all three right away?
+
+7. **Read-only Docker access**: the monitoring tools can read every
+   container's settings (secrets in `backend.env` included) and logs, but
+   not change anything (socket proxy, Decision 3). Accept this
+   (recommended: it is what the dashboards need), or drop container
+   details and logs from production and monitor only CPU/RAM/disk there?
 
 ## Out of scope
 
