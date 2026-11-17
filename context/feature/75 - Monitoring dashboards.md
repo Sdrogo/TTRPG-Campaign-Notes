@@ -134,7 +134,10 @@ and ~1 GB+ for error tracking alone; the Admin page's error list covers it.
    internal network, allowing only read calls (`CONTAINERS=1`, `INFO=1`,
    `EVENTS=1`, `POST=0`), and the agents and Dozzle talk to the proxy
    (`DOCKER_HOST=tcp://docker-proxy:2375`). Same on staging for the hub's
-   local agent and the Dozzle UI.
+   local agent and the Dozzle UI. In the fallback above, where the Beszel
+   agent runs with `network_mode: host` and so is not on the compose
+   network, the proxy is also published on `127.0.0.1:2375` only (never on
+   a public address) and that agent uses `DOCKER_HOST=tcp://127.0.0.1:2375`.
 4. **Files**: `deploy/monitoring/compose.yaml` + a `Caddyfile.monitoring`
    snippet for the staging server; the two agents as services in
    `deploy/compose.yaml` behind a compose profile `monitoring`, turned on by
