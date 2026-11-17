@@ -73,10 +73,12 @@ RCLONE_CONFIG_SAFE_FILENAME_ENCRYPTION=off
 RCLONE_CONFIG_SAFE_DIRECTORY_NAME_ENCRYPTION=false
 SETTINGS
 rclone() {
-  docker run --rm -i --network "$network" --env-file "$settings" rclone/rclone:1.71.0 -q "$@"
+  docker run --rm --network "$network" --env-file "$settings" rclone/rclone:1.71.0 -q "$@"
 }
-# rclone wants the password in its own obscured form.
-echo "RCLONE_CONFIG_SAFE_PASSWORD=$(rclone obscure - < backup-password)" >> "$settings"
+# rclone wants the password in its own obscured form. Only this call reads
+# standard input (-i); the others must not, or a `while read` loop around
+# them would lose its lines to the container.
+echo "RCLONE_CONFIG_SAFE_PASSWORD=$(docker run --rm -i rclone/rclone:1.71.0 obscure - < backup-password)" >> "$settings"
 
 root="safe:"
 today="$(date -u +%F)"
