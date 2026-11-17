@@ -8,8 +8,8 @@ project: [../README.md](../README.md).
 ## Stack
 
 Python 3.12, FastAPI on uvicorn, SQLAlchemy 2.0 async with `asyncpg`, Alembic
-for migrations, Pydantic settings, PyJWT (Supabase JWTs checked against the
-project's JWKS), Pillow for images, WeasyPrint + Jinja2 + pypdf for the Room
+for migrations, Pydantic settings, PyJWT (our own HS256 access tokens) and
+httpx for the OAuth sign-in with Google, Discord and GitHub, Pillow for images, WeasyPrint + Jinja2 + pypdf for the Room
 PDF. Tests use pytest; lint and types use Ruff and mypy.
 
 ## Setup
@@ -31,12 +31,16 @@ env files.
 
 | Variable | Meaning |
 | --- | --- |
-| `SUPABASE_URL` | Supabase project URL (JWKS for the tokens, Storage) |
+| `SUPABASE_URL` | Supabase project URL (Storage) |
 | `SUPABASE_SECRET_KEY` | Supabase secret key, for Storage |
 | `STORAGE_BUCKET` | Private bucket for images and files (`document-images`) |
 | `DATABASE_URL` | `postgresql+asyncpg://…`, Supabase's **Session Pooler** (the direct host is IPv6-only) |
 | `CORS_ORIGINS` | Exact allowed origins: a JSON list or comma-separated, no trailing `/` |
 | `CORS_ORIGIN_REGEX` | Optional pattern for generated hosts (staging's Vercel Previews); blank = none |
+| `API_PUBLIC_URL` | The API's public address; providers send users back to `<API_PUBLIC_URL>/auth/<provider>/callback` |
+| `AUTH_TOKEN_SECRET` | **Required**, 32+ random characters (`openssl rand -base64 48`): signs the access tokens. The app refuses to start without it |
+| `GOOGLE_CLIENT_ID`/`_SECRET`, `DISCORD_…`, `GITHUB_…` | Each provider's OAuth app; a provider without a client id is not offered |
+| `AUTH_COOKIE_SECURE` | `true` (default): the session cookie is `Secure`. Off only for plain HTTP other than localhost |
 | `DB_POOL_SIZE`, `DB_MAX_OVERFLOW` | Connections per process (5 + 2). The Session Pooler allows 15 per project across every backend on that database |
 
 ## Checks
