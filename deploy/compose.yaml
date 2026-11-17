@@ -2,10 +2,14 @@
 # /opt/exlibris on the server next to:
 #   backend.env  the backend's settings (secrets, chmod 600, never in git)
 #   garage.env   Garage's RPC secret (chmod 600, written by garage-setup.sh)
+#   postgres.env the database superuser's password (chmod 600, written by
+#                db-setup.sh)
 #   .env         non-secret settings for this file: API_HOSTS,
 #                FRONTEND_HOSTS, FRONTEND_REDIRECT_HOSTS, FILES_HOSTS,
 #                CSP_CONNECT_SRC, COMPOSE_PROFILES (`files` once Garage is
-#                set up) and BACKEND_TAG once deploy.sh has run
+#                set up, `db` once Postgres is), PG_SHARED_BUFFERS and
+#                PG_EFFECTIVE_CACHE_SIZE (db-setup.sh, from the box's
+#                memory) and BACKEND_TAG once deploy.sh has run
 #   site/        the built frontend: releases/<sha>-<time>, and `current`, a link
 #                to the live one (deploy.sh)
 # The deploy workflow copies this file, the Caddyfile and deploy.sh here on
@@ -21,6 +25,12 @@ services:
     # No `ports:`: only Caddy reaches the backend, over the compose network.
     # (Docker would bypass ufw for a published port.)
     restart: unless-stopped
+    # Waits for the database where there is one (the `db` profile, ticket 73
+    # step 5); a server without it (Supabase) starts the backend alone.
+    depends_on:
+      db:
+        condition: service_healthy
+        required: false
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:10000/health', timeout=4)"]
       interval: 15s
@@ -82,9 +92,43 @@ services:
     restart: unless-stopped
     logging: *logging
 
+  # The database (ticket 73 step 5). Only in the `db` profile, which
+  # db-setup.sh turns on in .env once it has copied the data in. Same
+  # version as CI (pinned by digest). No `ports:`: only the backend and the
+  # scripts reach it, at db:5432 on the compose network. Memory settings come
+  # from .env, sized by db-setup.sh for the box.
+  db:
+    image: postgres:17.6@sha256:00bc86618629af00d2937fdc5a5d63db3ff8450acf52f0636ec813c7f4902929
+    profiles: [db]
+    env_file:
+      - path: postgres.env
+        required: false
+    environment:
+      POSTGRES_DB: exlibris
+    command:
+      - postgres
+      - -c
+      - shared_buffers=${PG_SHARED_BUFFERS:-128MB}
+      - -c
+      - effective_cache_size=${PG_EFFECTIVE_CACHE_SIZE:-512MB}
+    # Docker's default 64 MB of shared memory is too small for parallel
+    # queries.
+    shm_size: 256mb
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres", "-d", "exlibris"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    logging: *logging
+
 volumes:
+  # The database. Dumped every night by backup.sh to the other VPS.
+  pg_data:
   # The bucket: its index and its objects. Backed up every night by
-  # backup-files.sh to the other VPS.
+  # backup.sh to the other VPS.
   garage_meta:
   garage_data:
   # The certificates. Losing it only means Caddy asks for new ones.

@@ -1,6 +1,6 @@
 # Garage, the S3 service that holds the images bucket (ticket 73 step 4).
 # Single node: one copy of each object here, and the nightly mirror to the
-# other VPS (backup-files.sh) is the second. The RPC secret is not in this
+# other VPS (backup.sh) is the second. The RPC secret is not in this
 # file: it comes from garage.env on the server (garage-setup.sh writes it).
 # The deploy copies this file to /opt/exlibris on every deploy.
 metadata_dir = "/var/lib/garage/meta"
