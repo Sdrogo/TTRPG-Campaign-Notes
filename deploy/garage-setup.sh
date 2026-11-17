@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Moves the images bucket to Garage on this server (ticket 73 step 4). Run
+# Sets up the images bucket in Garage on this server (ticket 73 step 4). Run
 # once per server from /opt/exlibris, after a deploy that brought Garage:
 #   bash garage-setup.sh https://files.exlibris.world
 # Safe to run again: each step checks what is already there.
@@ -9,11 +9,8 @@
 # 2. Gives Garage its layout, creates the bucket and a key that can only use
 #    that bucket, and adds the S3_* lines to backend.env (sudo: the file
 #    belongs to root). The key never has to be copied by hand.
-# 3. Copies the Supabase bucket into Garage, restarts the backend so it uses
-#    Garage, and copies again whatever was uploaded in between.
-# Rollback: remove the S3_* lines from backend.env and run
-#   docker compose up -d --force-recreate backend
-# (Supabase keeps every object until step 6.)
+# 3. Restarts the backend so it uses Garage. The objects themselves come
+#    from the backup (`bash backup.sh restore-files`, context/restore-runbook.md).
 set -euo pipefail
 
 files_host="${1:?usage: garage-setup.sh <public files URL, e.g. https://files.exlibris.world>}"
@@ -73,13 +70,6 @@ if ! sudo grep -q '^S3_ACCESS_KEY_ID=' backend.env; then
   echo "key $key_id added to backend.env"
 fi
 
-echo "== 3. Copy, switch, copy again"
-copy() { docker compose run --rm --no-deps backend python -m app.storage_copy; }
-copy
+echo "== 3. Restart the backend on Garage"
 docker compose up -d --force-recreate backend
-for _ in $(seq 1 40); do
-  [ "$(docker inspect -f '{{.State.Health.Status}}' "$(docker compose ps -q backend)")" = healthy ] && break
-  sleep 3
-done
-copy
 echo "done: the backend now uses Garage at $files_host"

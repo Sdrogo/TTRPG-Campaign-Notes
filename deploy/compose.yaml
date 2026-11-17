@@ -26,7 +26,7 @@ services:
     # (Docker would bypass ufw for a published port.)
     restart: unless-stopped
     # Waits for the database where there is one (the `db` profile, ticket 73
-    # step 5); a server without it (Supabase) starts the backend alone.
+    # step 5); a server without it starts the backend alone.
     depends_on:
       db:
         condition: service_healthy
@@ -55,16 +55,15 @@ services:
       # issued for it); the cutover adds api (vps-migration-plan.md, §9).
       API_HOSTS: ${API_HOSTS:-api-vps.exlibris.world}
       # The frontend's names (ticket 73), and the origins its CSP lets it
-      # call: the API and Supabase (auth, until ticket 73 step 3). Off by
-      # default: a plain-HTTP name that can't exist, so a server whose .env
-      # doesn't set it never asks for certificates for names that point
-      # elsewhere (Vercel, before the DNS switch).
+      # call besides its own and the files host: the API. Off by default: a
+      # plain-HTTP name that can't exist, so a server whose .env doesn't set
+      # it never asks for certificates for names that point elsewhere.
       FRONTEND_HOSTS: ${FRONTEND_HOSTS:-http://frontend-disabled.invalid}
       FRONTEND_REDIRECT_HOSTS: ${FRONTEND_REDIRECT_HOSTS:-http://redirect-disabled.invalid}
       # The bucket's public host (ticket 73 step 4), where browsers fetch
       # signed links; also allowed in the frontend's CSP. Off by default.
       FILES_HOSTS: ${FILES_HOSTS:-http://files-disabled.invalid}
-      CSP_CONNECT_SRC: ${CSP_CONNECT_SRC:-https://api.exlibris.world https://mlksmacrcjurfuxtwdjw.supabase.co wss://mlksmacrcjurfuxtwdjw.supabase.co}
+      CSP_CONNECT_SRC: ${CSP_CONNECT_SRC:-https://api.exlibris.world}
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - ./site:/srv/site:ro

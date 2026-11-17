@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # On the staging VPS: makes its Garage the target of production's nightly
-# backup (ticket 73 step 4, backup-files.sh). Run after garage-setup.sh.
+# backup (ticket 73 step 4, backup.sh). Run after garage-setup.sh.
 # Creates the bucket `exlibris-backups` and a key that can only use that
 # bucket, and prints the lines production's backup.env needs on standard
 # output (everything else goes to standard error). So from your own

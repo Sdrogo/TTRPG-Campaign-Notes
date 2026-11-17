@@ -1,6 +1,7 @@
 from collections.abc import AsyncIterator, Callable, Collection, Iterator
 from contextlib import asynccontextmanager
 from datetime import UTC, datetime, timedelta
+from urllib.parse import quote
 
 import jwt
 import pytest
@@ -86,7 +87,7 @@ async def db_session() -> AsyncIterator[AsyncSession]:
 
 @pytest.fixture
 def fake_storage(monkeypatch: pytest.MonkeyPatch) -> dict[str, bytes]:
-    """In-memory stand-in for Supabase Storage: DB changes in these tests
+    """In-memory stand-in for the images bucket: DB changes in these tests
     are rolled back (conftest.db_session), but real bucket uploads would
     not be, so Storage is faked here and verified live separately."""
     objects: dict[str, bytes] = {}
@@ -118,6 +119,11 @@ def fake_storage(monkeypatch: pytest.MonkeyPatch) -> dict[str, bytes]:
             raise storage.StorageError("Storage answered 404")
         return objects[path]
 
+    def fake_as_download(signed_url: str, file_name: str) -> str:
+        # The fake links aren't S3 ones: mark the attachment name visibly.
+        return f"{signed_url}&download={quote(file_name, safe='')}"
+
+    monkeypatch.setattr(storage, "as_download", fake_as_download)
     monkeypatch.setattr(storage, "download_signed", fake_download_signed)
     monkeypatch.setattr(storage, "download", fake_download)
     return objects

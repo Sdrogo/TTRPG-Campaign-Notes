@@ -71,7 +71,6 @@
     "prompt": "Inicia sessão para continuar.",
     "signInWith": "Iniciar sessão com {{provider}}",
     "privacy": "Privacidade",
-    "signInAgain": "Já tinhas iniciado sessão? Mudámos a forma de iniciar sessão: inicia sessão mais uma vez. As tuas Salas continuam todas aqui.",
     "signInFailed": "Não foi possível iniciar sessão. Tenta outra vez."
   },
   "landing": {
@@ -1128,11 +1127,11 @@
       },
       "processors": {
         "title": "Quem os trata, e onde",
-        "body": "A app recorre a estes fornecedores, que tratam os dados por nossa conta:\n\n- Supabase: base de dados, armazenamento de ficheiros e acesso, alojados na União Europeia (Frankfurt, Alemanha).\n- OVHcloud: o servidor que executa o backend da app, no Reino Unido, que a Comissão Europeia reconhece como país com um nível de proteção adequado.\n- Vercel: distribuição das páginas da app. A sua rede pode servir pedidos de fora da União Europeia; as transferências para os Estados Unidos baseiam-se no EU-U.S. Data Privacy Framework e nas cláusulas contratuais-tipo.\n- Google, Discord e GitHub: apenas para o acesso que escolhes, segundo as respetivas políticas.\n- Openverse, um projeto de WordPress.org: quando pesquisas imagens livres para um Documento, a pesquisa é enviada pelo nosso servidor, e as pré-visualizações são carregadas pelo teu navegador diretamente do Openverse, que por isso vê o teu endereço IP."
+        "body": "A app recorre a estes fornecedores, que tratam os dados por nossa conta:\n\n- OVHcloud: os servidores onde corre toda a app (páginas, backend, base de dados, armazenamento de ficheiros e acesso), em França (Estrasburgo). As cópias de segurança noturnas cifradas são guardadas num segundo servidor OVHcloud no Reino Unido, que a Comissão Europeia reconhece como país com um nível de proteção adequado.\n- Supabase: apenas até meados de dezembro de 2026, a cópia da base de dados e dos ficheiros de antes da passagem da app para os seus próprios servidores (novembro de 2026), na União Europeia (Frankfurt, Alemanha). Depois é eliminada.\n- Google, Discord e GitHub: apenas para o acesso que escolhes, segundo as respetivas políticas.\n- Openverse, um projeto de WordPress.org: quando pesquisas imagens livres para um Documento, a pesquisa é enviada pelo nosso servidor, e as pré-visualizações são carregadas pelo teu navegador diretamente do Openverse, que por isso vê o teu endereço IP."
       },
       "retention": {
         "title": "Durante quanto tempo os conservamos",
-        "body": "- A tua conta e o teu perfil ficam até eliminares a conta.\n- Quando eliminas a conta, perfil, avatar, Amigos, reações, post-its da Sessão 0 e conta de acesso são apagados de imediato. As Salas em que eras o único membro são eliminadas com todo o seu conteúdo. Nas Salas partilhadas com outros, o que escreveste fica como parte da campanha, mostrado como escrito por um utilizador desconhecido.\n- Uma Sala que eliminas é apagada com todo o seu conteúdo.\n- Os PDF das Salas são apagados 24 horas após a geração, e as importações de Documentos 7 dias após o fim.\n- Os registos dos servidores são conservados apenas pelo tempo necessário ao funcionamento e à segurança, e são substituídos de forma rotativa.\n- As cópias de segurança dos nossos fornecedores são substituídas dentro do respetivo ciclo de cópias."
+        "body": "- A tua conta e o teu perfil ficam até eliminares a conta.\n- Quando eliminas a conta, perfil, avatar, Amigos, reações, post-its da Sessão 0 e conta de acesso são apagados de imediato. As Salas em que eras o único membro são eliminadas com todo o seu conteúdo. Nas Salas partilhadas com outros, o que escreveste fica como parte da campanha, mostrado como escrito por um utilizador desconhecido.\n- Uma Sala que eliminas é apagada com todo o seu conteúdo.\n- Os PDF das Salas são apagados 24 horas após a geração, e as importações de Documentos 7 dias após o fim.\n- Os registos dos servidores são conservados apenas pelo tempo necessário ao funcionamento e à segurança, e são substituídos de forma rotativa.\n- As cópias de segurança noturnas cifradas são guardadas até seis meses e depois eliminadas."
       },
       "rights": {
         "title": "Os teus direitos",
@@ -1140,7 +1139,7 @@
       },
       "storage": {
         "title": "Cookies e armazenamento local",
-        "body": "A app não usa cookies. Guarda alguns elementos na memória do teu navegador, necessários ao seu funcionamento: a sessão de acesso, o idioma escolhido, voz e velocidade da leitura em voz alta, a personagem com que escreveste da última vez em cada Sala, os avisos sobre os PDF das Salas que fechaste, e um link de convite aberto antes de iniciares sessão. Ficam no teu dispositivo: a sessão é removida quando terminas sessão, o resto quando apagas os dados do navegador."
+        "body": "A app usa apenas dois cookies, ambos necessários ao acesso e definidos pelo seu próprio servidor: um mantém a tua sessão iniciada (até 30 dias, e é removido quando terminas sessão), o outro dura os dez minutos de um início de sessão. Não há cookies de rastreio. A app guarda também alguns elementos na memória do teu navegador, necessários ao seu funcionamento: o idioma escolhido, voz e velocidade da leitura em voz alta, a personagem com que escreveste da última vez em cada Sala, os avisos sobre os PDF das Salas que fechaste, e um link de convite aberto antes de iniciares sessão. Ficam no teu dispositivo até apagares os dados do navegador."
       }
     }
   },

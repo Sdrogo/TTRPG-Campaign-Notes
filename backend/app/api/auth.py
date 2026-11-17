@@ -101,7 +101,7 @@ def _provider(provider_id: str, locale: str) -> providers.Provider:
 
 
 def _return_origin(value: str | None) -> str | None:
-    return allowed_return_origin(value, settings.cors_origins, settings.cors_origin_regex)
+    return allowed_return_origin(value, settings.cors_origins)
 
 
 def _set_cookie(response: Response, name: str, value: str, max_age: int) -> None:

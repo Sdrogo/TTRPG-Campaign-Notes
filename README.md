@@ -36,20 +36,25 @@ The full spec is [context/requirements.md](context/requirements.md).
 ## Architecture in short
 
 - The **frontend never talks to the database or Storage directly**. It calls the
-  backend with the user's Supabase access token.
+  backend with the user's access token, which the backend itself issues after
+  an OAuth sign-in (Google, Discord or GitHub).
 - The **backend** verifies the token, applies the visibility and ownership rules
   (all in `backend/app/domain/`), and talks to Postgres through SQLAlchemy.
-- **Supabase** provides Postgres, Auth and Storage (images live in a private
-  bucket and are served through short-lived signed links).
+- **Postgres** and **Garage** (an S3 service, for images and PDFs in a private
+  bucket served through short-lived signed links) run next to the backend on
+  each server.
 - Every table is backend-only: Row Level Security is on with a deny policy for
-  Supabase's client roles, as a safety net.
+  the client roles of the Supabase era, as a safety net.
 
 More in [context/architecture.md](context/architecture.md).
 
 ## Running it locally
 
-You need Node 24, Python 3.12 or newer, and a Supabase project (Postgres, Auth
-with at least one provider, and a private Storage bucket named `document-images`).
+You need Node 24, Python 3.12 or newer, a Postgres 17 database, an OAuth app
+for at least one provider (redirect URI
+`http://localhost:8000/auth/<provider>/callback`) and, to upload images, an S3
+service with a private bucket named `document-images` (Garage, as on the
+servers, or any other).
 
 1. **Backend**
 
@@ -58,7 +63,7 @@ with at least one provider, and a private Storage bucket named `document-images`
    python -m venv .venv
    # activate it (.venv\Scripts\activate on Windows, source .venv/bin/activate elsewhere)
    pip install -e ".[dev]"
-   cp .env.example .env        # fill in SUPABASE_URL, SUPABASE_SECRET_KEY, DATABASE_URL
+   cp .env.example .env        # fill in DATABASE_URL, AUTH_TOKEN_SECRET, a provider, S3_*
    alembic upgrade head        # see backend/migrations/README
    uvicorn app.main:app --reload
    ```
@@ -69,7 +74,7 @@ with at least one provider, and a private Storage bucket named `document-images`
    ```bash
    cd frontend
    npm ci
-   cp .env.example .env        # fill in the Supabase URL and publishable key
+   cp .env.example .env        # VITE_API_BASE_URL, http://localhost:8000 by default
    npm run dev
    ```
 
@@ -82,7 +87,7 @@ files before running migrations or tests.
 
 Environment variables are listed in `backend/.env.example` and
 `frontend/.env.example`. `DATABASE_URL` must use the `postgresql+asyncpg://`
-scheme; Supabase's Session Pooler works where the direct host is IPv6-only.
+scheme.
 
 ## Checks
 
@@ -103,17 +108,18 @@ for the conventions.
 
 ## Deployment
 
-The frontend is deployed on Vercel and Supabase hosts the database. There are
-two environments:
+Everything runs on two OVHcloud VPSes, each with Docker behind Caddy (files in
+`deploy/`): the frontend, the backend, Postgres and Garage. There are two
+environments:
 
 - **Production** (branch `main`): the frontend at `https://exlibris.world`, the
-  backend on a VPS at `https://api.exlibris.world` (Docker behind Caddy, files in
-  `deploy/`). After CI passes on `main`, `.github/workflows/deploy-prod.yml`
-  builds the backend image, pushes it to GHCR and deploys it over SSH. Its
-  settings live in `/opt/exlibris/backend.env` on the server.
-- **Staging** (branch `staging`): a Vercel Preview, a Render Docker service and
-  its own Supabase project. Its settings live in the Render and Vercel
-  dashboards.
+  backend at `https://api.exlibris.world`. After CI passes on `main`,
+  `.github/workflows/deploy-prod.yml` builds the backend image and the
+  frontend, pushes the image to GHCR and deploys both over SSH.
+- **Staging** (branch `staging`): the same on the second VPS, at
+  `https://staging.exlibris.world`, deployed by `deploy-staging.yml`.
+
+Each server's settings live in `/opt/exlibris/backend.env` and `.env` there.
 
 Neither environment's settings are in this repo; see
 `context/architecture.md` → Environments, and `context/vps-migration-plan.md`

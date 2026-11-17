@@ -33,6 +33,6 @@ This is a personal project: there is no bug bounty.
 
 In scope: the web app at `exlibris.world` / `www.exlibris.world`, the API at
 `api.exlibris.world`, and the code in this repository. Out of scope: the
-third-party services the app relies on (Supabase, Vercel, OVHcloud,
-Openverse), which have their own reporting channels; denial of service by
+third-party services the app relies on (OVHcloud, Google, Discord,
+GitHub, Openverse), which have their own reporting channels; denial of service by
 volume; reports from automated scanners without a demonstrated impact.

@@ -71,7 +71,6 @@
     "prompt": "Zaloguj się, aby kontynuować.",
     "signInWith": "Zaloguj się przez {{provider}}",
     "privacy": "Prywatność",
-    "signInAgain": "Logowałeś się już wcześniej? Zmieniliśmy sposób logowania, zaloguj się jeszcze raz. Wszystkie twoje pokoje nadal tu są.",
     "signInFailed": "Logowanie się nie powiodło. Spróbuj ponownie."
   },
   "landing": {
@@ -1190,11 +1189,11 @@
       },
       "processors": {
         "title": "Kto je przetwarza i gdzie",
-        "body": "Aplikacja korzysta z tych dostawców, którzy przetwarzają dane w naszym imieniu:\n\n- Supabase: baza danych, przechowywanie plików i logowanie, hostowane w Unii Europejskiej (Frankfurt, Niemcy).\n- OVHcloud: serwer uruchamiający backend aplikacji, w Wielkiej Brytanii, którą Komisja Europejska uznaje za kraj zapewniający odpowiedni poziom ochrony.\n- Vercel: dostarczanie stron aplikacji. Jego sieć może obsługiwać żądania spoza Unii Europejskiej; transfery do Stanów Zjednoczonych opierają się na EU-U.S. Data Privacy Framework i standardowych klauzulach umownych.\n- Google, Discord i GitHub: tylko dla wybranego logowania, zgodnie z ich politykami prywatności.\n- Openverse, projekt WordPress.org: gdy szukasz darmowych obrazów do dokumentu, wyszukiwanie jest wysyłane z naszego serwera, a miniatury są wczytywane przez twoją przeglądarkę bezpośrednio z Openverse, który w ten sposób widzi twój adres IP."
+        "body": "Aplikacja korzysta z tych dostawców, którzy przetwarzają dane w naszym imieniu:\n\n- OVHcloud: serwery, na których działa cała aplikacja (strony, backend, baza danych, przechowywanie plików i logowanie), we Francji (Strasburg). Szyfrowane nocne kopie zapasowe są przechowywane na drugim serwerze OVHcloud w Wielkiej Brytanii, którą Komisja Europejska uznaje za kraj zapewniający odpowiedni poziom ochrony.\n- Supabase: tylko do połowy grudnia 2026 kopia bazy danych i plików sprzed przeniesienia aplikacji na własne serwery (listopad 2026), w Unii Europejskiej (Frankfurt, Niemcy). Potem zostaje usunięta.\n- Google, Discord i GitHub: tylko dla wybranego logowania, zgodnie z ich politykami prywatności.\n- Openverse, projekt WordPress.org: gdy szukasz darmowych obrazów do dokumentu, wyszukiwanie jest wysyłane z naszego serwera, a miniatury są wczytywane przez twoją przeglądarkę bezpośrednio z Openverse, który w ten sposób widzi twój adres IP."
       },
       "retention": {
         "title": "Jak długo je przechowujemy",
-        "body": "- Twoje konto i profil istnieją, dopóki nie usuniesz konta.\n- Gdy usuniesz konto, profil, awatar, znajomi, reakcje, karteczki z Sesji 0 i konto logowania są od razu kasowane. Pokoje z jednym członkiem są usuwane wraz z całą zawartością. W pokojach współdzielonych z innymi to, co napisano, zostaje jako część kampanii i jest pokazywane jako napisane przez nieznanego użytkownika.\n- Pokój, który usuniesz, jest kasowany wraz z całą zawartością.\n- PDF-y pokoi są kasowane 24 godziny po wygenerowaniu, a importy dokumentów 7 dni po zakończeniu.\n- Logi serwerów są przechowywane tylko tak długo, jak jest to potrzebne do działania i bezpieczeństwa, i są nadpisywane cyklicznie.\n- Kopie zapasowe naszych dostawców są nadpisywane w ramach ich cyklu kopii."
+        "body": "- Twoje konto i profil istnieją, dopóki nie usuniesz konta.\n- Gdy usuniesz konto, profil, awatar, znajomi, reakcje, karteczki z Sesji 0 i konto logowania są od razu kasowane. Pokoje z jednym członkiem są usuwane wraz z całą zawartością. W pokojach współdzielonych z innymi to, co napisano, zostaje jako część kampanii i jest pokazywane jako napisane przez nieznanego użytkownika.\n- Pokój, który usuniesz, jest kasowany wraz z całą zawartością.\n- PDF-y pokoi są kasowane 24 godziny po wygenerowaniu, a importy dokumentów 7 dni po zakończeniu.\n- Logi serwerów są przechowywane tylko tak długo, jak jest to potrzebne do działania i bezpieczeństwa, i są nadpisywane cyklicznie.\n- Szyfrowane nocne kopie zapasowe są przechowywane do sześciu miesięcy, a potem usuwane."
       },
       "rights": {
         "title": "Twoje prawa",
@@ -1202,7 +1201,7 @@
       },
       "storage": {
         "title": "Pliki cookie i pamięć lokalna",
-        "body": "Aplikacja nie używa plików cookie. Przechowuje kilka elementów w pamięci twojej przeglądarki, potrzebnych do jej działania: sesję logowania, wybrany język, głos i tempo czytania na głos, postać, którą ostatnio pisano w każdym pokoju, zamknięte komunikaty o PDF-ach pokoi oraz link z zaproszeniem otwarty przed zalogowaniem. Zostają na twoim urządzeniu: sesja jest usuwana po wylogowaniu, reszta po wyczyszczeniu danych przeglądarki."
+        "body": "Aplikacja używa tylko dwóch plików cookie, oba są potrzebne do logowania i ustawia je jej własny serwer: jeden utrzymuje cię zalogowanym (do 30 dni, usuwany po wylogowaniu), drugi działa przez dziesięć minut logowania. Nie ma plików cookie służących do śledzenia. Aplikacja przechowuje też kilka elementów w pamięci twojej przeglądarki, potrzebnych do jej działania: wybrany język, głos i tempo czytania na głos, postać, którą ostatnio pisano w każdym pokoju, zamknięte komunikaty o PDF-ach pokoi oraz link z zaproszeniem otwarty przed zalogowaniem. Zostają na twoim urządzeniu, dopóki nie wyczyścisz danych przeglądarki."
       }
     }
   },

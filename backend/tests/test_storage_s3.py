@@ -1,5 +1,5 @@
 """The bucket on S3 (ticket 73 step 4, Garage): request signing, presigned
-links, and which backend each storage call goes to. The HTTP itself is
+links, and where each storage call goes. The HTTP itself is
 checked live against Garage (context/architecture.md)."""
 
 from collections.abc import Mapping
@@ -21,25 +21,11 @@ def s3(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(settings, "s3_access_key_id", "GKtestkey")
     monkeypatch.setattr(settings, "s3_secret_access_key", "testsecret")
     monkeypatch.setattr(settings, "storage_bucket", "document-images")
-    monkeypatch.setattr(settings, "supabase_url", "https://own.supabase.test")
-
-
-@pytest.fixture
-def supabase(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr(settings, "s3_endpoint", "")
-    monkeypatch.setattr(settings, "s3_public_url", "")
-    monkeypatch.setattr(settings, "supabase_url", "https://own.supabase.test")
-    monkeypatch.setattr(settings, "storage_bucket", "document-images")
+    monkeypatch.setattr(storage, "LEGACY_SUPABASE_URLS", ("https://own.supabase.test",))
 
 
 def query(url: str) -> dict[str, list[str]]:
     return parse_qs(urlsplit(url).query)
-
-
-def test_s3_is_used_only_with_an_endpoint(supabase: None, monkeypatch: pytest.MonkeyPatch) -> None:
-    assert not storage.uses_s3()
-    monkeypatch.setattr(settings, "s3_endpoint", "http://garage:3900")
-    assert storage.uses_s3()
 
 
 def test_requests_are_signed_for_the_internal_endpoint(s3: None) -> None:
@@ -119,10 +105,9 @@ def test_an_own_link_becomes_a_signed_attachment_on_s3(s3: None) -> None:
     ]
 
 
-def test_a_foreign_link_keeps_the_supabase_download_parameter(s3: None) -> None:
-    url = storage.as_download("https://elsewhere.test/f.pdf?token=t", "f.pdf")
-
-    assert url == "https://elsewhere.test/f.pdf?token=t&download=f.pdf"
+def test_a_foreign_link_is_never_made_a_download(s3: None) -> None:
+    with pytest.raises(storage.StorageError):
+        storage.as_download("https://elsewhere.test/f.pdf?token=t", "f.pdf")
 
 
 class Calls:
@@ -134,32 +119,19 @@ class Calls:
         async def s3_upload(path: str, data: bytes, content_type: str) -> None:
             self.seen.append(("s3_upload", path))
 
-        async def supabase_upload(path: str, data: bytes, content_type: str) -> None:
-            self.seen.append(("supabase_upload", path))
-
         async def s3_remove(path: str) -> None:
             self.seen.append(("s3_remove", path))
-
-        async def supabase_remove(path: str) -> None:
-            self.seen.append(("supabase_remove", path))
-
-        async def supabase_sign(paths: list[str], expires_in: int) -> dict[str, str]:
-            self.seen.append(("supabase_sign", *paths))
-            return {}
 
         async def read_limited(url: str, headers: Mapping[str, str], max_bytes: int) -> bytes:
             self.seen.append(("read", url, "Authorization" in headers))
             return b"bytes"
 
         monkeypatch.setattr(storage, "_s3_upload", s3_upload)
-        monkeypatch.setattr(storage, "_supabase_upload", supabase_upload)
         monkeypatch.setattr(storage, "_s3_remove", s3_remove)
-        monkeypatch.setattr(storage, "_supabase_remove", supabase_remove)
-        monkeypatch.setattr(storage, "_supabase_create_signed_urls", supabase_sign)
         monkeypatch.setattr(storage, "_read_limited", read_limited)
 
 
-async def test_calls_go_to_s3_when_it_is_set(s3: None, monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_calls_go_to_s3(s3: None, monkeypatch: pytest.MonkeyPatch) -> None:
     calls = Calls(monkeypatch)
 
     await storage.upload("p", b"x", "image/webp")
@@ -170,25 +142,6 @@ async def test_calls_go_to_s3_when_it_is_set(s3: None, monkeypatch: pytest.Monke
         ("s3_upload", "p"),
         ("s3_remove", "p"),
         ("read", "http://garage:3900/document-images/r/a%20b.webp", True),
-    ]
-
-
-async def test_calls_go_to_supabase_otherwise(
-    supabase: None, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    monkeypatch.setattr(settings, "supabase_secret_key", "key")
-    calls = Calls(monkeypatch)
-
-    await storage.upload("p", b"x", "image/webp")
-    await storage.remove("p")
-    await storage.create_signed_urls(["p"], 60)
-    await storage.download("p", 10)
-
-    assert calls.seen == [
-        ("supabase_upload", "p"),
-        ("supabase_remove", "p"),
-        ("supabase_sign", "p"),
-        ("read", "https://own.supabase.test/storage/v1/object/document-images/p", True),
     ]
 
 
@@ -204,14 +157,3 @@ async def test_the_pdf_job_reads_own_links_inside_the_server(
         ("read", "http://garage:3900/document-images/r/a.webp", True),
         ("read", "https://elsewhere.test/a.webp", False),
     ]
-
-
-async def test_on_supabase_the_pdf_job_fetches_the_link_itself(
-    supabase: None, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    calls = Calls(monkeypatch)
-    url = "https://own.supabase.test/storage/v1/object/sign/document-images/a.webp?token=t"
-
-    await storage.download_signed(url, 10)
-
-    assert calls.seen == [("read", url, False)]

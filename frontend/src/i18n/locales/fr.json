@@ -71,7 +71,6 @@
     "prompt": "Connecte-toi pour continuer.",
     "signInWith": "Se connecter avec {{provider}}",
     "privacy": "Confidentialité",
-    "signInAgain": "Déjà connecté ? Nous avons changé la connexion : connecte-toi encore une fois. Toutes tes Salles sont toujours là.",
     "signInFailed": "La connexion n'a pas abouti. Réessaie."
   },
   "landing": {
@@ -1128,11 +1127,11 @@
       },
       "processors": {
         "title": "Qui les traite, et où",
-        "body": "L'app s'appuie sur ces prestataires, qui traitent les données pour notre compte :\n\n- Supabase : base de données, stockage des fichiers et connexion, hébergés dans l'Union européenne (Francfort, Allemagne).\n- OVHcloud : le serveur qui exécute le backend de l'app, au Royaume-Uni, que la Commission européenne reconnaît comme pays offrant un niveau de protection adéquat.\n- Vercel : diffusion des pages de l'app. Son réseau peut servir des requêtes depuis l'extérieur de l'Union européenne ; les transferts vers les États-Unis reposent sur le EU-U.S. Data Privacy Framework et sur les clauses contractuelles types.\n- Google, Discord et GitHub : uniquement pour la connexion que tu choisis, selon leurs propres politiques.\n- Openverse, un projet de WordPress.org : quand tu cherches des images libres pour un Document, la recherche est envoyée par notre serveur, et les aperçus sont chargés par ton navigateur directement depuis Openverse, qui voit donc ton adresse IP."
+        "body": "L'app s'appuie sur ces prestataires, qui traitent les données pour notre compte :\n\n- OVHcloud : les serveurs sur lesquels tourne toute l'app (pages, backend, base de données, stockage des fichiers et connexion), en France (Strasbourg). Les sauvegardes nocturnes chiffrées sont conservées sur un second serveur OVHcloud au Royaume-Uni, que la Commission européenne reconnaît comme pays offrant un niveau de protection adéquat.\n- Supabase : jusqu'à mi-décembre 2026 seulement, la copie de la base de données et des fichiers d'avant le passage de l'app sur ses propres serveurs (novembre 2026), dans l'Union européenne (Francfort, Allemagne). Elle est ensuite supprimée.\n- Google, Discord et GitHub : uniquement pour la connexion que tu choisis, selon leurs propres politiques.\n- Openverse, un projet de WordPress.org : quand tu cherches des images libres pour un Document, la recherche est envoyée par notre serveur, et les aperçus sont chargés par ton navigateur directement depuis Openverse, qui voit donc ton adresse IP."
       },
       "retention": {
         "title": "Combien de temps nous les conservons",
-        "body": "- Ton compte et ton profil restent tant que tu ne supprimes pas le compte.\n- Quand tu supprimes le compte, le profil, l'avatar, les Amis, les réactions, les post-it de la Session 0 et le compte de connexion sont effacés immédiatement. Les Salles dont tu étais le seul membre sont supprimées avec tout leur contenu. Dans les Salles partagées avec d'autres, ce que tu as écrit reste comme partie de la campagne, affiché comme écrit par un utilisateur inconnu.\n- Une Salle que tu supprimes est effacée avec tout son contenu.\n- Les PDF des Salles sont effacés 24 heures après leur génération, et les imports de Documents 7 jours après leur fin.\n- Les journaux des serveurs sont conservés uniquement le temps nécessaire au fonctionnement et à la sécurité, et sont écrasés en rotation.\n- Les sauvegardes de nos prestataires sont écrasées dans le cadre de leur cycle de sauvegarde."
+        "body": "- Ton compte et ton profil restent tant que tu ne supprimes pas le compte.\n- Quand tu supprimes le compte, le profil, l'avatar, les Amis, les réactions, les post-it de la Session 0 et le compte de connexion sont effacés immédiatement. Les Salles dont tu étais le seul membre sont supprimées avec tout leur contenu. Dans les Salles partagées avec d'autres, ce que tu as écrit reste comme partie de la campagne, affiché comme écrit par un utilisateur inconnu.\n- Une Salle que tu supprimes est effacée avec tout son contenu.\n- Les PDF des Salles sont effacés 24 heures après leur génération, et les imports de Documents 7 jours après leur fin.\n- Les journaux des serveurs sont conservés uniquement le temps nécessaire au fonctionnement et à la sécurité, et sont écrasés en rotation.\n- Les sauvegardes nocturnes chiffrées sont conservées jusqu'à six mois, puis supprimées."
       },
       "rights": {
         "title": "Tes droits",
@@ -1140,7 +1139,7 @@
       },
       "storage": {
         "title": "Cookies et stockage local",
-        "body": "L'app n'utilise pas de cookies. Elle conserve quelques éléments dans la mémoire de ton navigateur, nécessaires à son fonctionnement : la session de connexion, la langue choisie, la voix et la vitesse de la lecture à voix haute, le personnage avec lequel tu as écrit la dernière fois dans chaque Salle, les avis sur les PDF des Salles que tu as fermés, et un lien d'invitation ouvert avant la connexion. Ils restent sur ton appareil : la session est supprimée quand tu te déconnectes, le reste quand tu effaces les données du navigateur."
+        "body": "L'app n'utilise que deux cookies, tous deux nécessaires à la connexion et déposés par son propre serveur : l'un te garde connecté (jusqu'à 30 jours, il est supprimé quand tu te déconnectes), l'autre dure les dix minutes d'une connexion. Il n'y a aucun cookie de suivi. L'app conserve aussi quelques éléments dans la mémoire de ton navigateur, nécessaires à son fonctionnement : la langue choisie, la voix et la vitesse de la lecture à voix haute, le personnage avec lequel tu as écrit la dernière fois dans chaque Salle, les avis sur les PDF des Salles que tu as fermés, et un lien d'invitation ouvert avant la connexion. Ils restent sur ton appareil jusqu'à ce que tu effaces les données du navigateur."
       }
     }
   },

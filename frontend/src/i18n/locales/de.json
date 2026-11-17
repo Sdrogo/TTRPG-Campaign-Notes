@@ -71,7 +71,6 @@
     "prompt": "Melde dich an, um fortzufahren.",
     "signInWith": "Mit {{provider}} anmelden",
     "privacy": "Datenschutz",
-    "signInAgain": "Schon einmal angemeldet? Wir haben die Anmeldung umgestellt, bitte melde dich noch einmal an. Deine Räume sind alle noch da.",
     "signInFailed": "Die Anmeldung hat nicht geklappt. Bitte versuche es noch einmal."
   },
   "landing": {
@@ -1126,11 +1125,11 @@
       },
       "processors": {
         "title": "Wer sie verarbeitet, und wo",
-        "body": "Die App stützt sich auf diese Anbieter, die Daten in unserem Auftrag verarbeiten:\n\n- Supabase: Datenbank, Dateispeicher und Anmeldung, gehostet in der Europäischen Union (Frankfurt, Deutschland).\n- OVHcloud: der Server, auf dem das Backend der App läuft, im Vereinigten Königreich, das die Europäische Kommission als Land mit angemessenem Schutzniveau anerkennt.\n- Vercel: Auslieferung der App-Seiten. Sein Netzwerk kann Anfragen von außerhalb der Europäischen Union bedienen; Übermittlungen in die Vereinigten Staaten stützen sich auf das EU-U.S. Data Privacy Framework und Standardvertragsklauseln.\n- Google, Discord und GitHub: nur für die Anmeldung, die du wählst, nach ihren eigenen Datenschutzerklärungen.\n- Openverse, ein Projekt von WordPress.org: Wenn du nach freien Bildern für ein Dokument suchst, wird die Suche von unserem Server gesendet, und die Vorschauen lädt dein Browser direkt von Openverse, das dadurch deine IP-Adresse sieht."
+        "body": "Die App stützt sich auf diese Anbieter, die Daten in unserem Auftrag verarbeiten:\n\n- OVHcloud: die Server, auf denen die ganze App läuft (Seiten, Backend, Datenbank, Dateispeicher und Anmeldung), in Frankreich (Straßburg). Verschlüsselte nächtliche Backups liegen auf einem zweiten OVHcloud-Server im Vereinigten Königreich, das die Europäische Kommission als Land mit angemessenem Schutzniveau anerkennt.\n- Supabase: nur bis Mitte Dezember 2026 die Kopie der Datenbank und der Dateien aus der Zeit vor dem Umzug der App auf ihre eigenen Server (November 2026), in der Europäischen Union (Frankfurt, Deutschland). Danach wird sie gelöscht.\n- Google, Discord und GitHub: nur für die Anmeldung, die du wählst, nach ihren eigenen Datenschutzerklärungen.\n- Openverse, ein Projekt von WordPress.org: Wenn du nach freien Bildern für ein Dokument suchst, wird die Suche von unserem Server gesendet, und die Vorschauen lädt dein Browser direkt von Openverse, das dadurch deine IP-Adresse sieht."
       },
       "retention": {
         "title": "Wie lange wir sie speichern",
-        "body": "- Dein Konto und dein Profil bleiben bestehen, bis du dein Konto löschst.\n- Wenn du dein Konto löschst, werden Profil, Avatar, Freunde, Reaktionen, Session-0-Post-its und Anmeldekonto sofort gelöscht. Räume, in denen du das einzige Mitglied warst, werden mit allen Inhalten gelöscht. In Räumen, die du mit anderen teilst, bleibt das, was du geschrieben hast, als Teil der Kampagne erhalten und wird als von einem unbekannten Nutzer geschrieben angezeigt.\n- Ein Raum, den du löschst, wird mit allen Inhalten gelöscht.\n- Raum-PDFs werden 24 Stunden nach der Erstellung gelöscht, Dokumentimporte 7 Tage nach ihrem Ende.\n- Server-Logs werden nur so lange aufbewahrt, wie es für Betrieb und Sicherheit nötig ist, und fortlaufend überschrieben.\n- Backups unserer Anbieter werden innerhalb ihres Backup-Zyklus überschrieben."
+        "body": "- Dein Konto und dein Profil bleiben bestehen, bis du dein Konto löschst.\n- Wenn du dein Konto löschst, werden Profil, Avatar, Freunde, Reaktionen, Session-0-Post-its und Anmeldekonto sofort gelöscht. Räume, in denen du das einzige Mitglied warst, werden mit allen Inhalten gelöscht. In Räumen, die du mit anderen teilst, bleibt das, was du geschrieben hast, als Teil der Kampagne erhalten und wird als von einem unbekannten Nutzer geschrieben angezeigt.\n- Ein Raum, den du löschst, wird mit allen Inhalten gelöscht.\n- Raum-PDFs werden 24 Stunden nach der Erstellung gelöscht, Dokumentimporte 7 Tage nach ihrem Ende.\n- Server-Logs werden nur so lange aufbewahrt, wie es für Betrieb und Sicherheit nötig ist, und fortlaufend überschrieben.\n- Verschlüsselte nächtliche Backups werden bis zu sechs Monate aufbewahrt und dann gelöscht."
       },
       "rights": {
         "title": "Deine Rechte",
@@ -1138,7 +1137,7 @@
       },
       "storage": {
         "title": "Cookies und lokaler Speicher",
-        "body": "Die App verwendet keine Cookies. Sie legt einige Einträge im Speicher deines Browsers ab, die sie zum Funktionieren braucht: deine Anmeldesitzung, die gewählte Sprache, Stimme und Geschwindigkeit des Vorlesens, den Charakter, mit dem du zuletzt in jedem Raum geschrieben hast, die von dir geschlossenen Hinweise zu Raum-PDFs und einen Einladungslink, den du vor der Anmeldung geöffnet hast. Sie bleiben auf deinem Gerät: Die Sitzung wird beim Abmelden entfernt, der Rest, wenn du die Browserdaten löschst."
+        "body": "Die App verwendet nur zwei Cookies, beide für die Anmeldung nötig und von ihrem eigenen Server gesetzt: Eines hält dich angemeldet (bis zu 30 Tage, es wird beim Abmelden entfernt), das andere gilt für die zehn Minuten einer Anmeldung. Es gibt keine Tracking-Cookies. Außerdem legt die App einige Einträge im Speicher deines Browsers ab, die sie zum Funktionieren braucht: die gewählte Sprache, Stimme und Geschwindigkeit des Vorlesens, den Charakter, mit dem du zuletzt in jedem Raum geschrieben hast, die von dir geschlossenen Hinweise zu Raum-PDFs und einen Einladungslink, den du vor der Anmeldung geöffnet hast. Sie bleiben auf deinem Gerät, bis du die Browserdaten löschst."
       }
     }
   },

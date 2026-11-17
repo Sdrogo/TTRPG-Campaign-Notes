@@ -78,10 +78,8 @@ untouched.
    - the Google, Discord and GitHub client secrets: new ones from each
      console (the client IDs and redirect URIs stay);
    - no `DATABASE_URL` and no `S3_*` lines: the scripts below write them.
-5. **Images**: `bash garage-setup.sh https://files.exlibris.world`. While
-   Supabase still holds the old bucket (until ticket 73 step 6) this also
-   copies from there; afterwards its copy step reports an error and stops,
-   which is expected: carry on.
+5. **Images**: `bash garage-setup.sh https://files.exlibris.world` (an
+   empty bucket; step 7 fills it).
 6. **Backup access**: from your own computer, the same command as the first
    time:
    ```

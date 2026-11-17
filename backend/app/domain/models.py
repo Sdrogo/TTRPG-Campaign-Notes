@@ -156,7 +156,7 @@ class Document:
 
 @dataclass(frozen=True)
 class DocumentImage:
-    """An image in a Document's gallery, stored in Supabase Storage under
+    """An image in a Document's gallery, stored in the images bucket under
     `storage_path`; only the path lives in Postgres."""
 
     id: uuid.UUID
@@ -173,8 +173,8 @@ class DocumentImage:
 
 @dataclass(frozen=True)
 class DocumentFile:
-    """A PDF Attachment on a Document (D-21, spec 16), stored in Supabase
-    Storage under `storage_path`; only the path lives in Postgres. It has no
+    """A PDF Attachment on a Document (D-21, spec 16), stored in the
+    images bucket under `storage_path`; only the path lives in Postgres. It has no
     visibility of its own: whoever sees the Document sees it (VR-12)."""
 
     id: uuid.UUID
