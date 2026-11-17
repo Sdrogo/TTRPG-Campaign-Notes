@@ -4,11 +4,12 @@ Status: **confirmed 2026-11-16. Step 1 live** (production frontend and API on
 the Strasbourg VPS, 2026-11-16). **Step 2 live** (staging on the Erith VPS,
 2026-11-17). **Step 3 live** 2026-11-17 (own sign-in; PR #337, release
 #338; staging checked by the product owner with linking across providers).
-**Step 4 built** 2026-11-17 (files to Garage on the VPS, PR #342): live once
-the product owner runs `garage-setup.sh` on each server. **Step 4 live**
-2026-11-17 on staging and production, nightly backup running. **Step 5
-detailed 2026-11-17** (section 2, update), waiting for question 9. All questions answered: sign-in A (2026-11-16); files to Garage on
-the production VPS (2026-11-17, replacing "stay on Supabase for now").
+**Step 4 live** 2026-11-17 (files to Garage on both VPSes, PR #342,
+release #343; nightly encrypted backup to the staging VPS running).
+**Step 5 detailed** 2026-11-17 (section 2, update; docs PR #344), waiting for
+the product owner's confirmation. Questions: sign-in A (2026-11-16); files to
+Garage on the production VPS (2026-11-17, replacing "stay on Supabase for
+now"); backup age check through ticket 75 (question 9, 2026-11-17).
 
 ## Goals
 
@@ -174,7 +175,8 @@ migrations; this replaces the backup bullets above where they differ.
   from a given day, restore the files, and rebuild production on a fresh VPS.
   Tried once on staging (restore yesterday's production dump into a throwaway
   database there, check row counts, drop it) before production moves.
-- **Backup age check**: question 9.
+- **Backup age check**: `backup.sh` writes the time of its last success to
+  `backup-last-ok`; the monitoring of ticket 75 reads it (question 9).
 - **Order**: staging first (its own Supabase project, as the rehearsal),
   product owner checks the app, then production.
 - **Rollback**: restore the commented `DATABASE_URL` line and recreate the
@@ -457,14 +459,11 @@ Room PDFs) VPS-3 or VPS-4 is an in-place upgrade away, not a migration; several 
    Supabase database and Auth go about 4 weeks after the last step, keeping a
    final dump; the Supabase project itself stays while it holds the files.
 
-9. **Backup age check** (step 5): if the nightly backup stops working,
-   nothing says so today. Options: (a) leave it to the monitoring of ticket 75
-   (PR #339, not yet answered), which can read the time of the last good
-   backup that `backup.sh` writes; (b) add now a free external "dead man's
-   switch" (e.g. healthchecks.io) that `backup.sh` pings after each success and
-   that emails the product owner when a ping is missing. (b) adds a service
-   that receives no personal data, only the ping. Recommended: **(a)**, with
-   the timestamp written now, so ticket 75 only has to show it.
+9. **Backup age check** (step 5): decided 2026-11-17, **through the
+   monitoring of ticket 75**. Step 5 only makes `backup.sh` write the time of
+   the last good backup; ticket 75 shows it and alerts when it is too old.
+   Rejected: an external dead man's switch (healthchecks.io), one more
+   service for the same job.
 
 ## Out of scope
 
