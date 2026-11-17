@@ -7,10 +7,9 @@ from datetime import UTC, datetime, timedelta
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.security import HTTPAuthorizationCredentials
 from pydantic import BaseModel
 
-from app.auth.dependencies import _bearer_scheme, authenticated_user
+from app.auth.dependencies import CurrentUser, token_user_or_none
 from app.config import settings
 from app.db import admin_stats_repo
 from app.db.session import SessionDep
@@ -24,7 +23,6 @@ from app.domain.admin_stats import (
     is_admin,
     summarize_traffic,
 )
-from app.i18n.dependencies import LocaleDep
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 
@@ -32,18 +30,13 @@ TRAFFIC_DAYS = 7
 
 
 async def require_admin(
-    credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(_bearer_scheme)],
-    locale: LocaleDep,
+    caller: Annotated[CurrentUser | None, Depends(token_user_or_none)],
 ) -> str:
     """The caller's id when they are an admin; 404 for anyone else, a
     missing or invalid token included, so an anonymous probe can't tell the
     route from one that doesn't exist. Ignores `X-View-As`: the page is
     about the app, not a Room."""
-    try:
-        caller = authenticated_user(credentials, locale)
-    except HTTPException as error:
-        raise HTTPException(status.HTTP_404_NOT_FOUND) from error
-    if not is_admin(caller.id, settings.admin_user_ids):
+    if caller is None or not is_admin(caller.id, settings.admin_user_ids):
         raise HTTPException(status.HTTP_404_NOT_FOUND)
     return caller.id
 

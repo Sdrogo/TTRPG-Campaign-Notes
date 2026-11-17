@@ -153,7 +153,9 @@ services:
 
   # The only service with the Docker socket. Read-only API: containers
   # (list, inspect, logs, stats), events, info, version. POST=0 refuses
-  # every write. Published on 127.0.0.1 for the Beszel agent, which runs in
+  # every write. Inspect shows each container's environment, secrets
+  # included: accepted by the product owner (ticket 75 Question 7), which is
+  # why only Dozzle (its network) and the host's loopback reach it. Published on 127.0.0.1 for the Beszel agent, which runs in
   # the host's network.
   docker-proxy:
     image: tecnativa/docker-socket-proxy:v0.5.0
@@ -167,6 +169,9 @@ services:
       POST: "0"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
+    # Its own network, shared only with Dozzle: the backend, Caddy and the
+    # other services can't reach it.
+    networks: [docker-api]
     ports:
       - "127.0.0.1:2375:2375"
     restart: unless-stopped
@@ -204,6 +209,7 @@ services:
       DOZZLE_NO_ANALYTICS: "true"
       DOZZLE_ENABLE_ACTIONS: "false"
       DOZZLE_ENABLE_SHELL: "false"
+    networks: [docker-api]
     ports:
       - "127.0.0.1:8081:8080"
     volumes:
@@ -239,6 +245,10 @@ services:
       - uptime_kuma_data:/app/data
     restart: unless-stopped
     logging: *logging
+
+networks:
+  # docker-proxy and Dozzle only (ticket 75), away from the app's network.
+  docker-api:
 
 volumes:
   # The database. Dumped every night by backup.sh to the other VPS.
