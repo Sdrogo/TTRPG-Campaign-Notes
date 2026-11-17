@@ -146,7 +146,10 @@ and ~1 GB+ for error tracking alone; the Admin page's error list covers it.
    - Backend logs become one JSON line per event (time, level, logger,
      message, request id, route template, status, duration) so Dozzle
      can filter by field. No request bodies, no tokens, no user content;
-     the user id only on errors, never the email.
+     the user id only on errors, never the email. Exception messages and
+     tracebacks can embed values (an email in a constraint error, a Room
+     title, SQL parameters), so they stay in the container log only, which
+     rotates within weeks (Risks), and never reach a database table.
    - Caddy gets an access log for the API host only, JSON to stdout, with
      the client IP **truncated** (last octet / last 80 bits zeroed) and the
      `Authorization` and `Cookie` headers dropped.
@@ -183,15 +186,17 @@ and ~1 GB+ for error tracking alone; the Admin page's error list covers it.
      per route group (rooms, documents, maps, session zero, imports,
      exports, auth), last 7 days.
    - **Errors**: the last 100 server errors (time, route template, status,
-     exception type and message, request id to find the full log in
-     Dozzle). No request body, no user content.
+     exception type, request id to find the full log in Dozzle). No
+     exception message, no request body, no user content.
    - **Jobs**: PDF exports and imports running, failed in the last 7 days.
    - Counts only, never content: the page shows no Room or Document names,
      no emails, no per-user list (privacy notice unchanged; spec 31).
    - Backend: a middleware times each request and adds it to hourly
      buckets in memory (per route group: count, 4xx, 5xx, a latency
      histogram), flushed every minute to `request_stats_hourly`; unhandled
-     exceptions go to `error_events`. Retention 90 days for stats, 30 for
+     exceptions go to `error_events` with only time, route template,
+     status, exception class name and request id (no message: it can
+     carry personal data). Retention 90 days for stats, 30 for
      errors, cleaned by the existing sweeper. Exact with one uvicorn
      process; when ticket 73's "several workers" ticket lands, each worker
      flushes its own rows and the page sums them (no shared counters
@@ -224,7 +229,8 @@ of both. Each unit goes to staging first, as usual.
 - 75_3: middleware buckets (route templates, not raw paths; 5xx counted;
   flush), retention cleanup, admin gate (404 for a non-admin, for a missing
   setting, and for an admin id with a typo), each statistic against seeded
-  rows, no personal fields in any response; frontend page states (loading,
+  rows, no personal fields in any response, an exception whose message
+  holds an email leaves no trace of it in `error_events`; frontend page states (loading,
   error, empty database) and the menu entry shown only to admins.
 
 ## Risks
