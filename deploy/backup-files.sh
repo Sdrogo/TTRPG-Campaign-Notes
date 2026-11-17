@@ -1,7 +1,10 @@
 #!/usr/bin/env bash
 # The nightly backup of the images bucket (ticket 73 step 4): a full copy
 # into the other VPS's Garage, one folder per day, under
-# <bucket>/files/<YYYY-MM-DD>/. Files unchanged since the newest copy are
+# <bucket>/files/<YYYY-MM-DD>/, encrypted (rclone crypt: contents encrypted,
+# names kept, so days can be listed and pruned). The password is made on the
+# first run, in backup-password next to this script: keep a copy in the
+# password manager, since without it the copies can't be read. Files unchanged since the newest copy are
 # copied inside the target server (rclone --copy-dest), so only what is new
 # crosses the network. Kept: the 7 newest days, the 4 newest Sundays and
 # the 6 newest first days of a month. Step 5 adds the database dump.
@@ -12,9 +15,9 @@
 #   bash backup-files.sh install  every night at 03:30 (server time), from
 #                                 this user's crontab; logs to
 #                                 backup-files.log
-# Restore (on the server whose Garage lost its objects):
-#   rclone sync target:<bucket>/files/<day>/ source:document-images
-# with the same settings as below.
+# Restore (on the server whose Garage lost its objects): the same settings
+# as below, then
+#   rclone sync safe:<day>/ source:document-images
 set -euo pipefail
 cd "$(dirname "$0")"
 
@@ -29,6 +32,11 @@ fi
 # shellcheck source=/dev/null
 source backup.env
 : "${BACKUP_S3_URL:?}" "${BACKUP_BUCKET:?}" "${BACKUP_ACCESS_KEY_ID:?}" "${BACKUP_SECRET_ACCESS_KEY:?}"
+
+if [ ! -s backup-password ]; then
+  (umask 077 && openssl rand -base64 32 > backup-password)
+  echo "new backup password in $PWD/backup-password: copy it to the password manager"
+fi
 
 garage() { docker compose exec -T garage /garage "$@" 2>/dev/null; }
 # A key of this server's Garage that can only read the bucket, made on the
@@ -59,18 +67,24 @@ RCLONE_CONFIG_TARGET_REGION=garage
 RCLONE_CONFIG_TARGET_FORCE_PATH_STYLE=true
 RCLONE_CONFIG_TARGET_ACCESS_KEY_ID=$BACKUP_ACCESS_KEY_ID
 RCLONE_CONFIG_TARGET_SECRET_ACCESS_KEY=$BACKUP_SECRET_ACCESS_KEY
+RCLONE_CONFIG_SAFE_TYPE=crypt
+RCLONE_CONFIG_SAFE_REMOTE=target:$BACKUP_BUCKET/files
+RCLONE_CONFIG_SAFE_FILENAME_ENCRYPTION=off
+RCLONE_CONFIG_SAFE_DIRECTORY_NAME_ENCRYPTION=false
 SETTINGS
 rclone() {
-  docker run --rm --network "$network" --env-file "$settings" rclone/rclone:1.71.0 "$@"
+  docker run --rm -i --network "$network" --env-file "$settings" rclone/rclone:1.71.0 -q "$@"
 }
+# rclone wants the password in its own obscured form.
+echo "RCLONE_CONFIG_SAFE_PASSWORD=$(rclone obscure - < backup-password)" >> "$settings"
 
-root="target:$BACKUP_BUCKET/files"
+root="safe:"
 today="$(date -u +%F)"
-newest="$(rclone lsf --dirs-only "$root/" 2>/dev/null | tr -d / | grep -vx "$today" | sort | tail -n 1 || true)"
+newest="$(rclone lsf --dirs-only "$root" 2>/dev/null | tr -d / | grep -vx "$today" | sort | tail -n 1 || true)"
 copy_dest=()
-[ -n "$newest" ] && copy_dest=(--copy-dest "$root/$newest/")
-rclone sync "source:document-images" "$root/$today/" "${copy_dest[@]}" --stats-one-line --stats 0
-echo "$(date -u +%FT%TZ) files copied to $root/$today/"
+[ -n "$newest" ] && copy_dest=(--copy-dest "$root$newest/")
+rclone sync "source:document-images" "$root$today/" "${copy_dest[@]}"
+echo "$(date -u +%FT%TZ) files copied to $BACKUP_BUCKET/files/$today/"
 
 # The days to keep, from the days present (one per line, any order): the 7
 # newest, the 4 newest Sundays and the 6 newest first days of a month.
@@ -86,12 +100,12 @@ keep_days() {
       if (keep) print
     }'
 }
-days="$(rclone lsf --dirs-only "$root/" | tr -d / | grep -E '^[0-9]{4}-[0-9]{2}-[0-9]{2}$' || true)"
+days="$(rclone lsf --dirs-only "$root" | tr -d / | grep -E '^[0-9]{4}-[0-9]{2}-[0-9]{2}$' || true)"
 keep="$(keep_days <<<"$days")"
 while read -r day; do
   [ -n "$day" ] || continue
   if ! grep -qx "$day" <<<"$keep"; then
-    rclone purge "$root/$day/"
+    rclone purge "$root$day/"
     echo "removed the copy of $day"
   fi
 done <<<"$days"

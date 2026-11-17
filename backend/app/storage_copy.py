@@ -149,4 +149,6 @@ async def main() -> int:  # pragma: no cover - real Storage HTTP only
 
 if __name__ == "__main__":  # pragma: no cover
     logging.basicConfig(level=logging.INFO)
+    # One line per request would bury the summary.
+    logging.getLogger("httpx").setLevel(logging.WARNING)
     sys.exit(asyncio.run(main()))

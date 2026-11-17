@@ -4,7 +4,8 @@ Status: **confirmed 2026-11-16. Step 1 live** (production frontend and API on
 the Strasbourg VPS, 2026-11-16). **Step 2 live** (staging on the Erith VPS,
 2026-11-17). **Step 3 live** 2026-11-17 (own sign-in; PR #337, release
 #338; staging checked by the product owner with linking across providers).
-Next: step 4 (files to Garage on the VPS, decided 2026-11-17), then step 5
+**Step 4 built** 2026-11-17 (files to Garage on the VPS, PR #342): live once
+the product owner runs `garage-setup.sh` on each server. Next: step 5
 (database). All questions answered: sign-in A (2026-11-16); files to Garage on
 the production VPS (2026-11-17, replacing "stay on Supabase for now").
 
@@ -364,8 +365,9 @@ Room PDFs) VPS-3 or VPS-4 is an in-place upgrade away, not a migration; several 
   which has an EU adequacy decision. The privacy notice and the GDPR dossier
   list where data lives and who processes it, so both are updated in step 6
   (fewer processors: Supabase and Vercel leave the list).
-- **Disk**: production's 75 GB (staging's 40 GB) holds the database and Docker images; files and backups are
-  off the disk, so it is not a near-term limit. The `/health` cron can alert on
+- **Disk**: production's 75 GB (staging's 40 GB) holds the database, Docker
+  images and, since step 4, the files (80 MB in 2026-11) and on staging their
+  backup copies, so it is not a near-term limit. The `/health` cron can alert on
   free space.
 
 ## Questions for the product owner
