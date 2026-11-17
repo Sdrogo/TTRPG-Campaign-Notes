@@ -198,14 +198,17 @@ jobs:
           scp -i ~/.ssh/deploy_key deploy/compose.yaml deploy/migrate.sh migrations.tgz "$TARGET:/opt/exlibris/"
           ssh -i ~/.ssh/deploy_key "$TARGET" "bash /opt/exlibris/migrate.sh $SHA"
 
-      # compose.yaml, the Caddyfile and deploy.sh come from this commit, so
-      # the server always runs the versions in the repository.
+      # compose.yaml, the Caddyfile, Garage's settings and the scripts come
+      # from this commit, so the server always runs the versions in the
+      # repository.
       - name: Deploy on the VPS
         env:
           SHA: ${{ steps.commit.outputs.sha }}
           TARGET: ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}
         run: |
-          files=(deploy/compose.yaml deploy/Caddyfile deploy/deploy.sh deploy/migrate.sh)
+          files=(deploy/compose.yaml deploy/Caddyfile deploy/deploy.sh deploy/migrate.sh
+            deploy/garage.toml deploy/garage-setup.sh deploy/backup-target-setup.sh
+            deploy/backup-files.sh)
           [ -f frontend.tgz ] && files+=(frontend.tgz)
           scp -i ~/.ssh/deploy_key "${files[@]}" "$TARGET:/opt/exlibris/"
           ssh -i ~/.ssh/deploy_key "$TARGET" "bash /opt/exlibris/deploy.sh $SHA"

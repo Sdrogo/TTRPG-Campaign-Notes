@@ -4,7 +4,7 @@ import json
 import re
 from typing import Annotated
 
-from pydantic import field_validator
+from pydantic import field_validator, model_validator
 from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 
@@ -15,10 +15,22 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
     # Supabase Storage only (the images bucket); sign-in left Supabase in
-    # ticket 73 step 3.
+    # ticket 73 step 3. Still read once the bucket is on S3: by the copy
+    # (`python -m app.storage_copy`), by old links in exports, and for a
+    # rollback.
     supabase_url: str = ""
     supabase_secret_key: str = ""
     storage_bucket: str = "document-images"
+    # The bucket on S3 (ticket 73 step 4: Garage on the VPS). Set, it
+    # replaces Supabase Storage. `s3_endpoint` is where the backend talks to
+    # it (`http://garage:3900`, inside the compose network);
+    # `s3_public_url` is the host browsers fetch signed links from
+    # (`https://files.exlibris.world`, through Caddy).
+    s3_endpoint: str = ""
+    s3_public_url: str = ""
+    s3_region: str = "garage"
+    s3_access_key_id: str = ""
+    s3_secret_access_key: str = ""
     # NoDecode: parsed by `_parse_cors_origins` below instead of as JSON, so
     # a plain or comma-separated value from a hosting dashboard also works.
     cors_origins: Annotated[list[str], NoDecode] = ["http://localhost:5173"]
@@ -60,6 +72,20 @@ class Settings(BaseSettings):
     discord_client_secret: str = ""
     github_client_id: str = ""
     github_client_secret: str = ""
+
+    @model_validator(mode="after")
+    def _check_s3(self) -> "Settings":
+        """An S3 endpoint without its public host or key would only fail on
+        the first upload or image: refuse to start instead."""
+        if self.s3_endpoint:
+            missing = [
+                name.upper()
+                for name in ("s3_public_url", "s3_access_key_id", "s3_secret_access_key")
+                if not getattr(self, name)
+            ]
+            if missing:
+                raise ValueError(f"S3_ENDPOINT is set but {', '.join(missing)} is not")
+        return self
 
     @field_validator("cors_origin_regex", mode="before")
     @classmethod
