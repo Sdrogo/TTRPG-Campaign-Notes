@@ -2,8 +2,9 @@
 
 Status: **confirmed 2026-11-16. Step 1 live** (production frontend and API on
 the Strasbourg VPS, 2026-11-16). **Step 2 live** (staging on the Erith VPS,
-2026-11-17). **Step 3 built** 2026-11-17 (own sign-in, PR into staging),
-waiting for the OAuth consoles and `backend.env` settings. All questions
+2026-11-17). **Step 3 live** 2026-11-17 (own sign-in; PR #337, release
+#338; staging checked by the product owner with linking across providers).
+Next: step 5 (database), step 4 still postponed. All questions
 answered 2026-11-16 (sign-in A, files stay on Supabase for now).
 
 ## Goals
