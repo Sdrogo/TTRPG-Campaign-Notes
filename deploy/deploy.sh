@@ -1,13 +1,14 @@
 #!/usr/bin/env bash
 # Deploys one backend image on the VPS and waits until it is healthy.
-# Run by .github/workflows/deploy-prod.yml over SSH from /opt/exlibris:
+# Run by .github/workflows/deploy-vps.yml (for production and staging) over
+# SSH from /opt/exlibris:
 #   bash deploy.sh <image tag>
 # By hand, to roll back to the previous image (and its frontend):
 #   cd /opt/exlibris && bash deploy.sh "$(cat .backend_tag.previous)"
 #
 # The frontend (ticket 73) comes as frontend.tgz, copied here by the workflow
 # and built from the same commit as the image. It is unpacked into
-# site/releases/<tag> and goes live only once the backend is healthy, by
+# site/releases/<tag>-<time> and goes live only once the backend is healthy, by
 # replacing the site/current link in one rename, so a visitor never gets half
 # a build.
 set -euo pipefail
@@ -23,17 +24,27 @@ set_tag() {
 }
 touch .env
 mkdir -p site/releases
-# Deploying the commit that is already live again keeps its folder as it is.
-if [ -f frontend.tgz ] && [ "$(readlink site/current || true)" != "releases/$tag" ]; then
-  rm -rf "site/releases/$tag"
-  mkdir "site/releases/$tag"
-  tar -xzf frontend.tgz -C "site/releases/$tag"
-fi
-rm -f frontend.tgz
+# frontend.tgz belongs to this run only: never left, even by a failure, for
+# a later run (a rollback by hand) to pick up.
+trap 'rm -f frontend.tgz' EXIT
 previous="$(sed -n 's/^BACKEND_TAG=//p' .env)"
 
 # Pulled before .env changes: a failed pull leaves everything as it was.
 BACKEND_TAG="$tag" docker compose pull backend
+
+# Each build gets its own folder, <tag>-<time>, so even a redeploy of the
+# live commit (with other VITE_* values) never touches the folder being
+# served; it goes live below, once the backend is healthy.
+build=
+if [ -f frontend.tgz ]; then
+  build="$tag-$(date +%s)"
+  # Under a temporary name until complete: a failed unpack leaves nothing a
+  # rollback could pick up (the next deploy clears it).
+  rm -rf site/releases/*.partial
+  mkdir "site/releases/$build.partial"
+  tar -xzf frontend.tgz -C "site/releases/$build.partial"
+  mv "site/releases/$build.partial" "site/releases/$build"
+fi
 
 # From here on, any failure (`up`, the Caddy reload, the health check) puts
 # the last healthy image back, so neither a reboot nor the next deploy's
@@ -41,6 +52,7 @@ BACKEND_TAG="$tag" docker compose pull backend
 # On a first deploy there is nothing to restore: the pin is just removed.
 restore() {
   set_tag "$previous"
+  if [ -n "$build" ]; then rm -rf "site/releases/$build"; fi
   if [ -n "$previous" ]; then
     echo "deploy of $tag failed; restoring $previous" >&2
     docker compose up -d backend || true
@@ -68,10 +80,15 @@ if [ "$status" != healthy ]; then
 fi
 trap - ERR
 
-# The frontend of this commit goes live. A rollback to a commit whose build
-# was pruned keeps the frontend that is live now, and says so.
-if [ -f "site/releases/$tag/index.html" ]; then
-  ln -sfn "releases/$tag" site/current.new
+# The frontend of this commit goes live. A rollback takes the newest build
+# kept for that commit; if it was pruned, the live frontend stays, and the
+# script says so.
+if [ -z "$build" ]; then
+  # (`<tag>` alone: the layout of the first deploys, 2026-11-16.)
+  build="$(ls -1t site/releases | grep -E "^$tag(-[0-9]+)?$" | head -n 1 || true)"
+fi
+if [ -n "$build" ] && [ -f "site/releases/$build/index.html" ]; then
+  ln -sfn "releases/$build" site/current.new
   mv -T site/current.new site/current
 else
   echo "no frontend build for $tag; the live frontend is unchanged" >&2

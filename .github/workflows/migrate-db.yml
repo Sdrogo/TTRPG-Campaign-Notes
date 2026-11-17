@@ -1,0 +1,80 @@
+name: Migrate database
+
+# The manual button for the Alembic migrations (ticket 74): Actions → Migrate
+# database → Run workflow, pick the environment and the branch or commit
+# whose migrations to run. For the cases the `db-migration` label doesn't
+# cover, like migrating staging before its PR is merged. Runs on the VPS
+# (deploy/migrate.sh) with the backend image deployed there, so the database
+# URL never leaves the server.
+#
+# Production waits for an approval when the GitHub environment
+# `migrate-production-approval` has a required reviewer (Settings →
+# Environments); staging never waits. Uses the deploy secrets of
+# `vps-production` / `vps-staging`.
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Where to run the migrations
+        required: true
+        type: choice
+        options: [staging, production]
+      ref:
+        description: Branch or commit whose migrations to run (default the environment's branch)
+        required: false
+
+# Never next to a deploy of the same server.
+concurrency:
+  group: ${{ inputs.environment == 'production' && 'deploy-prod' || 'deploy-staging' }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  approve:
+    name: Approve the production migration
+    if: inputs.environment == 'production'
+    runs-on: ubuntu-latest
+    environment: migrate-production-approval
+    steps:
+      - run: echo "approved by ${{ github.actor }}"
+
+  migrate:
+    name: Run the migrations
+    needs: approve
+    if: >-
+      always() &&
+      (needs.approve.result == 'success' || needs.approve.result == 'skipped')
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment == 'production' && 'vps-production' || 'vps-staging' }}
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          ref: ${{ inputs.ref || (inputs.environment == 'production' && 'main' || 'staging') }}
+          persist-credentials: false
+
+      - name: Set up SSH
+        env:
+          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+          VPS_KNOWN_HOSTS: ${{ secrets.VPS_KNOWN_HOSTS }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$VPS_SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          printf '%s\n' "$VPS_KNOWN_HOSTS" > ~/.ssh/known_hosts
+
+      # No tag: the image deployed on that server now. compose.yaml is not
+      # copied, so the server keeps the one of its last deploy.
+      - name: Run the migrations on the VPS
+        env:
+          TARGET: ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}
+        run: |
+          tar -czf migrations.tgz -C backend migrations alembic.ini
+          scp -i ~/.ssh/deploy_key deploy/migrate.sh migrations.tgz "$TARGET:/opt/exlibris/"
+          ssh -i ~/.ssh/deploy_key "$TARGET" "bash /opt/exlibris/migrate.sh"
+
+      - name: Remove the SSH key
+        if: always()
+        run: rm -f ~/.ssh/deploy_key

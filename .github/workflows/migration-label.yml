@@ -1,0 +1,30 @@
+name: Migration label
+
+# Ticket 74, decision 5: a PR that adds or changes a migration must say whether
+# it migrates, with the `db-migration` label. With the label, the deploy after
+# the merge runs `alembic upgrade head` before switching the backend
+# (deploy-vps.yml); without it nothing would migrate and the new backend could
+# start against an old schema. Adding or removing the label re-runs this check.
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, labeled, unlabeled]
+    paths:
+      - backend/migrations/versions/**
+
+permissions: {}
+
+jobs:
+  label:
+    name: db-migration label
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check the label
+        env:
+          HAS_LABEL: ${{ contains(github.event.pull_request.labels.*.name, 'db-migration') }}
+        run: |
+          if [ "$HAS_LABEL" = "true" ]; then
+            echo "db-migration label present: the deploy after the merge runs the migrations."
+          else
+            echo "::error::This PR changes backend/migrations/versions/. Add the db-migration label, or remove the migration."
+            exit 1
+          fi

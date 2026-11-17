@@ -2,8 +2,8 @@
 
 Status: **confirmed 2026-11-16, step 1 built** (frontend served by Caddy,
 `deploy-prod.yml` builds and ships it; switched in by the product owner on the
-new Strasbourg VPS). Steps 3 and 4 wait for the answers to questions 1, 2
-and 4 at the end.
+new Strasbourg VPS). All questions answered 2026-11-16 (sign-in A, files
+stay on Supabase for now).
 
 ## Goals
 
@@ -253,8 +253,8 @@ keeps running between steps.
 
 | # | Step | Claude build time | Downtime in production | Product owner's part |
 |---|---|---|---|---|
-| 1 | New production VPS (OVH VPS-2, Strasbourg): same setup as today's (Docker, Caddy, deploy workflow pointed at it), plus the frontend served by Caddy (`vercel.json` headers move to the Caddyfile); API and frontend switched to it | ~1.5 h | none (DNS switch, TTL 300; old box and Vercel keep serving meanwhile) | order and harden the new VPS (same steps as 2026-10-08), GitHub secrets, DNS switch; delete the Vercel project after a quiet week. **Built 2026-11-16**: `deploy/Caddyfile` `{$FRONTEND_HOSTS}` site, `deploy.sh` (`site/releases/<sha>`, `site/current`), `deploy-prod.yml` (frontend build, `CHECK_*_HOST`) |
-| 2 | Current VPS-1 turned into staging (frontend, backend, Postgres, deploy on `staging`); still using the staging Supabase Auth and Storage | ~1 h | none | DNS records for the two staging names; staging `backend.env`; then Render staging can go |
+| 1 | New production VPS (OVH VPS-2, Strasbourg): same setup as today's (Docker, Caddy, deploy workflow pointed at it), plus the frontend served by Caddy (`vercel.json` headers move to the Caddyfile); API and frontend switched to it | ~1.5 h | none (DNS switch, TTL 300; old box and Vercel keep serving meanwhile) | order and harden the new VPS (same steps as 2026-10-08), GitHub secrets, DNS switch; delete the Vercel project after a quiet week. **Built 2026-11-16**: `deploy/Caddyfile` `{$FRONTEND_HOSTS}` site, `deploy.sh` (`site/releases/<sha>-<time>`, `site/current`), `deploy-prod.yml` (frontend build, `CHECK_*_HOST`) |
+| 2 | Current VPS-1 turned into staging (frontend, backend, Postgres, deploy on `staging`); still using the staging Supabase Auth and Storage | ~1 h | none | DNS records for the two staging names; staging `backend.env`; then Render staging can go. **Built 2026-11-16** without Postgres: staging keeps the staging Supabase database until step 5, which moves staging's database first as its rehearsal. `deploy-vps.yml` (shared), `deploy-staging.yml`, Caddy 413 CORS for the staging origin |
 | 3 | Sign-in in the backend (option A) | ~3–4 h incl. tests | none; every user is signed out once | OAuth consoles: new redirect URIs, client secrets in both `backend.env`; run the migration on staging, then prod |
 | 4 | Files to object storage, plus the copy script (lists Supabase objects, copies each, checks size; safe to re-run, only copies what is missing) | ~1.5 h | none: copy, deploy, copy again for anything uploaded meanwhile | create the buckets and keys at OVH |
 | 5 | Database to the VPS, plus nightly encrypted off-site backups and the restore runbook | ~1.5 h | **~15–30 min** maintenance (API answers 503 while `pg_dump` / `pg_restore` of ~46 MB runs) | run the dump/restore at a quiet hour with the runbook |
@@ -313,23 +313,28 @@ Room PDFs) VPS-3 or VPS-4 is an in-place upgrade away, not a migration; several 
 
 ## Questions for the product owner
 
-1. **Sign-in**: A (our own, in the backend), recommended, or B (self-hosted
-   Supabase Auth, no frontend change)?
-2. **Files**: OVH Object Storage (recommended), another S3 provider, or the VPS
-   disk?
+1. **Sign-in**: decided 2026-11-16, **A** (our own, in the backend).
+2. **Files**: decided 2026-11-16, **stay on Supabase Storage for now**, move
+   later if needed (step 4 postponed). Supabase stays for files only, on the
+   Free plan (1 GB, 98 MB used): watch the free-plan pause for inactivity
+   once its database is no longer used, and the backups of step 5 must then
+   also cover the bucket.
 3. **Production VPS**: decided and ordered, OVH VPS-2 in Strasbourg, Debian 13 (2026-11-16). (Decided: current VPS-1 becomes
    staging, a bigger one runs production.)
-4. **Account linking by verified email** across providers, like Supabase
-   does today (recommended), or one account per provider identity?
-5. **Everyone signed out once** at the sign-in switch: fine with a short
-   notice on the landing page, or no notice?
-6. **Backup retention**: 7 daily, 4 weekly, 6 monthly, encrypted, on the
-   staging VPS (OVH, Erith) and in the object storage (recommended)? Where should the decryption key be kept besides
-   the VPS (it must not live only there)?
-7. **Order**: as above (new production VPS with the frontend, staging on the
-   current VPS, sign-in, files, database), or the database earlier?
-8. **Decommissioning**: delete the Supabase projects, Render and Vercel about
-   4 weeks after the last step, keeping a final dump (recommended)?
+4. **Account linking by verified email**: decided 2026-11-16, **yes**, like
+   Supabase today.
+5. **Everyone signed out once** at the sign-in switch: decided 2026-11-16,
+   **with a short notice** on the landing page.
+6. **Backup retention**: decided 2026-11-16, **7 daily, 4 weekly, 6
+   monthly**, encrypted, on the staging VPS and in off-site storage; older
+   copies are deleted automatically so storage stays bounded. The decryption
+   key also lives in the product owner's password manager. With files staying
+   on Supabase Storage (2), the backups cover the bucket too.
+7. **Order**: decided 2026-11-16, as planned: staging (done), sign-in, then
+   the database; files later, only if needed.
+8. **Decommissioning**: decided 2026-11-16, **yes**: Render, Vercel and the
+   Supabase database and Auth go about 4 weeks after the last step, keeping a
+   final dump; the Supabase project itself stays while it holds the files.
 
 ## Out of scope
 
