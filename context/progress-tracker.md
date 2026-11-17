@@ -41,12 +41,12 @@ Full history is archived; read it only when you need that detail:
 
 ## Migrations and Releases
 
-Alembic migrations are **not** applied on deploy: the product owner applies
-them by hand (`alembic upgrade head` with the matching env file loaded,
-`architecture.md` → Local env files and → Environments). Staging gets a
-migration before its PR merges into `staging`; production gets it before the
-release to `main` that ships it. Before any release, list what is pending
-here and remind the product owner.
+Since 2026-11-17 (ticket 74, staging on its VPS) migrations run from GitHub
+Actions: a PR merged with the `db-migration` label migrates staging, the
+release PR with the label migrates production, and Actions → *Migrate
+database* runs them on demand (`architecture.md` → Environments). Before any
+release, list what is pending here and remind the product owner to label the
+release PR.
 
 - **Head in the repository**: `e7b3d9a1c5f2` (relation color legend, spec 68).
 - **Staging database**: `e7b3d9a1c5f2 (head)`, applied 2026-11-09 with
