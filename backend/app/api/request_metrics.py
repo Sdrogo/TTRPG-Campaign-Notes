@@ -54,7 +54,9 @@ class RequestMetricsMiddleware:
         request_id = new_request_id()
         token = request_id_var.set(request_id)
         started = time.perf_counter()
-        status = 500
+        # 0 until a response starts: a request the client abandoned before
+        # that is neither counted nor stored as an error.
+        status = 0
 
         async def send_with_id(message: Message) -> None:
             nonlocal status
@@ -86,9 +88,15 @@ class RequestMetricsMiddleware:
         route = scope.get("route")
         template: str | None = getattr(route, "path", None)
         method = str(scope.get("method", ""))
+        if status == 0:
+            return
         request_stats.stats.record(now, template, status, duration_ms)
         group = route_group(template)
-        if status >= 500:
+        # A health check's deliberate 503 (database down, stale backup) is
+        # counted and logged, but not stored as an error event: the uptime
+        # monitor asks every minute and would push the real errors out of
+        # the Admin page's list.
+        if status >= 500 and (exc_type is not None or group not in _QUIET_GROUPS):
             request_stats.record_error(
                 ErrorEvent(
                     occurred_at=now,

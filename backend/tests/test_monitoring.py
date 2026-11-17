@@ -1,6 +1,7 @@
 """Ticket 75: request statistics, JSON logs, the readiness check and the
 Admin page's API."""
 
+import asyncio
 import json
 import logging
 import sys
@@ -326,6 +327,32 @@ async def test_non_http_scopes_pass_through() -> None:
     await middleware({"type": "lifespan"}, None, None)  # type: ignore[arg-type]
     assert seen == ["lifespan"]
     assert request_stats.stats.take() == {}
+
+
+async def test_a_request_abandoned_before_its_response_is_not_counted() -> None:
+    async def inner(scope: dict[str, object], receive: object, send: object) -> None:
+        raise asyncio.CancelledError
+
+    middleware = request_metrics.RequestMetricsMiddleware(inner)  # type: ignore[arg-type]
+    with pytest.raises(asyncio.CancelledError):
+        await middleware({"type": "http", "method": "GET"}, None, None)  # type: ignore[arg-type]
+    assert request_stats.stats.take() == {}
+    assert request_stats.pending_errors == []
+
+
+async def test_a_health_checks_503_is_counted_but_not_stored_as_an_error(
+    client: AsyncClient, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+) -> None:
+    def broken() -> object:
+        raise ConnectionError("no database")
+
+    monkeypatch.setattr(session_module, "async_session_factory", broken)
+    with caplog.at_level(logging.INFO, logger="app.request"):
+        assert (await client.get("/health/ready")).status_code == 503
+    assert request_stats.pending_errors == []
+    taken = request_stats.stats.take()
+    assert sum(bucket.server_errors for bucket in taken.values()) == 1
+    assert [r.levelno for r in caplog.records if r.name == "app.request"] == [logging.ERROR]
 
 
 # --- readiness ---------------------------------------------------------------
