@@ -5,8 +5,9 @@ the Strasbourg VPS, 2026-11-16). **Step 2 live** (staging on the Erith VPS,
 2026-11-17). **Step 3 live** 2026-11-17 (own sign-in; PR #337, release
 #338; staging checked by the product owner with linking across providers).
 **Step 4 built** 2026-11-17 (files to Garage on the VPS, PR #342): live once
-the product owner runs `garage-setup.sh` on each server. Next: step 5
-(database). All questions answered: sign-in A (2026-11-16); files to Garage on
+the product owner runs `garage-setup.sh` on each server. **Step 4 live**
+2026-11-17 on staging and production, nightly backup running. **Step 5
+detailed 2026-11-17** (section 2, update), waiting for question 9. All questions answered: sign-in A (2026-11-16); files to Garage on
 the production VPS (2026-11-17, replacing "stay on Supabase for now").
 
 ## Goals
@@ -118,6 +119,68 @@ with this step, not after it:
   then every few months; the `/health` cron also checks the dump's age (a
   `/health/backup` reading the last success time, or the backup job pinging a
   dead-man's-switch monitor).
+
+**Update 2026-11-17: step 5 in detail.** Checked against the code and the
+migrations; this replaces the backup bullets above where they differ.
+
+- **Service**: `db`, image `postgres:17.6` (pinned by digest, like CI), on the
+  compose network only (no `ports:`), data in the named volume `pg_data`, its
+  own profile `db` (like Garage's `files`), so a server is switched only when
+  its setup script runs. Settings sized per box: production (8 GB)
+  `shared_buffers` 2 GB, staging (4 GB) 1 GB. The backend keeps its pool of
+  5 + 2.
+- **Roles**: the backend connects as `exlibris`, which owns the tables and is
+  not a superuser. The two Supabase API roles `anon` and `authenticated` are
+  created as `NOLOGIN` with no grants: the deny policies of migration
+  `f1c8a2e6d493` name them, so they must exist for the restore, and
+  `tests/test_database_security.py` keeps checking the same thing it checks
+  today (the CI shim does the same).
+- **What moves**: the `public` schema only (the app's tables, its text search
+  configuration and `alembic_version`), dumped with `pg_dump -Fc --schema=public
+  --no-owner --no-privileges` and restored as `exlibris`. Before the restore,
+  the setup creates the schema `extensions` with the `unaccent` extension, which
+  `public.search_simple_unaccent` uses (migration `c4e9a7f1d3b2`), in the same schema as on Supabase.
+  `auth.*` and every other Supabase schema stay behind: since step 3 nothing
+  reads them. Older migrations that touch `auth.users` never run again on the
+  VPS, because the restored `alembic_version` is already past them.
+- **Script, nothing by hand** (`deploy/db-setup.sh`, as `garage-setup.sh`):
+  1. writes a random password to `postgres.env` (chmod 600), turns on the
+     `db` profile, starts Postgres, creates the roles and the extension;
+  2. stops the backend (start of the maintenance window);
+  3. dumps from the URL already in `backend.env` (so the Supabase password
+     never leaves the server), using the `postgres:17.6` image's own `pg_dump`,
+     and restores into the VPS;
+  4. compares the row count of every table on both sides and stops on any
+     difference, leaving `backend.env` untouched;
+  5. replaces `DATABASE_URL` in `backend.env` with
+     `postgresql+asyncpg://exlibris:…@db:5432/exlibris` (the old line is kept,
+     commented, for rollback), starts the backend and waits for `/health`.
+  Safe to re-run until step 5 succeeds; afterwards it refuses, so it can never
+  overwrite the live VPS database with an older Supabase copy.
+- **Maintenance window**: the backend is stopped from step 2 to step 5, so
+  the API does not answer (the app shows its usual connection error). The
+  database is 61 MB on production and 42 MB on staging: about 2–5 minutes, not
+  the 15–30 estimated above. At a quiet hour; no announcement planned.
+- **Migrations (ticket 74)**: `migrate.sh` already runs inside the compose
+  network with `backend.env`, so it reaches `db:5432` with no change.
+- **Nightly backup**: `backup-files.sh` becomes `backup.sh` and also runs
+  `pg_dump -Fc` of the VPS database, into the same encrypted target as the
+  files (rclone crypt, `exlibris-backups/db/<YYYY-MM-DD>.dump`) with the same
+  retention and the same password. The `age` tool and the copy pulled over
+  SSH (above) are dropped: one tool, one password, one place. The cron line
+  installed in step 4 keeps working (the old name stays as a one-line
+  wrapper until step 6).
+- **Restore runbook** in `context/restore-runbook.md`: restore the database
+  from a given day, restore the files, and rebuild production on a fresh VPS.
+  Tried once on staging (restore yesterday's production dump into a throwaway
+  database there, check row counts, drop it) before production moves.
+- **Backup age check**: question 9.
+- **Order**: staging first (its own Supabase project, as the rehearsal),
+  product owner checks the app, then production.
+- **Rollback**: restore the commented `DATABASE_URL` line and recreate the
+  backend; anything written since the move is lost, so the decision is taken
+  within the window, right after the smoke test. The Supabase databases stay
+  untouched (read-only in practice) until step 6.
 
 ### 3. Files: S3-compatible object storage
 
@@ -393,6 +456,15 @@ Room PDFs) VPS-3 or VPS-4 is an in-place upgrade away, not a migration; several 
 8. **Decommissioning**: decided 2026-11-16, **yes**: Render, Vercel and the
    Supabase database and Auth go about 4 weeks after the last step, keeping a
    final dump; the Supabase project itself stays while it holds the files.
+
+9. **Backup age check** (step 5): if the nightly backup stops working,
+   nothing says so today. Options: (a) leave it to the monitoring of ticket 75
+   (PR #339, not yet answered), which can read the time of the last good
+   backup that `backup.sh` writes; (b) add now a free external "dead man's
+   switch" (e.g. healthchecks.io) that `backup.sh` pings after each success and
+   that emails the product owner when a ping is missing. (b) adds a service
+   that receives no personal data, only the ping. Recommended: **(a)**, with
+   the timestamp written now, so ticket 75 only has to show it.
 
 ## Out of scope
 
