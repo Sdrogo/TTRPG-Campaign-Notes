@@ -2,9 +2,9 @@
 
 | | |
 |---|---|
-| **Version** | 0.6 |
-| **Date** | 27 October 2026 |
-| **Status** | Aligned with what is built and released (specs 01–45); implementation status per requirement in section 14 |
+| **Version** | 0.7 |
+| **Date** | 18 November 2026 |
+| **Status** | Aligned with what is built and released (specs 01–75); implementation status per requirement in section 14 |
 | **Audience** | Project team and the Agents that will use this document as their base Context |
 
 **New in 0.2:** resolved Open points OQ-01…OQ-08 (now Decisions D-11…D-18); introduced the Administrator role; a Document's "fields" are now Details in the main Thread; the Glossary can be filtered by Tag; new Open points OQ-09…OQ-12.
@@ -12,6 +12,8 @@
 **New in 0.3:** resolved Open points OQ-11 and OQ-12 (now Decisions D-19, D-20), ahead of the Documents/Details unit. OQ-09 and OQ-10 stay formally open but are already implemented in practice by the Rooms/Membership unit (see `progress-tracker.md`).
 
 **New in 0.4:** new Decisions D-21…D-27: **PDF Attachments** on Documents, **Characters** linked to a User with Posts written "as the Character", **Friendships** between Users (the first concept not tied to a Room). New rules VR-12, VR-13, requirements FR-D8, FR-D9, FR-T11, FR-F1…FR-F5, use cases UC-20…UC-25, invariants I-12…I-14. Tickets: `context/feature/15`…`18`. The document was also translated from Italian to English; IDs and meaning are unchanged.
+
+**New in 0.7** (18 November 2026, product owner's request to align the spec with the app again): **Session 0** with its chain of steps, polls and boards (D-46); the **Room landing page** of Sections (D-47); **Clocks** (D-48); **live updates** pushed to open pages, which replace the 5-second map polling (D-49; D-04, D-36 and I-06 amended); **Markdown** in descriptions and Notes (D-50); imports from an **Obsidian vault** and by Document name (D-51); curved relations with an adjustable bend and a **color legend** (D-52); the app **self-hosted** on its own servers in the EU, with its own sign-in, nightly backups and monitoring (D-53). New requirements FR-R11, FR-R12, FR-D16, FR-M10, FR-M11, FR-G5, FR-S1…S6, FR-C1…C5, FR-T12; NFR-07 and NFR-10 updated, NFR-11 and NFR-12 added; UC-34…UC-37; W-08.
 
 **New in 0.6** (27 October 2026, product owner's request to align the spec with the app): the product is named **Ex Libris**. Maps, which 0.5 left out of scope, are now in: **free relationship maps**, **live mention maps** and **geographic maps**, with **Relational link Notes**, maps that **Players can edit** and maps refreshed while open (D-30…D-36; D-04 amended). New Decisions also for the Document subtitle, Room image, Room duplication, Document export/import and PDF, personal data (GDPR), twelve UI languages, the landing page with a read-only Demo, and the dropping of FR-G2 (D-37…D-45). New requirements FR-A3…A4, FR-R9…R10, FR-D10…D15, FR-M1…M9, FR-G3…G4, FR-L1…L2; NFR-09 widened, NFR-10 added; VR-07 widened, VR-14…VR-16; UC-26…UC-33; W-07. Section 14 now records what is built, partial, not built or dropped for every requirement. Glossary entries (FR-N3/N4, VR-10) are **not built**: the Room Index (spec 44) is the navigation that exists.
 
@@ -47,7 +49,7 @@ A web application, distributed online, where several Users contribute to the doc
 
 **Out of scope for now**
 
-- Real-time collaborative editing of text (D-04). *(Maps are the exception: an open map is refreshed every few seconds and saves only what changed, D-36.)*
+- Real-time collaborative editing of text (D-04). *(Open pages are told when something changes and read it again (D-49), and maps save only what changed (D-36), but two people never type in the same text together.)*
 - Managing rules, character sheets, dice, battle maps or combat. *(A character sheet can however be **attached** as a PDF file to the Character's Document, D-21: the platform stores it, it doesn't interpret it. Relationship and geographic maps are in scope since 0.6, D-30, D-32: they are notes about the campaign, not a tactical battle grid.)*
 - A native mobile app (the web interface must still be usable from a smartphone).
 - Translating user content (Documents, Notes, Comments, Tag names): only the interface is translated (NFR-09).
@@ -68,6 +70,9 @@ A web application, distributed online, where several Users contribute to the doc
 | **Tag** | A label to classify and navigate Documents and Glossary entries. "Types" are Tags (D-05). |
 | **Glossary** (or Dictionary) | The Room's set of entries (term + definition), filterable by Tag (D-14). *Not built (section 14): the app's navigation is the Room Index.* |
 | **Room Index** | The small card opened from a tab on the left edge of every Room page, with links to the Room's sections: the Main Tags' groups of Documents and the Maps (spec 44). |
+| **Section** | A card of the Room's landing page that opens a page of blocks arranged by the Master (D-47). |
+| **Session 0** | The Room page where the table agrees on the campaign before and between sessions, through a chain of steps (D-46). |
+| **Clock** | A progress clock of segments, marked as an event approaches; it can be grouped with others under an end rule (D-48). |
 | **Thread** | A conversation tied to a Document, made of nested Posts. Every Document has a main Thread. |
 | **Post** | A single contribution in a Thread (a **Comment** or a reply). |
 | **Detail** | An additional titled Description attached to a Document, called a **Note** in the app (e.g. "Distinguishing marks: has a wooden leg that creaks with every step") (D-18). |
@@ -112,7 +117,7 @@ A web application, distributed online, where several Users contribute to the doc
 | D-01 | The **Master also sees Players' private content**. Comments that are 100% private (Master included, "sealed content") are a possible evolution but not a priority. |
 | D-02 | A Room can have **several Masters (co-GMs)**, not a priority. A general Room management system is needed: Administrator Users, editable roles, Users who join or are invited. |
 | D-03 | A **Document's description** is edited by **anyone with Ownership** of that Document. |
-| D-04 | **No real-time editing** for now. Priority to an **efficient Thread structure**. *(Amended in 0.6: maps are saved change by change and refreshed while open, D-36; text stays without live co-editing.)* |
+| D-04 | **No real-time editing** for now. Priority to an **efficient Thread structure**. *(Amended in 0.6: maps are saved change by change and refreshed while open, D-36; amended in 0.7: open pages are refreshed by pushed events, D-49; text stays without live co-editing.)* |
 | D-05 | Documents are **not strictly typed**: "Types" (NPC, Place, Event, Artifact…) are treated as **Tags**. |
 | D-06 | Roles (Master/Player/Administrator) are **per Room**, not global. |
 | D-07 | Login through **Google** (preferred method), plus Discord and GitHub (FR-A1). |
@@ -144,7 +149,7 @@ A web application, distributed online, where several Users contribute to the doc
 | D-33 | A Note can be flagged as a **Relational link**. **Only the mentions written in flagged Notes draw relations on mention maps**; descriptions, unflagged Notes and Comments still count as mentions everywhere else (backlinks, search). *(spec 41)* |
 | D-34 | Saving a description or a Note **links the names of the Room's Documents automatically** as mentions, and a "Generate mentions" action does it on existing text. Only Documents the writer sees are linked. *(spec 39)* |
 | D-35 | A free or geographic map can be **unlocked for Players** (off by default): every member who sees it then edits its board; settings, visibility, deletion, plane, background and linking stay with its creator and the Master. *(spec 42)* |
-| D-36 | A map is saved **change by change** (each moved, added or removed item), laid over the stored board, so several editors never overwrite each other, and an open map is **read again every 5 seconds**. No push, no presence, no editing of maps from a phone. *(spec 43)* |
+| D-36 | A map is saved **change by change** (each moved, added or removed item), laid over the stored board, so several editors never overwrite each other. An open map is read again when a change is pushed (D-49), every 5 seconds only while the push stream is down. No presence, no editing of maps from a phone. *(specs 43, 52)* |
 | D-37 | A Document has an optional **subtitle** (≤120 characters, one line), edited by whoever edits its name and shown under it; a map card shows it as its default caption. *(spec 28_0)* |
 | D-38 | A Room has an optional **image**, set by an Administrator; it is the default cover of the Room PDF. *(spec 26)* |
 | D-39 | The **Master** can **duplicate** a Room: the copy holds its setup, Tags, Documents (with Notes and images) and maps, but no Comments, PDF Attachments, history or members except the person duplicating, who becomes Master and Administrator. Selective visibility becomes Private in the copy. *(specs 33, 40)* |
@@ -154,6 +159,14 @@ A web application, distributed online, where several Users contribute to the doc
 | D-43 | Reading aids that stay in the browser: **read aloud** of a Document with the browser's own voices, and **image search** over free image libraries (Openverse) to add an image to a Document. Neither adds stored personal data. *(specs 29, 30, 30b)* |
 | D-44 | The site opens on a public **landing page** for everyone; the Rooms list is a page of its own. A **read-only Demo** shows the real pages over a sample Room kept in the browser (English or Italian), with a Master/Player switch and a guided tour; nothing reaches the server. *(spec 45)* |
 | D-45 | **FR-G2 (API access with a personal token for Agents) is dropped** (product owner, 2026-10-06; ticket 23c). The export of FR-G1 is the Agent-facing surface. |
+| D-46 | **Session 0** is a Room page where the Master runs the table's opening sessions as a **chain of steps** composed, reordered and advanced by the Master: **Retro** (post-its in columns, drafts private to their author, anonymous if wished), **Lines & Veils** (one Room-wide board; the Master promotes post-its to it), **Stars and Wishes**, **Questions** whose answers become Documents owned by the Players who gave them (the Master may edit any answer), the **Dichiarazione d'Intenti** (DDI) with per-Player acceptance, and **polls** with choices shown as cards. Each session is separate and can carry over what the previous one left. *(specs 46, 46c, 46d, 47, 47b, 53, 54, 70)* |
+| D-47 | A Room opens on its **landing page**: Section cards arranged by the Master, each a page of **blocks** (Documents filtered by Tags and grouped, maps, clocks, or a Session 0 step used as a standalone tool, hidden from the Players until the Master shows it). The Documents, Maps, Session 0 and Clocks pages are cards of the same landing. Sections travel with the JSON export. *(specs 55, 56, 60, 63)* |
+| D-48 | **Clocks** are Room content: progress clocks of 2 to 16 segments tied to an event, marked during play and kept across sessions. Each Room sets its own **clock rules** (who opens and marks, whether a mark can be undone), **labels** and **kinds of mark**; clocks can be **grouped** with an end rule (free, race, turn, sequence). Players can propose a clock, seen by them and the Master until it is opened. A clock has a visibility, and its consequence can stay hidden from the Players. Clocks have a page of their own and a Section block. *(spec 61)* |
+| D-49 | **Live updates**: each open Room page holds one push stream from the server, which says only *what* changed (never the content) and only to members who may see it, before or after the change. The page then reads it again. It covers Session 0, maps, Documents, Comments, the landing page and clocks. *(specs 46, 52, 55, 61)* |
+| D-50 | Descriptions and Notes are written in **Markdown** (headings, lists, emphasis, links, tables); mentions keep working inside it. Comments stay plain text. *(spec 48)* |
+| D-51 | Import extensions (D-40): a whole **Obsidian vault** (zip or folder, pictures included, staged privately only for the import) can be imported as Documents; a file Document whose id matches nothing is matched to the Room's Document **with the same name** and offered as Copy or Replace; the JSON export carries each Note's Relational link flag. *(specs 65, 69, 71)* |
+| D-52 | On free maps, relations are drawn as **curves** with a **bend** each editor can drag, and each relation color can carry a **meaning**, listed in an on-screen **legend**; the Master keeps **Room presets** of meanings that maps stay linked to. A map card's name opens the Document beside the map. *(specs 62, 62b, 62c, 67, 68)* |
+| D-53 | **Self-hosted**: the app, its database, its files and its sign-in run on servers the product owner rents in the EU (OVHcloud, Strasbourg for production), with no third-party platform holding user data. The backend runs its own OAuth sign-in with the providers of FR-A1. Database and files are backed up nightly, encrypted, to a second server, with a written restore procedure; both servers are monitored, with email alerts and an Admin page for the operators. *(tickets 72, 73, 74, 75)* |
 
 ---
 
@@ -225,6 +238,10 @@ erDiagram
 - **Map items:** on a free map, cards (a Document or a text), groups and relations; on a geographic map, areas, pins (optionally a Document) and links. Each item can be Master only.
 - **Reveal:** content, who revealed it, from and to which level, the members who gained it and whether they have seen it (VR-06).
 - **Export / import job:** requester, Room, format and options, status, expiry (24 hours for a PDF, 7 days for an import).
+- **Session 0:** per Room, its sessions (rounds), each a chain of steps (modules) with their post-its, reactions, questions and answers, DDI and acceptances, polls and votes; the Room-wide Lines & Veils board; a shared timer (D-46).
+- **Section:** Room, kind (custom or one of the page cards), title, description, image, position, ordered blocks (D-47).
+- **Clock:** Room, name, segments, marks, state (proposed, open, closed, lapsed), visibility, labels, optional group and Document; per Room its rules, labels, kinds of mark and templates (D-48).
+- **Sign-in identity and session:** provider, provider id, email; a session's hashed refresh token, browser and IP (D-53).
 
 ---
 
@@ -318,6 +335,8 @@ erDiagram
 - **FR-R8** When a User is removed or leaves, their content stays visible unless deleted, and the Ownership of their Documents can be reassigned (D-15).
 - **FR-R9** Room image, set by an Administrator, shown on the Room card and as the default PDF cover (D-38).
 - **FR-R10** Duplicate a Room, by its Master (D-39).
+- **FR-R11** A Room **landing page** of Sections and blocks, arranged by the Master (D-47).
+- **FR-R12** Rename a Room, by an Administrator, from its settings.
 
 ### Documents
 - **FR-D1** Document CRUD with name, images (up to 20, D-09), description (rich text or Markdown), Tags.
@@ -335,6 +354,7 @@ erDiagram
 - **FR-D13** Find an image in free image libraries and add it to a Document (D-43).
 - **FR-D14** Read a Document aloud with the browser's voices (D-43).
 - **FR-D15** Preview a mentioned Document on hover, and open a Document or a map side by side with another (split view).
+- **FR-D16** Write descriptions and Notes in **Markdown** (D-50).
 
 ### Tags, Glossary and navigation
 - **FR-N1** Per-Room Tags, with an optional category and default Tags on creation (D-14).
@@ -357,6 +377,7 @@ erDiagram
 - **FR-T9** In-app notifications (email later).
 - **FR-T10** Details are shown on the Document's page as a dedicated section under the description, filtered by visibility (not on the card).
 - **FR-T11** Write a Post **as a Character** (D-24), shown according to VR-13.
+- **FR-T12** New Comments appear on an open Document without reloading (D-49).
 
 ### Visibility
 - **FR-V1** Set the visibility of a Document, block and Post (VR-03).
@@ -374,8 +395,10 @@ erDiagram
 - **FR-M5** Import and export a geographic map as a JSON file, with a preview report before import (D-32).
 - **FR-M6** Link a map to a Document, shown on the Document's page.
 - **FR-M7** Unlock a map so Players who see it can edit its board (D-35).
-- **FR-M8** Save map edits change by change and refresh an open map every few seconds (D-36).
+- **FR-M8** Save map edits change by change and refresh an open map as soon as a change is pushed (D-36, D-49).
 - **FR-M9** Maps are carried by Room duplication and by the Room's JSON export and import.
+- **FR-M10** Curved relations with a draggable bend on free maps (D-52).
+- **FR-M11** A **color legend** of relation meanings per free map, with Room presets managed by the Master (D-52).
 
 ### Friendships
 - **FR-F1** Send a Friendship request to a member of a shared Room or through a Friend code (D-27).
@@ -389,6 +412,22 @@ erDiagram
 - **FR-G2** API access with the requesting User's scope. *(Dropped, D-45.)*
 - **FR-G3** Room and Document **PDF** laid out like a game manual, in a chosen style and page size, generated as a background job (D-40).
 - **FR-G4** **Import** one or more Documents, or a whole Room export, from JSON or Markdown, copying or replacing, with a preview first (D-40).
+- **FR-G5** Import an **Obsidian vault** with its pictures, and match file Documents to Room Documents by name (D-51).
+
+### Session 0
+- **FR-S1** The Master creates a Session 0 session as a chain of steps, reorders the steps and moves the table to the next one (D-46).
+- **FR-S2** Retro and Stars and Wishes boards of post-its, private drafts, anonymous post-its, reactions; the Master promotes post-its to the Room's Lines & Veils board.
+- **FR-S3** Questions answered by the Players, whose answers create Documents they own; the Master can edit any answer.
+- **FR-S4** A Dichiarazione d'Intenti the Players accept one by one.
+- **FR-S5** Polls whose choices are cards with an optional description.
+- **FR-S6** A Session 0 step used as a standalone tool in a Section, shown to the Players when the Master decides (D-47).
+
+### Clocks
+- **FR-C1** Open, mark, undo a mark on, close and archive a clock, within the Room's clock rules (D-48).
+- **FR-C2** Room clock rules, labels, kinds of mark and templates, set by the Master (built-in templates are offered too).
+- **FR-C3** Group clocks with an end rule: free, race, turn or sequence.
+- **FR-C4** A Player proposes a clock; the Master opens or declines it.
+- **FR-C5** A Clocks page in the Room and a clocks block in a Section, updated live (D-49).
 
 ### Landing and Demo
 - **FR-L1** A public landing page explaining the product, with sign-in, and a quick-navigation menu to the Rooms list and each Room (D-44).
@@ -404,10 +443,12 @@ erDiagram
 - **NFR-04 Performance:** lists, search and Threads must stay smooth with a lot of content and active visibility filters.
 - **NFR-05 Usability:** the interface is usable from a smartphone during game sessions.
 - **NFR-06 Traceability:** roles, ownership and visibility have an AuditLog.
-- **NFR-07 Reliability:** backups and version history.
+- **NFR-07 Reliability:** version history; nightly encrypted backups of the database and the files to a second server, with a written restore procedure; monitoring with email alerts (D-53).
 - **NFR-08 Extensibility:** a data model agnostic of the game system and of Document "types".
 - **NFR-09 Languages:** the interface and the API's error messages are available in the twelve languages of D-42, following the User's choice or the browser's language; English is the fallback.
-- **NFR-10 Personal data:** the platform follows the GDPR: access and portability (FR-A3), erasure (FR-A4), a public information notice, and data processing agreements with its hosting providers.
+- **NFR-10 Personal data:** the platform follows the GDPR: access and portability (FR-A3), erasure (FR-A4), a public information notice, and data processing agreements with its hosting providers (since D-53, OVHcloud only).
+- **NFR-11 Security of the public hosts:** security headers with an enforced Content-Security-Policy, request body caps, per-user rate limits on writes, no public API documentation, and a published way to report vulnerabilities (ticket 72).
+- **NFR-12 Operations:** database migrations run from the repository's CI, never by hand on a server; a merge that changes only documentation deploys nothing (tickets 74, 73).
 
 ---
 
@@ -448,6 +489,10 @@ erDiagram
 | UC-31 | Export or import content | Member | Member of the Room | Exports the Room or a Document as JSON, Markdown or PDF; or imports a file → reads the preview → copies or replaces | Import not allowed (D-13): refused |
 | UC-32 | Delete one's account | User | Authenticated | Opens the Account page → downloads their data (optional) → types the confirmation → the account is deleted | Last Administrator or Master of a shared Room: must designate a successor first |
 | UC-33 | Try the Demo | Visitor | — | Opens the landing page → "Try the demo" → follows the guided tour, switching between Master and Players | Exits the Demo or signs in |
+| UC-34 | Run a Session 0 | Master and Players | Members of the Room | The Master composes the chain of steps → the table fills each step (post-its, questions, DDI, polls) → the Master moves to the next | A Player's draft stays private until published |
+| UC-35 | Arrange the Room landing | Master | Master role | Adds a Section → fills its page with blocks (Documents by Tag, maps, clocks, a Session 0 tool) → orders the cards | The Documents card cannot be deleted |
+| UC-36 | Track a clock | Master and Players | Clock rules allow the action | Opens a clock (or a Player proposes it) → marks segments during play → the clock closes when full; everyone sees it live | Rule forbids the mark or the undo: refused |
+| UC-37 | Import an Obsidian vault | Member allowed to create Documents | Vault as zip or folder | Chooses the vault → reads the preview → confirms → Documents and pictures are imported | Vault over the size limits (100 MB): refused |
 
 ---
 
@@ -491,6 +536,12 @@ erDiagram
 3. The Master imports a geographic map of the city (UC-28), binds its pins to the place Documents and unlocks it for the Players (UC-29).
 4. Each member sees only the cards, pins and relations of the Documents visible to them (VR-14, VR-15).
 
+**W-08 · Opening a campaign with Session 0**
+1. The Master creates the Room and composes the first Session 0 session: Lines & Veils, DDI, Questions (UC-34).
+2. The Players add their lines and veils, accept the DDI and answer the Questions; the answers become their Characters' Documents.
+3. The Master arranges the landing page (UC-35) with a Section for the campaign's Documents and a clocks block for the first threats (UC-36).
+4. After a few sessions the Master starts a new Session 0 session with a Retro, carrying over what is still open.
+
 ---
 
 ## 14. Priorities (MoSCoW) and implementation status
@@ -501,14 +552,15 @@ erDiagram
 | **Should** | FR-R5, FR-R8; FR-D5, FR-D8, FR-D9; FR-N3–N5; FR-T6–T8, FR-T10, FR-T11; FR-V2, FR-V3, FR-V5; FR-G1 |
 | **Could** | Several co-Masters (D-02); FR-D6; FR-N6; FR-T9; FR-F1–F5; FR-G2; VR-09 (sealed content) |
 | **Added while building (0.6)** | FR-A3, FR-A4; FR-R9, FR-R10; FR-D10–D15; FR-N7; FR-M1–M9; FR-G3, FR-G4; FR-L1, FR-L2; NFR-10 |
-| **Won't (for now)** | Real-time editing of text (maps: D-36); native mobile app; login providers beyond those of FR-A1 |
+| **Added while building (0.7)** | FR-R11, FR-R12; FR-D16; FR-T12; FR-M10, FR-M11; FR-G5; FR-S1–S6; FR-C1–C5; NFR-11, NFR-12 |
+| **Won't (for now)** | Real-time editing of text (maps: D-36; live refresh: D-49); native mobile app; login providers beyond those of FR-A1 |
 
-**Implementation status** (31 October 2026, last release to production with PR #281; tickets in `context/feature/`, details in `progress-tracker.md`):
+**Implementation status** (18 November 2026, last release to production with PR #351; tickets in `context/feature/`, details in `progress-tracker.md`):
 
 | Status | Requirements |
 |---|---|
-| **Built** | Every Must, except the paginated loading of FR-T3 (below). Should: FR-R5, FR-R8, FR-D5 (specs 24, 24b), FR-D8 (16), FR-D9 and FR-T11 (17), FR-N5 (21), FR-T6–T8 (19c), FR-T10 (12), FR-V2 and FR-V5 (22), FR-V3 (22b), FR-G1 (23, 27). Could: several Masters, FR-F1–F5 (18). Added: FR-A3, FR-A4 (31), FR-R9 (26), FR-R10 (33, 40), FR-D10 (28_0), FR-D11 (39), FR-D12 (41), FR-D13 (29), FR-D14 (30, 30b), FR-D15 (32, 37), FR-N7 (44), FR-M1–M9 (28, 36, 38, 38b, 40, 42, 43), FR-G3 for the Room (23b, 35) and for a single Document (27b), FR-G4 (27), FR-L1, FR-L2 (45). NFR-09 (09, 09_1, 34). |
-| **Partial** | FR-T3: sorting is built, paginated loading is parked until Threads get long in practice. FR-T9: only the "Revealed" marks and the header badge (22), no general notifications. FR-N6: Document names are linked automatically (D-34), but there are no Glossary terms. NFR-07: version history exists; backups and monitoring of the production server are still to set up. NFR-10: the code part is built; the legal review of the notice and the processing agreements are owed by the product owner. |
+| **Built** | Every Must, except the paginated loading of FR-T3 (below). Should: FR-R5, FR-R8, FR-D5 (specs 24, 24b), FR-D8 (16), FR-D9 and FR-T11 (17), FR-N5 (21), FR-T6–T8 (19c), FR-T10 (12), FR-V2 and FR-V5 (22), FR-V3 (22b), FR-G1 (23, 27). Could: several Masters, FR-F1–F5 (18). Added: FR-A3, FR-A4 (31), FR-R9 (26), FR-R10 (33, 40), FR-D10 (28_0), FR-D11 (39), FR-D12 (41), FR-D13 (29), FR-D14 (30, 30b), FR-D15 (32, 37), FR-N7 (44), FR-M1–M9 (28, 36, 38, 38b, 40, 42, 43), FR-G3 for the Room (23b, 35) and for a single Document (27b), FR-G4 (27, 69, 71), FR-L1, FR-L2 (45, 64). Added in 0.7: FR-R11 (55, 56, 60), FR-R12, FR-D16 (48), FR-T12 (52), FR-M10, FR-M11 (62, 67, 68), FR-G5 (65, 69), FR-S1–S6 (46, 47, 47b, 53, 54, 60, 70), FR-C1–C5 (61). NFR-07 (73, 75), NFR-09 (09, 09_1, 34), NFR-11 (72), NFR-12 (73, 74). |
+| **Partial** | FR-T3: sorting is built, paginated loading is parked until Threads get long in practice. FR-T9: only the "Revealed" marks and the header badge (22), no general notifications. FR-N6: Document names are linked automatically (D-34), but there are no Glossary terms. NFR-10: the code part is built; the legal review of the notice and the processing agreement with OVHcloud are owed by the product owner (on hold). NFR-11: GitHub private vulnerability reporting is still to turn on. |
 | **Not built** | FR-N3, FR-N4 and VR-10 (Glossary entries; the Room Index, FR-N7, is the navigation that exists); FR-D6 (draft/published); VR-09 (sealed content). |
 | **Dropped** | FR-G2 (D-45). |
 
@@ -525,7 +577,7 @@ erDiagram
 | I-03 | The **Master sees everything** in their own Room (D-01). |
 | I-04 | Documents **have no rigid type**: classification is through Tags (D-05). |
 | I-05 | Editing a Document's description belongs to whoever has **Ownership** of it; the Master always has implicit Ownership (D-03, D-12). |
-| I-06 | No real-time functionality is required (D-04); maps only refresh by polling and save change by change (D-36). |
+| I-06 | No real-time co-editing of text (D-04): open pages are refreshed by pushed events that carry no content and reach only members who may see the change (D-49); maps save change by change (D-36). |
 | I-07 | The **Administrator is a distinct role**; the last Administrator cannot leave without designating a successor (D-11, D-16). |
 | I-08 | Documents **have no custom fields**: additional information is **Details** attached to the Document (D-18). |
 | I-09 | A reply is never more visible than its parent Post (D-17). |
