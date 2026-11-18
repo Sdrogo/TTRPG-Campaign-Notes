@@ -90,7 +90,9 @@ Status: **ticket, to confirm** (2026-11-18). Docs only; no code yet.
     `/health/backup`), as the backend already does, so the uptime
     monitors don't bury the rest.
 12. **Privacy notice**: one sentence in the 12 languages (server logs with
-    truncated IP addresses, kept a few weeks). `context/architecture.md`
+    truncated IP addresses, kept for a limited time: the most recent
+    200 MB of logs per service, which today is several weeks; the notice
+    says "for a limited time", not a number of days). `context/architecture.md`
     → Monitoring (ticket 75) gets a "Caddy access log" bullet with these
     rules, and ticket 75's "No Caddy access log" (its "As built" and
     "Where we are" sections) is marked as superseded by this ticket.
@@ -166,6 +168,13 @@ outside the Dockerfile.
   the new monitor is green.
 
 ## Risks
+
+- The vault protects the days it already holds, not the next one: a
+  compromised production can write bad or empty data into a new day of its
+  own bucket before the 05:00 copy, and the vault will keep it. The
+  "Backup vault" monitor says the copy ran, not that the data is good;
+  `backup.sh check` (restore and compare row counts) remains the integrity
+  check, run by hand from time to time.
 
 - Two Garage behaviours this design relies on are taken from its
   documentation, not yet tried here: a bucket's `write` permission also
