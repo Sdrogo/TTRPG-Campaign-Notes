@@ -49,20 +49,20 @@ release, list what is pending here and remind the product owner to label the
 release PR.
 
 - **Head in the repository**: `c6f1a9d3e7b2` (request statistics and error
-  events, ticket 75; PR #339, needs the `db-migration` label).
-- **Staging database**: `b5e2c8f1a4d7 (head)`, 2026-11-17 from Actions (PR #337).
-  Before: `e7b3d9a1c5f2`, applied 2026-11-09 with
+  events, ticket 75).
+- **Staging database**: `c6f1a9d3e7b2 (head)`, 2026-11-17 from Actions (PR #339).
+  Before: `b5e2c8f1a4d7`, 2026-11-17 from Actions (PR #337); before that `e7b3d9a1c5f2`, applied 2026-11-09 with
   `backend/.env.staging` loaded (`d4a8f2c6b9e1` applied the same day,
   `c1d7e3a9f5b2` on 2026-11-03).
-- **Production database**: `b5e2c8f1a4d7 (head)`, 2026-11-17 from Actions (release PR #338).
-  Before: `e7b3d9a1c5f2`, applied 2026-11-09 with
+- **Production database**: `c6f1a9d3e7b2 (head)`, 2026-11-18 from Actions
+  (release PR #349; the label was added just after the merge, before the
+  deploy started, and the deploy migrated). Before: `b5e2c8f1a4d7`,
+  2026-11-17 (release PR #338); before that `e7b3d9a1c5f2`, applied 2026-11-09 with
   `backend/.env` loaded (product owner's go-ahead), before the release PR
   #316: `d4a8f2c6b9e1` (arrow bend, spec 67) then `e7b3d9a1c5f2` (color
   legend, spec 68). Earlier: `c1d7e3a9f5b2` on 2026-11-03 before the release
   that shipped it (PR #302), with `e8c4a2f6b1d9` and `e9c4a2f7b1d8` the same day.
-- **Pending**: `c6f1a9d3e7b2` (ticket 75: tables `request_stats_hourly`,
-  `error_events`) on both databases, through the label on PR #339 and on
-  the release PR. Earlier: `b5e2c8f1a4d7` (own sign-in, ticket 73 step 3) ran
+- **Pending**: none. Earlier: `b5e2c8f1a4d7` (own sign-in, ticket 73 step 3) ran
   from Actions on 2026-11-17: staging with PR #337, production with release
   PR #338 (31 identities copied).
 
@@ -257,6 +257,10 @@ image search, read aloud, GDPR (10-01 → 10-10). See the two older archives.
 
 ## Next Up
 
+- **CI in parallel shards** (product owner, 2026-11-18, PR #350): frontend
+  tests (~12 min) and backend tests (~7.5 min) each run in four parallel
+  jobs, and `Frontend coverage` / `Backend coverage` merge them and apply
+  the 100% gates. `pip-audit` waits 60 s and retries once (PyPI timeouts).
 - **75, Monitoring dashboards** (product owner, 2026-11-17): built in PR
   #339 (migration `c6f1a9d3e7b2`). Beszel + Uptime Kuma hub on staging,
   agents + Dozzle on both servers behind a read-only Docker proxy, all on
