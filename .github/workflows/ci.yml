@@ -135,9 +135,48 @@ jobs:
         if: always()
         run: node ../.github/scripts/frontend-summary.mjs >> "$GITHUB_STEP_SUMMARY"
 
+  # Lint and type-check once; the tests run in the shards below.
   backend:
     name: Backend
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          # The floor this project declares (`requires-python`, and mypy's
+          # `python_version`), so CI checks the contract rather than only
+          # whatever a developer happens to run.
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: backend/pyproject.toml
+
+      - name: Install
+        run: pip install -e ".[dev]"
+
+      - name: Lint
+        run: ruff check .
+
+      - name: Type-check
+        run: mypy app tests
+
+  # The test files split across parallel runners, each with its own database:
+  # one runner took ~7.5 minutes. Each shard keeps its coverage data;
+  # `backend-coverage` combines them, so the 100% gate still applies to the
+  # whole suite.
+  backend-tests:
+    name: Backend tests (${{ matrix.shard }}/4)
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
     defaults:
       run:
         working-directory: backend
@@ -188,21 +227,12 @@ jobs:
 
       - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
         with:
-          # The floor this project declares (`requires-python`, and mypy's
-          # `python_version`), so CI checks the contract rather than only
-          # whatever a developer happens to run.
           python-version: '3.12'
           cache: pip
           cache-dependency-path: backend/pyproject.toml
 
       - name: Install
         run: pip install -e ".[dev]"
-
-      - name: Lint
-        run: ruff check .
-
-      - name: Type-check
-        run: mypy app tests
 
       - name: Prepare the database
         env:
@@ -213,20 +243,81 @@ jobs:
       - name: Migrate
         run: alembic upgrade head
 
-      # The whole suite, database tests included (the `integration` marker
-      # still lets a developer without a database run `-m "not integration"`).
-      # 100% of `app/`, `app/domain` included: the handful of lines that only
-      # ever run against real infrastructure (a real DB engine/session in
-      # app/db/session.py, real Storage HTTP calls in app/db/storage.py, no
-      # route ever deleting a Room) are marked `# pragma: no cover` instead of
-      # counted against the floor - so this is exact, not "just under".
+      # The database tests run too (the `integration` marker still lets a
+      # developer without a database run `-m "not integration"`). Files are
+      # dealt out largest first, round robin, so the shards come out about
+      # even; every file lands in exactly one shard.
       - name: Test with coverage
+        env:
+          SHARD: ${{ matrix.shard }}
+          COVERAGE_FILE: .coverage.shard${{ matrix.shard }}
         run: |
-          pytest --cov=app --cov-report=term-missing --cov-fail-under=100 --junitxml=junit.xml
+          files=$(ls -S tests/test_*.py | awk -v n=4 -v i="$SHARD" 'NR % n == i % n')
+          # shellcheck disable=SC2086
+          pytest $files --cov=app --cov-report= --junitxml=junit-$SHARD.xml
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: ${{ !cancelled() }}
+        with:
+          name: backend-coverage-${{ matrix.shard }}
+          path: |
+            backend/.coverage.shard${{ matrix.shard }}
+            backend/junit-${{ matrix.shard }}.xml
+          include-hidden-files: true
+          retention-days: 1
+
+  # The gate: 100% of `app/`, `app/domain` included. The handful of lines that
+  # only ever run against real infrastructure (a real DB engine/session in
+  # app/db/session.py, real Storage HTTP calls, no route ever deleting a
+  # Room) are marked `# pragma: no cover` instead of counted against the
+  # floor - so this is exact, not "just under". A missing shard leaves lines
+  # uncovered, so it fails here too.
+  backend-coverage:
+    name: Backend coverage
+    needs: backend-tests
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: backend/pyproject.toml
+
+      # Only coverage itself: it reads its settings from pyproject.toml and
+      # the sources from the checkout.
+      - name: Install
+        run: pip install "coverage[toml]>=7"
+
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: backend-coverage-*
+          path: backend
+          merge-multiple: true
+
+      - name: Check coverage
+        run: |
+          coverage combine
+          coverage report --show-missing --fail-under=100
           coverage report --include='app/domain/*' --fail-under=100
 
-      # Same layout as the Frontend job's summary: test counts, coverage
-      # totals, then a collapsible per-file table.
+      # A shard's failed test fails its own job; this makes the run fail here
+      # too, so this one check carries the whole gate.
+      - name: Every shard passed
+        env:
+          RESULTS: ${{ needs.backend-tests.result }}
+        run: test "$RESULTS" = success
+
+      # Same layout as the Frontend summary: test counts, coverage totals,
+      # then a collapsible per-file table.
       - name: Summarise tests and coverage
         if: always()
         run: |
@@ -334,7 +425,11 @@ jobs:
           # rather than fail on its advisories.
           /tmp/audit/bin/python -m pip install --quiet --upgrade pip
           /tmp/audit/bin/pip install --quiet . pip-audit
-          /tmp/audit/bin/pip-audit --skip-editable --progress-spinner off
+          # PyPI's advisory API is sometimes slow from the runners (2026-11-18:
+          # three failures in a row on the default 15 s read timeout), so
+          # allow 60 s and one more try before failing the check.
+          audit() { /tmp/audit/bin/pip-audit --skip-editable --progress-spinner off --timeout 60; }
+          audit || { echo "pip-audit failed, trying once more in 30 s"; sleep 30; audit; }
 
       # What ships to the browser only; dev tooling never reaches users.
       - name: Frontend dependency audit
