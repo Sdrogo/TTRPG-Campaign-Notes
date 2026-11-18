@@ -228,6 +228,10 @@ image search, read aloud, GDPR (10-01 → 10-10). See the older archives.
 
 ## Next Up
 
+- **76, Security hardening 2** (ticket written 2026-11-18, to confirm):
+  pinned builds from `uv.lock` + image digests + `dependabot.yml`, Caddy
+  access log with masked IPs, a backup vault on staging that production
+  can't delete. From the 2026-11-18 security overview.
 - **73, external clean-up** (product owner): delete both Supabase projects
   about mid-December 2026 after a last dump (and the `supabase-*.dump`
   files on the servers), remove the old OAuth redirect URLs at Google,
