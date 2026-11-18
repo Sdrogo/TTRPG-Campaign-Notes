@@ -55,7 +55,7 @@ describe('VisibilityHistory', () => {
     expect(within(row).getByText('Rivelazione')).toBeInTheDocument();
     expect(within(row).getByText('Ora lo vedono: Alice')).toBeInTheDocument();
     // The same entry, as a list for phones.
-    expect(within(list()).getByRole('link', { name: 'Il Cancello' })).toBeInTheDocument();
+    expect(within(list()).getByRole('link', { name: 'Il Cancello', hidden: true })).toBeInTheDocument();
   });
 
   it('names a Note and a Comment, and the Selective grants', async () => {

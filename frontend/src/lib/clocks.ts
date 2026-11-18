@@ -532,7 +532,7 @@ export function wedgeColors(clock: Clock, kinds: MarkKind[]): MapColor[] {
 
 /** Reads a string through the shared instance; some keys are built at run time. */
 function translate(key: string, options?: Record<string, unknown>): string {
-  return (i18n.t as (key: string, options?: Record<string, unknown>) => string)(key, options);
+  return (i18n.t as unknown as (key: string, options?: Record<string, unknown>) => string)(key, options);
 }
 
 /** One line in words: who, what, how much, where the clock stood, the note. */

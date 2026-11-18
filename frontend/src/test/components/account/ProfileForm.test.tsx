@@ -147,8 +147,8 @@ describe('limits', () => {
 
     fireEvent.change(bioField(), { target: { value: 'a'.repeat(MAX_BIO_LENGTH + 1) } });
 
-    expect(screen.getByText(`${MAX_BIO_LENGTH + 1}/${MAX_BIO_LENGTH}`)).toHaveStyle({
-      color: 'var(--mantine-color-red-text)',
-    });
+    expect(screen.getByText(`${MAX_BIO_LENGTH + 1}/${MAX_BIO_LENGTH}`).style.color).toBe(
+      'var(--mantine-color-red-text)',
+    );
   });
 });
