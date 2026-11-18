@@ -1,6 +1,56 @@
 # 76 - Security hardening 2
 
-Status: **ticket, to confirm** (2026-11-18). Docs only; no code yet.
+Status: **built** (2026-11-18, PR #355 into `staging`). Confirmed by the
+product owner the same day, with the defaults of the three questions
+(masks /24 and /48, vault retention as today, Dependabot weekly). "As
+built" below wins over the proposed Decisions where they differ.
+
+## As built (2026-11-18)
+
+- **76_1 Pinned builds**: as Decisions 1-7. The `build` dependency group in
+  `pyproject.toml` (`hatchling==1.33.0`, and `editables==0.6`, which the
+  editable install in CI needs) replaces the separate
+  `build-requirements.txt` of Decision 2: it lives in `uv.lock` with
+  hashes like everything else, and Dependabot's `uv` updates keep it
+  current. The Dockerfile's first stage (`ghcr.io/astral-sh/uv:0.11.32`, by
+  digest) exports both lists; CI does the same through
+  `.github/scripts/install-backend.sh` (`setup-uv` pinned by SHA, uv
+  0.11.32). Base images: `python:3.12-slim-bookworm@sha256:935c3c…`,
+  `caddy:2.11@sha256:4851e5…`; every compose image and the rclone image
+  in the backup scripts by digest too.
+- **76_2 Caddy access log**: as Decisions 8-11, in one shared `log_filter`
+  snippet (`deploy/Caddyfile`) used by the access log of the three sites
+  and by Caddy's own error lines (global `log default`, which otherwise
+  printed full URIs). Codes are replaced with `***` (one `regexp` on
+  `request>uri`), not deleted. Checked on a local Caddy: masked IPs, no
+  code, state or signature, no `/health` line. **Decision 12 needed no
+  change**: the privacy notice (12 languages) already says server logs
+  hold IP addresses and are kept for a limited, rolling period.
+- **76_3 Backup vault**: as Decisions 13-18, except:
+  - The vault copies only **finished days** (before today, UTC): backup.sh
+    only ever writes today's folder, so a past day never changes
+    legitimately and a manual second run on the same day is no false
+    alarm. The copy is therefore a day behind, so production keeps the
+    **4** newest days (`BACKUP_KEEP_DAYS=4`), not 3.
+  - A day copied completely gets a marker `done/<day>` in the vault; a run
+    cut short is finished by the next one (`--immutable` adds what is
+    missing, changes nothing). Marked days still in the source are
+    compared (`rclone check --one-way`); a difference fails the run.
+  - The run also fails when yesterday's day never arrived, so the "Backup
+    vault" monitor also catches production no longer sending.
+  - `backup-vault.sh` makes its own bucket and key on the first run; no
+    `backup-target-setup.sh vault` step. `backup-target-setup.sh
+    vault-reader` prints the read-only key for `vault.env`, and restores
+    are `bash backup.sh vault check|fetch|restore-files [day]`.
+  - The retention rule moved to `deploy/backup-keep.sh`, sourced by both
+    scripts.
+  - Tested on a local Garage v2.5.0 (same image): the first run copies
+    every finished day, server side across buckets; a second copies
+    nothing; production's key gets 403 on the vault (list and delete) and
+    can delete in its own bucket (so `write` does include delete); after a
+    file of an old day is changed in the source the run fails with
+    `MISMATCH`, `backup-last-ok` is not updated and the vault copy is
+    unchanged; the `vault-reader` key reads and gets 403 on delete.
 
 ## Goals
 
@@ -42,7 +92,7 @@ Status: **ticket, to confirm** (2026-11-18). Docs only; no code yet.
    `uv.lock` to a hashed requirements file
    (`uv export --frozen --no-dev --no-emit-project`), and the image runs
    `pip install --require-hashes -r requirements.txt`, then
-   `pip install --no-deps .` for our own package. `uv` comes from its
+   `pip install --no-deps --no-build-isolation .` for our own package. `uv` comes from its
    official image, pinned by digest, in the build stage only: the final
    image is unchanged (no uv inside).
 2. **The build backend is pinned too**: `[build-system].requires` pins

@@ -7,7 +7,18 @@
 # Build context is `backend/`, and `.dockerignore` keeps every `.env*` file
 # out of it: the image must never carry production values (settings live in
 # the Render dashboard).
-FROM python:3.12-slim-bookworm
+# The lock, exported with its hashes (ticket 76): runtime packages and the
+# build tool. uv only runs in this stage (its image has no shell, hence the
+# exec form); the image below never carries it.
+FROM ghcr.io/astral-sh/uv:0.11.32@sha256:df4cae8f3a96d175e2e5f992e597550000edbe78fdc2594d5cd8de1a217f504c AS lock
+WORKDIR /src
+COPY pyproject.toml uv.lock ./
+RUN ["/uv", "export", "--frozen", "--no-dev", "--no-emit-project", "--quiet", "--output-file", "/src/requirements.txt"]
+RUN ["/uv", "export", "--frozen", "--only-group", "build", "--no-emit-project", "--quiet", "--output-file", "/src/build-requirements.txt"]
+
+# By digest as well as tag (ticket 76): a rebuilt tag can't change the
+# image under us; Dependabot proposes the new digest.
+FROM python:3.12-slim-bookworm@sha256:935c3c5b12357a7e10caa9c1e6ca5692344d97cf229832ef584be2cec9fc03df
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
@@ -30,9 +41,17 @@ WORKDIR /app
 # The package is installed, not run from the source tree, like on Render's
 # native runtime. Migrations stay a by-hand step (`architecture.md` →
 # Environments), so `alembic` and `migrations/` are not needed at run time.
+# Exactly the versions in uv.lock, each checked against its hash, then our
+# own package built with the pinned hatchling and no network fetch
+# (`--no-build-isolation`, `--no-deps`): nothing reaches the image that the
+# lock doesn't name (ticket 76).
+COPY --from=lock /src/requirements.txt /src/build-requirements.txt /tmp/
+RUN pip install --require-hashes -r /tmp/requirements.txt \
+    && pip install --require-hashes -r /tmp/build-requirements.txt
 COPY pyproject.toml ./
 COPY app ./app
-RUN pip install .
+RUN pip install --no-deps --no-build-isolation . \
+    && rm /tmp/requirements.txt /tmp/build-requirements.txt
 
 # Run as an unprivileged user (review of PR #96). It has a home directory so
 # fontconfig and WeasyPrint have somewhere to write their caches; the code in

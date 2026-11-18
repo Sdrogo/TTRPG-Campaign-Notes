@@ -208,7 +208,7 @@ jobs:
         run: |
           files=(deploy/compose.yaml deploy/Caddyfile deploy/deploy.sh deploy/migrate.sh
             deploy/garage.toml deploy/garage-setup.sh deploy/backup-target-setup.sh
-            deploy/backup.sh deploy/db-setup.sh)
+            deploy/backup.sh deploy/backup-keep.sh deploy/backup-vault.sh deploy/db-setup.sh)
           [ -f frontend.tgz ] && files+=(frontend.tgz)
           scp -i ~/.ssh/deploy_key "${files[@]}" "$TARGET:/opt/exlibris/"
           ssh -i ~/.ssh/deploy_key "$TARGET" "bash /opt/exlibris/deploy.sh $SHA"

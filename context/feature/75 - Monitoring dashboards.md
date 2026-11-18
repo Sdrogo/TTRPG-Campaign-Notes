@@ -33,7 +33,9 @@ possible; 6 everything at once; 7 monitoring only, never commands.
   (`app/logging_setup.py`, one `app.request` line per request with the
   `X-Request-ID` it also returns; health checks are counted but not
   logged). **No Caddy access log**: the backend's line covers every API
-  request without storing client IPs. Postgres logs statements over 500 ms
+  request without storing client IPs. *(Superseded by ticket 76: Caddy
+  now logs every site with masked IPs; see `context/architecture.md` →
+  Monitoring.)* Postgres logs statements over 500 ms
   without their parameters. Rotation 20 MB x 10.
 - **Alerts by email** (Decision 6): SMTP set in Beszel and Uptime Kuma by
   the product owner. Staging monitors sit in a nightly maintenance window.
@@ -77,6 +79,7 @@ possible; 6 everything at once; 7 monitoring only, never commands.
   rotated at 10 MB × 5 per container. Logs are read today only with
   `docker compose logs` over SSH.
 - Caddy writes no access log (no `log` directive in `deploy/Caddyfile`).
+  *(Superseded by ticket 76.)*
 - The backend logs with Python's `logging` (exceptions of the background
   jobs, auth, storage), unstructured, to stdout.
 - `GET /health` answers `{"status": "ok"}` without touching the database;

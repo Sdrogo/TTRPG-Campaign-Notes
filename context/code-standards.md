@@ -87,6 +87,10 @@ only.
 - Prefer explicit, narrow exceptions (e.g. `NotOwnerError`,
   `VisibilityViolation`) over generic ones, so route handlers can map
   them to the right HTTP status without guessing.
+- Dependencies change through `uv add` / `uv lock` (in `backend/`), and
+  `uv.lock` is committed with `pyproject.toml`: the image and CI install
+  only what the lock names, with hashes, and CI fails when the two
+  disagree (ticket 76).
 
 ## Frontend (React + Vite)
 

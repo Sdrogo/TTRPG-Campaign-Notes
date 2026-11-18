@@ -13,7 +13,7 @@ copy, in Italian, is `/mnt/project-files/vps/passo-monitoraggio.md`.
 | `.env` `MONITOR_NAME` | `prod` | `staging` |
 | `monitoring.env` (chmod 600) | `KEY`, `TOKEN`, `LISTEN=45876` | `KEY`, `TOKEN`, `LISTEN=127.0.0.1:45876`, `HUB_URL=http://127.0.0.1:8090` |
 | `ufw` | `allow from 57.129.179.240 to any port 45876 proto tcp` | nothing |
-| `backend.env` | `ADMIN_USER_IDS=<id>`, `BACKUP_STATUS_FILE=/srv/status/backup-last-ok` | `ADMIN_USER_IDS` with staging's ids only: staging runs no `backup.sh` (the nightly backup goes from production to staging's Garage), so its `/health/backup` stays 404 |
+| `backend.env` | `ADMIN_USER_IDS=<id>`, `BACKUP_STATUS_FILE=/srv/status/backup-last-ok` | `ADMIN_USER_IDS` with staging's ids only, and `BACKUP_STATUS_FILE=/srv/status/backup-last-ok`: staging runs no `backup.sh`, but `backup-vault.sh` (ticket 76) writes that file, so staging's `/health/backup` reports the backup vault |
 
 `KEY` and `TOKEN` come from Beszel's "Add system" dialog (one system per
 server). After changing `backend.env`: `docker compose up -d
@@ -42,7 +42,8 @@ Beszel `localhost:8090`, Uptime Kuma `localhost:3001`, Dozzle staging
   10 min, disk 80%.
 - Uptime Kuma, both environments, every minute, 3 retries 30 s apart,
   10 s timeout: API `/health`,
-  `/health/ready`, the site, and production's `/health/backup` (hourly); certificate expiry
+  `/health/ready`, the site, production's `/health/backup` (hourly) and staging's
+  `/health/backup` as "Backup vault" (hourly, ticket 76); certificate expiry
   notification on. Staging monitors are in a recurring maintenance window
   00:00-09:00 Europe/Rome (the product owner's choice).
 
@@ -54,4 +55,4 @@ Beszel `localhost:8090`, Uptime Kuma `localhost:3001`, Dozzle staging
   `DOZZLE_REMOTE_HOST` (no socket); if it shows none, read
   `docker compose logs dozzle`.
 - `/health/backup` turns green after the first `backup.sh` run that follows
-  the deploy.
+  the deploy (on staging, the first `backup-vault.sh` run).

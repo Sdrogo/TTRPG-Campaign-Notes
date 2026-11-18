@@ -4,12 +4,50 @@
 # in API_HOSTS and FRONTEND_HOSTS (set in compose.yaml / the server's .env);
 # each must already resolve to this server.
 
+# What any log line may say about a request (ticket 76): no full client
+# address (IPv4 keeps its /24, IPv6 its /48), no Authorization or Cookie
+# header (Caddy already redacts them; dropped anyway), and nothing in a URL
+# that works as a key: invitation and friend codes, the sign-in callback's
+# code and state, a signed file link's credential and signature.
+(log_filter) {
+	format filter {
+		wrap json
+		fields {
+			request>remote_ip ip_mask 24 48
+			request>client_ip ip_mask 24 48
+			request>headers>Authorization delete
+			request>headers>Cookie delete
+			request>uri regexp "(/invite/|/friends/add/|/invitations/|[?&](?:code|state|X-Amz-Credential|X-Amz-Signature)=)[^/?&#]+" "${1}***"
+		}
+	}
+}
+
+# Caddy's own lines (errors such as a 502 log the request too) go through
+# the same filter.
+{
+	log default {
+		output stderr
+		import log_filter
+	}
+}
+
+# The access log (ticket 76): one JSON line per request on stdout, where
+# Dozzle shows it and Docker's rotation (20 MB x 10 per container) bounds it.
+(access_log) {
+	log {
+		output stdout
+		import log_filter
+	}
+}
+
 # The frontend (ticket 73 step 1): the built SPA, unpacked by deploy.sh into
 # site/releases/<sha>-<time> and switched in through the site/current link.
 # The headers are spec 72's (checked by caddyFrontendHeaders.test.ts);
 # CSP_CONNECT_SRC lists the API origin the app talks to, and FILES_HOSTS the
 # bucket's host (the app fetches some files, e.g. PDFs to preview).
 {$FRONTEND_HOSTS} {
+	import access_log
+
 	header {
 		Strict-Transport-Security "max-age=31536000"
 		X-Content-Type-Options "nosniff"
@@ -55,6 +93,8 @@
 # signature is. The sandbox CSP keeps a file opened here from running
 # anything.
 {$FILES_HOSTS} {
+	import access_log
+
 	header {
 		Strict-Transport-Security "max-age=31536000"
 		X-Content-Type-Options "nosniff"
@@ -68,6 +108,12 @@
 
 # The API.
 {$API_HOSTS} {
+	import access_log
+	# The uptime monitors' checks, every minute: not logged (as the
+	# backend does), or they would bury the rest.
+	@health path /health /health/*
+	log_skip @health
+
 	# Security headers on every response, the live streams included (spec 72
 	# Decision 5). The API only answers JSON, SSE and files, so its CSP lets
 	# nothing load and nothing frame it. HSTS: one year, this host only.
