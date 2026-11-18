@@ -223,6 +223,7 @@ describe('demoFetch', () => {
       expect((await get(`/rooms/demo/documents/${MIRAI}/mention-suggestions`)).body).toEqual({ sources: [] });
       expect(await get(`/rooms/demo/documents/${MIRAI}/linked-map`)).toMatchObject({ status: 200, body: null });
       expect((await get(`/rooms/demo/documents/${MIRAI}/linked-map/x`)).status).toBe(404);
+      expect((await get(`/rooms/demo/documents/${MIRAI}/files`)).status).toBe(404);
     });
 
     it('gives Documents their image', async () => {

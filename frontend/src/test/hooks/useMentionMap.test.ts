@@ -7,6 +7,7 @@ import { toMentionMap } from '../../lib/maps';
 import {
   useCopyMentionMap,
   useDeleteMentionMap,
+  useLinkedMap,
   useMentionMap,
   useMentionMapPreview,
   useSaveMentionCards,
@@ -53,6 +54,21 @@ describe('the mention map queries', () => {
 
     fetchMock.mockRejectedValue(new ApiError(500, 'Rotto'));
     const failing = renderHookWithProviders(() => useMentionMap('room-1', 'doc-2'));
+    await waitFor(() => expect(failing.result.current.error?.message).toBe('Rotto'));
+  });
+
+  it('reads no linked map as null, from null or a 404, and fails on other errors', async () => {
+    fetchMock.mockResolvedValue(null);
+    const none = renderHookWithProviders(() => useLinkedMap('room-1', 'doc-1'));
+    await waitFor(() => expect(none.result.current.data).toBeNull());
+    expect(fetchMock).toHaveBeenCalledWith('/rooms/room-1/documents/doc-1/linked-map');
+
+    fetchMock.mockRejectedValue(new ApiError(404, 'Nascosto'));
+    const hidden = renderHookWithProviders(() => useLinkedMap('room-1', 'doc-2'));
+    await waitFor(() => expect(hidden.result.current.data).toBeNull());
+
+    fetchMock.mockRejectedValue(new ApiError(500, 'Rotto'));
+    const failing = renderHookWithProviders(() => useLinkedMap('room-1', 'doc-3'));
     await waitFor(() => expect(failing.result.current.error?.message).toBe('Rotto'));
   });
 
