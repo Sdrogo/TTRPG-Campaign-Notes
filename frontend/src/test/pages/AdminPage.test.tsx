@@ -166,7 +166,13 @@ describe('AdminPage', () => {
     expect(screen.getByText('RuntimeError')).toBeInTheDocument();
     expect(screen.getByText('def456')).toBeInTheDocument();
 
-    expect(screen.getByText('In corso: 1')).toBeInTheDocument();
+    // Running jobs in blue, none in gray: the theme's red is for failures only.
+    expect(screen.getByText('In corso: 1').closest('.mantine-Badge-root')).toHaveStyle({
+      '--badge-color': 'var(--mantine-color-blue-light-color)',
+    });
+    expect(screen.getByText('In corso: 0').closest('.mantine-Badge-root')).toHaveStyle({
+      '--badge-color': 'var(--mantine-color-gray-light-color)',
+    });
     expect(screen.getByText('Falliti (7 giorni): 3')).toBeInTheDocument();
   });
 
