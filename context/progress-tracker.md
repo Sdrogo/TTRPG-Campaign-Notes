@@ -235,7 +235,12 @@ image search, read aloud, GDPR (10-01 → 10-10). See the older archives.
   log with masked IPs, backup vault on staging (`backup-vault.sh`). After
   merge, product owner on the servers: vault first run + cron + monitor,
   then `BACKUP_KEEP_DAYS=7` on production (guide in
-  `/mnt/project-files/vps/`).
+  `/mnt/project-files/vps/`). **Live 2026-11-18** (vault on staging, monitor
+  green, `BACKUP_KEEP_DAYS=7` on prod). Follow-ups #356, #366: both backup
+  scripts check `status/` is writable up front and replace
+  `status/backup-last-ok` (Docker had made the folder, and a file in it, as
+  root, which failed the runs at their last line). Left: confirm tonight's
+  03:30 (prod) and 05:00 (vault) runs.
 - **73, external clean-up** (product owner): delete both Supabase projects
   about mid-December 2026 after a last dump (and the `supabase-*.dump`
   files on the servers), remove the old OAuth redirect URLs at Google,

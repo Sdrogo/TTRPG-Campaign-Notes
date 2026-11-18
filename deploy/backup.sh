@@ -76,6 +76,14 @@ if [ ! -s backup-password ]; then
   echo "new backup password in $PWD/backup-password: copy it to the password manager"
 fi
 
+# The status folder must be this user's: Docker makes it as root when the
+# backend's mount comes first (deploy.sh makes it for this user since ticket
+# 75), and the run would then fail at its very end, after the copy.
+if [ -z "${1:-}" ]; then
+  mkdir -p status
+  [ -w status ] || { echo "status/ is not writable: sudo chown $(id -un):$(id -gn) status" >&2; exit 1; }
+fi
+
 # Whether this server has a database comes from its settings, not from a
 # running container: a stopped database must fail the backup, not skip it.
 has_db=false
@@ -230,4 +238,6 @@ date -u +%FT%TZ > backup-last-ok
 # The same time where the backend reads it, for /health/backup and the
 # uptime monitor (ticket 75); readable by the backend's user.
 mkdir -p status
-(umask 022 && cp backup-last-ok status/backup-last-ok)
+# Replaced, not overwritten: a leftover file owned by another user (root,
+# from a run before status/ was made for this user) can then not block it.
+(umask 022 && cp backup-last-ok status/.backup-last-ok.new && mv -f status/.backup-last-ok.new status/backup-last-ok)
