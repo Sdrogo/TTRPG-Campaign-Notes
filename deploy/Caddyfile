@@ -17,6 +17,10 @@
 			request>client_ip ip_mask 24 48
 			request>headers>Authorization delete
 			request>headers>Cookie delete
+			request>headers>Proxy-Authorization delete
+			# Same-origin requests carry the full page URL here (invite codes,
+			# the sign-in callback's code), so it goes too.
+			request>headers>Referer delete
 			request>uri regexp "(/invite/|/friends/add/|/invitations/|[?&](?:code|state|X-Amz-Credential|X-Amz-Signature)=)[^/?&#]+" "${1}***"
 		}
 	}
