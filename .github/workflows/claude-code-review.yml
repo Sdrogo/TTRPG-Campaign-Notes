@@ -27,12 +27,12 @@ jobs:
 
     steps:
       # Pinned by commit SHA, as in ci.yml; the comment is the version.
-      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 1
           persist-credentials: false
 
-      - uses: anthropics/claude-code-action@97c53473391bff1901034d4b454b5bac7ab7a029 # v1.0.239
+      - uses: anthropics/claude-code-action@f3b070c88125d33dbae5653df5f143101d4ea9dc # v1.0.276
         with:
           # Set exactly one of these two repository secrets: an OAuth token
           # from `claude setup-token` (Claude Pro/Max subscription) or an
