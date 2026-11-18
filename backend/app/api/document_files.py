@@ -79,7 +79,7 @@ def file_responses(
             content_type=file.content_type,
             uploaded_by=file.uploaded_by,
             created_at=file.created_at,
-            url=storage.as_download(urls[file.storage_path], file.display_name),
+            url=storage.as_download(file.storage_path, file.display_name),
             can_delete=can_delete,
         )
         for file in files

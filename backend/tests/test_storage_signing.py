@@ -196,17 +196,8 @@ def test_own_object_path_reads_only_this_apps_signed_links(
 ) -> None:
     from app.config import settings
 
-    monkeypatch.setattr(settings, "supabase_url", "https://own.supabase.test")
+    monkeypatch.setattr(storage, "LEGACY_SUPABASE_URLS", ("https://own.supabase.test",))
+    monkeypatch.setattr(settings, "s3_public_url", "")
     monkeypatch.setattr(settings, "storage_bucket", "document-images")
 
     assert storage.own_object_path(url) == expected
-
-
-def test_own_object_path_is_none_without_a_configured_supabase(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    from app.config import settings
-
-    monkeypatch.setattr(settings, "supabase_url", "")
-
-    assert storage.own_object_path("https://x.test/storage/v1/object/sign/b/p") is None

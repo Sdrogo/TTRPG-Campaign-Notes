@@ -975,10 +975,10 @@ _OWN_STORAGE = "https://own.supabase.test"
 
 @pytest.fixture
 def own_bucket(monkeypatch: pytest.MonkeyPatch) -> Callable[[str], str]:
-    """Makes `_OWN_STORAGE` this app's Supabase and returns how to write a
+    """Makes `_OWN_STORAGE` one of the bucket's old Supabase hosts and returns how to write a
     signed link of one of its objects whose token has long expired (the fake
     fetch can't serve it: only a read straight from Storage can)."""
-    monkeypatch.setattr(settings, "supabase_url", _OWN_STORAGE)
+    monkeypatch.setattr(storage, "LEGACY_SUPABASE_URLS", (_OWN_STORAGE,))
 
     def link(path: str) -> str:
         return f"{_OWN_STORAGE}/storage/v1/object/sign/{settings.storage_bucket}/{path}?token=old"

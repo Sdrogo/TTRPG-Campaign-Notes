@@ -98,14 +98,12 @@ async def _response(
         signed = await storage.signed_urls([job.storage_path])
         if job.storage_path in signed and job.options.document_id is not None:
             filename = document_pdf_filename(job.options.document_name or "", job.finished_at)
-            url = storage.as_download(signed[job.storage_path], filename)
+            url = storage.as_download(job.storage_path, filename)
         elif job.storage_path in signed:
             if room_name is None:
                 room = await rooms_repo.get_room(session, job.room_id)
                 room_name = room.name if room is not None else "room"
-            url = storage.as_download(
-                signed[job.storage_path], pdf_filename(room_name, job.finished_at)
-            )
+            url = storage.as_download(job.storage_path, pdf_filename(room_name, job.finished_at))
     return ExportJobResponse(
         id=job.id,
         status=job.status,

@@ -1,6 +1,7 @@
 """Write the Backend job's section of the GitHub job summary, as Markdown on stdout.
 
-Reads pytest's JUnit XML (test counts) and `coverage json` output; run from
+Reads pytest's JUnit XML (test counts; one `junit-<shard>.xml` per test shard)
+and `coverage json` output; run from
 backend/. Files with no statements (the empty `__init__.py` packages) are left
 out of the per-file table: they are always "100%" and only add noise.
 """
@@ -9,7 +10,6 @@ import json
 from pathlib import Path
 from xml.etree import ElementTree
 
-JUNIT = Path("junit.xml")
 COVERAGE = Path("coverage.json")
 
 
@@ -19,13 +19,16 @@ def pct(value: float) -> str:
 
 
 def tests() -> None:
-    """Print the pass/fail counts from pytest's JUnit XML."""
+    """Print the pass/fail counts from pytest's JUnit XML, summed over the shards."""
     print("### Backend tests\n")
-    if not JUNIT.exists():
+    reports = sorted(Path().glob("junit*.xml"))
+    if not reports:
         print("_No test report produced._\n")
         return
-    root = ElementTree.parse(JUNIT).getroot()
-    suites = [root] if root.tag == "testsuite" else list(root.iter("testsuite"))
+    suites = []
+    for report in reports:
+        root = ElementTree.parse(report).getroot()
+        suites += [root] if root.tag == "testsuite" else list(root.iter("testsuite"))
     keys = ("tests", "failures", "errors", "skipped")
     count = {k: sum(int(s.get(k, 0)) for s in suites) for k in keys}
     failed = count["failures"] + count["errors"]

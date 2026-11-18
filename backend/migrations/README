@@ -1,7 +1,8 @@
 Database migrations (Alembic, async, single database)
 ======================================================
 
-The schema lives in the Postgres database that Supabase hosts. Alembic builds it
+The schema lives in Postgres (on each VPS since ticket 73 step 5; Supabase
+hosted it before, which is why the rules below name its roles). Alembic builds it
 from `app/db/models.py`. The connection comes from `DATABASE_URL` (see
 `backend/.env.example`), which must use the `postgresql+asyncpg://` scheme;
 `migrations/env.py` reads it through `app/config.py`, so the placeholder URL in
@@ -41,9 +42,9 @@ Rules every migration must follow
       CREATE POLICY backend_only_deny_clients ON public.<table>
         AS RESTRICTIVE FOR ALL TO anon, authenticated USING (false) WITH CHECK (false);
 
-  Supabase exposes `public` through its Data API, and the publishable key ships
-  in the frontend. `tests/test_database_security.py` fails if a table is missing
-  this. Do not "fix" a dashboard warning with a permissive policy.
+  Supabase exposed `public` through its Data API; the rule stays as a safety
+  net (`db-setup.sh` creates the two roles, without login, on each VPS).
+  `tests/test_database_security.py` fails if a table is missing this. Do not "fix" a dashboard warning with a permissive policy.
 - **No foreign key to `auth.users`.** User ids are plain UUID columns taken from
   the verified JWT, so our migrations don't depend on Supabase's own schema.
 - Only the `public` schema is ours; `env.py` ignores the others Supabase creates.

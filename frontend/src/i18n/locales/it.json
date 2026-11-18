@@ -71,7 +71,6 @@
     "prompt": "Accedi per continuare.",
     "signInWith": "Accedi con {{provider}}",
     "privacy": "Privacy",
-    "signInAgain": "Avevi già fatto l'accesso? Abbiamo cambiato il modo di accedere: accedi un'altra volta. Le tue Stanze sono tutte qui.",
     "signInFailed": "L'accesso non è andato a buon fine. Riprova."
   },
   "landing": {
@@ -1131,11 +1130,11 @@
       },
       "processors": {
         "title": "Chi li tratta, e dove",
-        "body": "L'app si appoggia a questi fornitori, che trattano i dati per nostro conto:\n\n- Supabase: database, archiviazione dei file e accesso, ospitati nell'Unione Europea (Francoforte, Germania).\n- OVHcloud: il server che esegue il backend dell'app, nel Regno Unito, che la Commissione europea riconosce come paese con un livello di protezione adeguato.\n- Vercel: distribuzione delle pagine dell'app. La sua rete può servire richieste da fuori dell'Unione Europea; i trasferimenti verso gli Stati Uniti si basano sull'EU-U.S. Data Privacy Framework e sulle clausole contrattuali standard.\n- Google, Discord e GitHub: solo per l'accesso che scegli, secondo le loro informative.\n- Openverse, un progetto di WordPress.org: quando cerchi immagini libere per un Documento, la ricerca viene inviata dal nostro server, e le anteprime vengono caricate dal tuo browser direttamente da Openverse, che quindi vede il tuo indirizzo IP."
+        "body": "L'app si appoggia a questi fornitori, che trattano i dati per nostro conto:\n\n- OVHcloud: i server su cui gira tutta l'app (pagine, backend, database, archiviazione dei file e accesso), in Francia (Strasburgo). I backup notturni cifrati sono conservati su un secondo server OVHcloud nel Regno Unito, che la Commissione europea riconosce come paese con un livello di protezione adeguato.\n- Supabase: solo fino a metà dicembre 2026, la copia del database e dei file di prima del passaggio dell'app ai suoi server (novembre 2026), nell'Unione Europea (Francoforte, Germania). Poi viene cancellata.\n- Google, Discord e GitHub: solo per l'accesso che scegli, secondo le loro informative.\n- Openverse, un progetto di WordPress.org: quando cerchi immagini libere per un Documento, la ricerca viene inviata dal nostro server, e le anteprime vengono caricate dal tuo browser direttamente da Openverse, che quindi vede il tuo indirizzo IP."
       },
       "retention": {
         "title": "Per quanto tempo li conserviamo",
-        "body": "- Il tuo account e il tuo profilo restano finché non elimini l'account.\n- Quando elimini l'account, profilo, avatar, Amici, reazioni, post-it della Sessione 0 e account di accesso vengono cancellati subito. Le Stanze in cui eri l'unico membro vengono eliminate con tutto il loro contenuto. Nelle Stanze condivise con altri, ciò che hai scritto resta come parte della campagna, mostrato come scritto da un utente sconosciuto.\n- Una Stanza che elimini viene cancellata con tutto il suo contenuto.\n- I PDF delle Stanze vengono cancellati 24 ore dopo la generazione, e le importazioni di Documenti 7 giorni dopo la fine.\n- I log dei server vengono conservati solo per il tempo necessario al funzionamento e alla sicurezza, e vengono sovrascritti a rotazione.\n- I backup dei nostri fornitori vengono sovrascritti entro il loro ciclo di backup."
+        "body": "- Il tuo account e il tuo profilo restano finché non elimini l'account.\n- Quando elimini l'account, profilo, avatar, Amici, reazioni, post-it della Sessione 0 e account di accesso vengono cancellati subito. Le Stanze in cui eri l'unico membro vengono eliminate con tutto il loro contenuto. Nelle Stanze condivise con altri, ciò che hai scritto resta come parte della campagna, mostrato come scritto da un utente sconosciuto.\n- Una Stanza che elimini viene cancellata con tutto il suo contenuto.\n- I PDF delle Stanze vengono cancellati 24 ore dopo la generazione, e le importazioni di Documenti 7 giorni dopo la fine.\n- I log dei server vengono conservati solo per il tempo necessario al funzionamento e alla sicurezza, e vengono sovrascritti a rotazione.\n- I backup notturni cifrati sono conservati fino a sei mesi, poi cancellati."
       },
       "rights": {
         "title": "I tuoi diritti",
@@ -1143,7 +1142,7 @@
       },
       "storage": {
         "title": "Cookie e memoria locale",
-        "body": "L'app non usa cookie. Conserva alcuni elementi nella memoria del tuo browser, necessari al suo funzionamento: la sessione di accesso, la lingua scelta, voce e velocità della lettura ad alta voce, il personaggio con cui hai scritto l'ultima volta in ogni Stanza, gli avvisi sui PDF delle Stanze che hai chiuso, e un link d'invito aperto prima di accedere. Restano sul tuo dispositivo: la sessione viene rimossa quando esci, il resto quando cancelli i dati del browser."
+        "body": "L'app usa solo due cookie, entrambi necessari all'accesso e impostati dal suo server: uno ti mantiene connesso (fino a 30 giorni, e viene rimosso quando esci), l'altro dura i dieci minuti di un accesso. Non ci sono cookie di tracciamento. L'app conserva anche alcuni elementi nella memoria del tuo browser, necessari al suo funzionamento: la lingua scelta, voce e velocità della lettura ad alta voce, il personaggio con cui hai scritto l'ultima volta in ogni Stanza, gli avvisi sui PDF delle Stanze che hai chiuso, e un link d'invito aperto prima di accedere. Restano sul tuo dispositivo finché non cancelli i dati del browser."
       }
     }
   },

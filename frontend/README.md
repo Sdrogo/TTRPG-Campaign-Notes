@@ -7,8 +7,7 @@ whole project: [../README.md](../README.md).
 ## Stack
 
 React 19, Vite, TypeScript (strict), Mantine v9 for UI, TanStack Query for
-server state, React Router, `react-i18next` (Italian and English), Supabase JS
-for sign-in only, Phosphor icons, Oxlint. Tests use Vitest and React Testing
+server state, React Router, `react-i18next` (Italian and English), Phosphor icons, Oxlint. Tests use Vitest and React Testing
 Library.
 
 ## Setup
@@ -65,6 +64,7 @@ Full rules: [../context/code-standards.md](../context/code-standards.md) and
 
 ## Deployment
 
-Deployed on Vercel. `vercel.json` rewrites every path to `index.html` so deep
-links work with client-side routing. The three `VITE_` variables are set in the
-Vercel project settings.
+Built by `.github/workflows/deploy-vps.yml` and served by Caddy on each VPS
+(`deploy/Caddyfile`), which falls back to `index.html` so deep links work with
+client-side routing and sends the security headers. `VITE_API_BASE_URL` is a
+variable of the GitHub environments `vps-production` / `vps-staging`.

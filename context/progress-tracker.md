@@ -30,8 +30,7 @@ Full history is archived; read it only when you need that detail:
   migrations were applied to production beforehand. Dependabot PRs land on
   `main`: merge `main` into `staging` before opening a release PR.
 - **Waiting on the product owner**: review of 55 (Room landing); 52 live
-  updates to test with two browsers; legal review of `/privacy` and the DPAs with Supabase, OVHcloud and
-  Vercel (spec 31; shipped before those were done). Keeping shared content
+  updates to test with two browsers; legal review of `/privacy` and the DPA with OVHcloud (spec 31; shipped before those were done). Keeping shared content
   anonymised after an account deletion is the default in place, not
   explicitly confirmed.
 - **Test baseline**: backend and frontend both at 100% coverage with exact
@@ -49,20 +48,20 @@ release, list what is pending here and remind the product owner to label the
 release PR.
 
 - **Head in the repository**: `c6f1a9d3e7b2` (request statistics and error
-  events, ticket 75; PR #339, needs the `db-migration` label).
-- **Staging database**: `b5e2c8f1a4d7 (head)`, 2026-11-17 from Actions (PR #337).
-  Before: `e7b3d9a1c5f2`, applied 2026-11-09 with
+  events, ticket 75).
+- **Staging database**: `c6f1a9d3e7b2 (head)`, 2026-11-17 from Actions (PR #339).
+  Before: `b5e2c8f1a4d7`, 2026-11-17 from Actions (PR #337); before that `e7b3d9a1c5f2`, applied 2026-11-09 with
   `backend/.env.staging` loaded (`d4a8f2c6b9e1` applied the same day,
   `c1d7e3a9f5b2` on 2026-11-03).
-- **Production database**: `b5e2c8f1a4d7 (head)`, 2026-11-17 from Actions (release PR #338).
-  Before: `e7b3d9a1c5f2`, applied 2026-11-09 with
+- **Production database**: `c6f1a9d3e7b2 (head)`, 2026-11-18 from Actions
+  (release PR #349; the label was added just after the merge, before the
+  deploy started, and the deploy migrated). Before: `b5e2c8f1a4d7`,
+  2026-11-17 (release PR #338); before that `e7b3d9a1c5f2`, applied 2026-11-09 with
   `backend/.env` loaded (product owner's go-ahead), before the release PR
   #316: `d4a8f2c6b9e1` (arrow bend, spec 67) then `e7b3d9a1c5f2` (color
   legend, spec 68). Earlier: `c1d7e3a9f5b2` on 2026-11-03 before the release
   that shipped it (PR #302), with `e8c4a2f6b1d9` and `e9c4a2f7b1d8` the same day.
-- **Pending**: `c6f1a9d3e7b2` (ticket 75: tables `request_stats_hourly`,
-  `error_events`) on both databases, through the label on PR #339 and on
-  the release PR. Earlier: `b5e2c8f1a4d7` (own sign-in, ticket 73 step 3) ran
+- **Pending**: none. Earlier: `b5e2c8f1a4d7` (own sign-in, ticket 73 step 3) ran
   from Actions on 2026-11-17: staging with PR #337, production with release
   PR #338 (31 identities copied).
 
@@ -257,6 +256,10 @@ image search, read aloud, GDPR (10-01 → 10-10). See the two older archives.
 
 ## Next Up
 
+- **CI in parallel shards** (product owner, 2026-11-18, PR #350): frontend
+  tests (~12 min) and backend tests (~7.5 min) each run in four parallel
+  jobs, and `Frontend coverage` / `Backend coverage` merge them and apply
+  the 100% gates. `pip-audit` waits 60 s and retries once (PyPI timeouts).
 - **75, Monitoring dashboards** (product owner, 2026-11-17): built in PR
   #339 (migration `c6f1a9d3e7b2`). Beszel + Uptime Kuma hub on staging,
   agents + Dozzle on both servers behind a read-only Docker proxy, all on
@@ -294,8 +297,14 @@ image search, read aloud, GDPR (10-01 → 10-10). See the two older archives.
   row-count check, switch, rollback line kept; also restores a backup file),
   `deploy/backup.sh` (was `backup-files.sh`; adds the nightly `pg_dump`,
   `check`/`fetch`/`restore-files`, `backup-last-ok`),
-  `context/restore-runbook.md`. Live once the product owner runs
-  `db-setup.sh` on staging, then production. Then step 6 cleanup.
+  `context/restore-runbook.md`; live on both servers 2026-11-17.
+  Step 6 code cleanup built 2026-11-17 (no migration): `vercel.json`,
+  `CORS_ORIGIN_REGEX`, the Supabase Storage side of `storage.py`,
+  `storage_copy.py`, `SUPABASE_*` settings, `backup-files.sh` and the
+  "sign in once more" notice removed; `own_object_path` still reads old
+  Supabase links in exports; privacy notice updated (OVH Strasbourg, the two
+  sign-in cookies, backups). Left for the product owner: the external
+  services, and dropping Supabase from the notice once it is deleted.
 - **License** (product owner, 2026-11-15): GPL-3.0 replaced by the
   Functional Source License `FSL-1.1-ALv2` (no commercial competing service;
   each version becomes Apache-2.0 after two years), licensor Andrea Partenope.

@@ -71,7 +71,6 @@
     "prompt": "Log in om door te gaan.",
     "signInWith": "Inloggen met {{provider}}",
     "privacy": "Privacy",
-    "signInAgain": "Eerder ingelogd? We hebben het inloggen veranderd, log dus nog één keer in. Al je Kamers zijn er nog.",
     "signInFailed": "Inloggen is niet gelukt. Probeer het opnieuw."
   },
   "landing": {
@@ -1131,11 +1130,11 @@
       },
       "processors": {
         "title": "Wie ze verwerkt, en waar",
-        "body": "De app maakt gebruik van deze leveranciers, die gegevens namens ons verwerken:\n\n- Supabase: database, bestandsopslag en inloggen, gehost in de Europese Unie (Frankfurt, Duitsland).\n- OVHcloud: de server waarop de backend van de app draait, in het Verenigd Koninkrijk, dat door de Europese Commissie wordt erkend als land met een passend beschermingsniveau.\n- Vercel: levering van de pagina's van de app. Het netwerk kan verzoeken van buiten de Europese Unie afhandelen; doorgiften naar de Verenigde Staten zijn gebaseerd op het EU-U.S. Data Privacy Framework en de standaardcontractbepalingen.\n- Google, Discord en GitHub: alleen voor het inloggen dat je kiest, volgens hun eigen privacyverklaringen.\n- Openverse, een project van WordPress.org: wanneer je naar vrije afbeeldingen voor een Document zoekt, wordt de zoekopdracht vanaf onze server verstuurd en laadt je browser de voorbeelden rechtstreeks van Openverse, dat dus je IP-adres ziet."
+        "body": "De app maakt gebruik van deze leveranciers, die gegevens namens ons verwerken:\n\n- OVHcloud: de servers waarop de hele app draait (pagina's, backend, database, bestandsopslag en inloggen), in Frankrijk (Straatsburg). Versleutelde nachtelijke back-ups worden bewaard op een tweede OVHcloud-server in het Verenigd Koninkrijk, dat door de Europese Commissie wordt erkend als land met een passend beschermingsniveau.\n- Supabase: alleen tot half december 2026 de kopie van de database en de bestanden van vóór de verhuizing van de app naar haar eigen servers (november 2026), in de Europese Unie (Frankfurt, Duitsland). Daarna wordt die verwijderd.\n- Google, Discord en GitHub: alleen voor het inloggen dat je kiest, volgens hun eigen privacyverklaringen.\n- Openverse, een project van WordPress.org: wanneer je naar vrije afbeeldingen voor een Document zoekt, wordt de zoekopdracht vanaf onze server verstuurd en laadt je browser de voorbeelden rechtstreeks van Openverse, dat dus je IP-adres ziet."
       },
       "retention": {
         "title": "Hoe lang we ze bewaren",
-        "body": "- Je account en je profiel blijven bestaan tot je het account verwijdert.\n- Wanneer je het account verwijdert, worden profiel, avatar, Vrienden, reacties, Sessie 0-post-its en inlogaccount meteen gewist. Kamers waarin jij het enige lid was, worden met alle inhoud verwijderd. In Kamers die je met anderen deelt, blijft wat je hebt geschreven staan als onderdeel van de campagne, getoond als geschreven door een onbekende gebruiker.\n- Een Kamer die je verwijdert, wordt met alle inhoud gewist.\n- De pdf's van Kamers worden 24 uur na het aanmaken gewist, en de importen van Documenten 7 dagen na afloop.\n- Serverlogs worden alleen bewaard zolang dat nodig is voor de werking en de beveiliging, en worden roulerend overschreven.\n- Back-ups van onze leveranciers worden overschreven binnen hun back-upcyclus."
+        "body": "- Je account en je profiel blijven bestaan tot je het account verwijdert.\n- Wanneer je het account verwijdert, worden profiel, avatar, Vrienden, reacties, Sessie 0-post-its en inlogaccount meteen gewist. Kamers waarin jij het enige lid was, worden met alle inhoud verwijderd. In Kamers die je met anderen deelt, blijft wat je hebt geschreven staan als onderdeel van de campagne, getoond als geschreven door een onbekende gebruiker.\n- Een Kamer die je verwijdert, wordt met alle inhoud gewist.\n- De pdf's van Kamers worden 24 uur na het aanmaken gewist, en de importen van Documenten 7 dagen na afloop.\n- Serverlogs worden alleen bewaard zolang dat nodig is voor de werking en de beveiliging, en worden roulerend overschreven.\n- Versleutelde nachtelijke back-ups worden tot zes maanden bewaard en daarna verwijderd."
       },
       "rights": {
         "title": "Jouw rechten",
@@ -1143,7 +1142,7 @@
       },
       "storage": {
         "title": "Cookies en lokale opslag",
-        "body": "De app gebruikt geen cookies. Ze bewaart enkele items in het geheugen van je browser die nodig zijn voor de werking: de inlogsessie, de gekozen taal, stem en snelheid van het voorlezen, het personage waarmee je het laatst in elke Kamer schreef, de meldingen over pdf's van Kamers die je hebt gesloten, en een uitnodigingslink die vóór het inloggen is geopend. Ze blijven op je apparaat: de sessie wordt verwijderd als je uitlogt, de rest wanneer je de browsergegevens wist."
+        "body": "De app gebruikt maar twee cookies, allebei nodig om in te loggen en gezet door haar eigen server: de ene houdt je ingelogd (tot 30 dagen, en wordt verwijderd als je uitlogt), de andere geldt voor de tien minuten van een inlogpoging. Er zijn geen trackingcookies. De app bewaart ook enkele items in het geheugen van je browser die nodig zijn voor de werking: de gekozen taal, stem en snelheid van het voorlezen, het personage waarmee je het laatst in elke Kamer schreef, de meldingen over pdf's van Kamers die je hebt gesloten, en een uitnodigingslink die vóór het inloggen is geopend. Ze blijven op je apparaat tot je de browsergegevens wist."
       }
     }
   },

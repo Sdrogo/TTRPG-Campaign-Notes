@@ -10,7 +10,6 @@ from app.domain.sign_in import (
 )
 
 ORIGINS = ["https://exlibris.world", "http://localhost:5173"]
-REGEX = r"https://ttrpg-[a-z0-9-]+\.vercel\.app"
 
 
 @pytest.mark.parametrize(
@@ -20,7 +19,7 @@ REGEX = r"https://ttrpg-[a-z0-9-]+\.vercel\.app"
         ("https://exlibris.world/", "https://exlibris.world"),
         ("HTTPS://ExLibris.World", "https://exlibris.world"),
         ("http://localhost:5173", "http://localhost:5173"),
-        ("https://ttrpg-abc-1.vercel.app", "https://ttrpg-abc-1.vercel.app"),
+        ("https://ttrpg-abc-1.vercel.app", None),
         (None, None),
         ("", None),
         ("https://evil.example", None),
@@ -35,11 +34,7 @@ REGEX = r"https://ttrpg-[a-z0-9-]+\.vercel\.app"
     ],
 )
 def test_only_the_frontend_origins_are_accepted(value: str | None, expected: str | None) -> None:
-    assert allowed_return_origin(value, ORIGINS, REGEX) == expected
-
-
-def test_without_a_pattern_only_the_listed_origins_pass() -> None:
-    assert allowed_return_origin("https://ttrpg-abc.vercel.app", ORIGINS, None) is None
+    assert allowed_return_origin(value, ORIGINS) == expected
 
 
 NOW = datetime(2026, 11, 17, 12, 0, tzinfo=UTC)

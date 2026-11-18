@@ -71,7 +71,6 @@
     "prompt": "Sign in to continue.",
     "signInWith": "Sign in with {{provider}}",
     "privacy": "Privacy",
-    "signInAgain": "Signed in before? We changed how sign-in works, so please sign in once more. Your Rooms are all still here.",
     "signInFailed": "The sign-in didn't go through. Please try again."
   },
   "landing": {
@@ -1131,11 +1130,11 @@
       },
       "processors": {
         "title": "Who processes it, and where",
-        "body": "The app relies on these providers, which process data on our behalf:\n\n- Supabase: database, file storage and sign-in, hosted in the European Union (Frankfurt, Germany).\n- OVHcloud: the server that runs the app's backend, in the United Kingdom, which the European Commission recognises as offering adequate protection.\n- Vercel: delivery of the web app's pages. Its network may serve requests from outside the European Union; transfers to the United States rely on the EU-U.S. Data Privacy Framework and standard contractual clauses.\n- Google, Discord and GitHub: only for the sign-in you choose, under their own privacy policies.\n- Openverse, a WordPress.org project: when you search free images for a Document, the search is sent by our server, and the previews are loaded by your browser directly from Openverse, which therefore sees your IP address."
+        "body": "The app relies on these providers, which process data on our behalf:\n\n- OVHcloud: the servers that run the whole app (its pages, backend, database, file storage and sign-in), in France (Strasbourg). Encrypted nightly backups are kept on a second OVHcloud server in the United Kingdom, which the European Commission recognises as offering adequate protection.\n- Supabase: until mid-December 2026 only, the copy of the database and files from before the app moved to its own servers (November 2026), in the European Union (Frankfurt, Germany). It is then deleted.\n- Google, Discord and GitHub: only for the sign-in you choose, under their own privacy policies.\n- Openverse, a WordPress.org project: when you search free images for a Document, the search is sent by our server, and the previews are loaded by your browser directly from Openverse, which therefore sees your IP address."
       },
       "retention": {
         "title": "How long we keep it",
-        "body": "- Your account and profile are kept until you delete your account.\n- When you delete your account, your profile, avatar, Friends, reactions, Session 0 post-its and sign-in account are erased at once. Rooms where you were the only member are deleted with everything in them. In Rooms shared with others, what you wrote stays as part of the campaign, shown as written by an unknown user.\n- A Room you delete is erased with everything in it.\n- Room PDFs are deleted 24 hours after they are generated, and Document imports 7 days after they finish.\n- Server logs are kept only as long as needed for operation and security, and are overwritten on a rolling basis.\n- Backups kept by our providers are overwritten within their backup cycle."
+        "body": "- Your account and profile are kept until you delete your account.\n- When you delete your account, your profile, avatar, Friends, reactions, Session 0 post-its and sign-in account are erased at once. Rooms where you were the only member are deleted with everything in them. In Rooms shared with others, what you wrote stays as part of the campaign, shown as written by an unknown user.\n- A Room you delete is erased with everything in it.\n- Room PDFs are deleted 24 hours after they are generated, and Document imports 7 days after they finish.\n- Server logs are kept only as long as needed for operation and security, and are overwritten on a rolling basis.\n- Encrypted nightly backups are kept for up to six months, then deleted."
       },
       "rights": {
         "title": "Your rights",
@@ -1143,7 +1142,7 @@
       },
       "storage": {
         "title": "Cookies and local storage",
-        "body": "The app uses no cookies. It keeps a few items in your browser's storage that it needs to work: your sign-in session, the language you chose, your read-aloud voice and speed, the character you last posted as in each Room, the Room PDF notices you dismissed, and an invitation link you opened before signing in. They stay on your device: the session is removed when you sign out, the rest when you clear your browser's data."
+        "body": "The app uses only two cookies, both needed for sign-in and set by its own server: one keeps you signed in (for up to 30 days, and is removed when you sign out), the other lasts the ten minutes of a sign-in. There are no tracking cookies. The app also keeps a few items in your browser's storage that it needs to work: the language you chose, your read-aloud voice and speed, the character you last posted as in each Room, the Room PDF notices you dismissed, and an invitation link you opened before signing in. They stay on your device until you clear your browser's data."
       }
     }
   },

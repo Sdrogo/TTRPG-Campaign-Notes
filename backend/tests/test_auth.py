@@ -112,7 +112,6 @@ def test_the_sign_in_state_round_trips() -> None:
 def _providers(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(settings, "api_public_url", "https://api.test")
     monkeypatch.setattr(settings, "cors_origins", [FRONTEND])
-    monkeypatch.setattr(settings, "cors_origin_regex", None)
     for name in ("google", "discord"):
         monkeypatch.setattr(settings, f"{name}_client_id", f"{name}-id")
         monkeypatch.setattr(settings, f"{name}_client_secret", f"{name}-secret")

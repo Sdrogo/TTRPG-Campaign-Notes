@@ -1,4 +1,4 @@
-"""Keeps Supabase Storage in step with the rows that reference its objects
+"""Keeps the images bucket in step with the rows that reference its objects
 (`document_images.storage_path`, `document_files.storage_path`,
 `users.avatar_path`, `rooms.image_path`) when a transaction
 fails. Storage isn't part of the Postgres transaction, so every object that

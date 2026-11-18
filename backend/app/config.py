@@ -1,7 +1,6 @@
 """Runtime settings, read from the environment (or a local `.env`)."""
 
 import json
-import re
 from typing import Annotated
 
 from pydantic import field_validator, model_validator
@@ -14,15 +13,9 @@ class Settings(BaseSettings):
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
-    # Supabase Storage only (the images bucket); sign-in left Supabase in
-    # ticket 73 step 3. Still read once the bucket is on S3: by the copy
-    # (`python -m app.storage_copy`), by old links in exports, and for a
-    # rollback.
-    supabase_url: str = ""
-    supabase_secret_key: str = ""
     storage_bucket: str = "document-images"
-    # The bucket on S3 (ticket 73 step 4: Garage on the VPS). Set, it
-    # replaces Supabase Storage. `s3_endpoint` is where the backend talks to
+    # The images bucket on S3 (ticket 73 step 4: Garage on the VPS).
+    # `s3_endpoint` is where the backend talks to
     # it (`http://garage:3900`, inside the compose network);
     # `s3_public_url` is the host browsers fetch signed links from
     # (`https://files.exlibris.world`, through Caddy).
@@ -34,15 +27,9 @@ class Settings(BaseSettings):
     # NoDecode: parsed by `_parse_cors_origins` below instead of as JSON, so
     # a plain or comma-separated value from a hosting dashboard also works.
     cors_origins: Annotated[list[str], NoDecode] = ["http://localhost:5173"]
-    # Origins allowed by pattern on top of `cors_origins`, for hosts that are
-    # generated per deploy (Vercel previews). Matched against the whole
-    # Origin header (Starlette uses `fullmatch`). Unset = no pattern.
-    cors_origin_regex: str | None = None
     database_url: str = ""
-    # Connections this process may hold. Supabase's Session Pooler allows 15
-    # clients per project in total, shared by every backend on the same
-    # database (two at once while production moves host), so 5 + 2 each
-    # keeps two processes under the cap.
+    # Connections this process may hold: the server's Postgres (ticket 73
+    # step 5) allows 100, so 5 + 2 leaves room for migrations and backups.
     db_pool_size: int = 5
     db_max_overflow: int = 2
     # FastAPI's /docs, /redoc and /openapi.json (spec 72 Decision 8): off
@@ -96,23 +83,6 @@ class Settings(BaseSettings):
             if missing:
                 raise ValueError(f"S3_ENDPOINT is set but {', '.join(missing)} is not")
         return self
-
-    @field_validator("cors_origin_regex", mode="before")
-    @classmethod
-    def _check_cors_origin_regex(cls, value: object) -> object:
-        """Blank means unset, and a pattern that doesn't compile fails at
-        startup - Starlette would otherwise raise only once the middleware
-        is built, with no hint that the env var is to blame."""
-        if not isinstance(value, str):
-            return value
-        pattern = value.strip()
-        if not pattern:
-            return None
-        try:
-            re.compile(pattern)
-        except re.error as exc:
-            raise ValueError(f"CORS_ORIGIN_REGEX is not a valid regex: {exc}") from exc
-        return pattern
 
     @field_validator("admin_user_ids", mode="before")
     @classmethod

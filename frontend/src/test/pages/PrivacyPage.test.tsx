@@ -18,8 +18,8 @@ describe('PrivacyPage', () => {
       'I tuoi diritti',
       'Cookie e memoria locale',
     ]);
-    expect(screen.getByText(/^Supabase: database/).closest('li')).not.toBeNull();
-    expect(screen.getByText(/Ultimo aggiornamento: 9 ottobre 2026/)).toBeInTheDocument();
+    expect(screen.getByText(/^OVHcloud: i server/).closest('li')).not.toBeNull();
+    expect(screen.getByText(/Ultimo aggiornamento: 17 novembre 2026/)).toBeInTheDocument();
     expect(screen.getByRole('link', { name: "Torna all'app" })).toHaveAttribute('href', '/');
   });
 
@@ -39,6 +39,6 @@ describe('PrivacyPage', () => {
     renderWithProviders(<PrivacyPage />);
 
     expect(screen.getByRole('heading', { level: 1, name: 'Privacy notice' })).toBeInTheDocument();
-    expect(screen.getByText(/Last updated: October 9, 2026/)).toBeInTheDocument();
+    expect(screen.getByText(/Last updated: November 17, 2026/)).toBeInTheDocument();
   });
 });

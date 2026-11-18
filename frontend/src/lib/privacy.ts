@@ -24,7 +24,7 @@ export const PRIVACY_CONTROLLER = {
 } as const;
 
 /** The date the privacy notice was last changed, shown at its top (ISO, `YYYY-MM-DD`). */
-export const PRIVACY_NOTICE_UPDATED = '2026-10-09';
+export const PRIVACY_NOTICE_UPDATED = '2026-11-17';
 
 /**
  * A paragraph of the privacy notice as stored in the locale files: plain text,

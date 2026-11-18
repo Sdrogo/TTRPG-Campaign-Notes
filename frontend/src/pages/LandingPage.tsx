@@ -227,11 +227,6 @@ export function LandingPage({ signedIn }: LandingPageProps) {
                   {t('landing.signInTitle')}
                 </Title>
                 <Text c="dimmed">{t('auth.prompt')}</Text>
-                {/* Ticket 73 step 3: the move to our own sign-in ended every
-                    session once. Drop this with the ticket's cleanup. */}
-                <Text size="sm" c="dimmed">
-                  {t('auth.signInAgain')}
-                </Text>
               </Stack>
               {signInFailed && (
                 <Alert color="red" role="alert" w="100%" maw={320}>
