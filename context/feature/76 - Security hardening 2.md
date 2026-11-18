@@ -45,42 +45,51 @@ Status: **ticket, to confirm** (2026-11-18). Docs only; no code yet.
    `pip install --no-deps .` for our own package. `uv` comes from its
    official image, pinned by digest, in the build stage only: the final
    image is unchanged (no uv inside).
-2. **CI installs from the lock too**: the same export with `--extra dev`,
+2. **The build backend is pinned too**: `[build-system].requires` pins
+   `hatchling==<x.y.z>`, and a small `backend/build-requirements.txt`
+   (hatchling and its few dependencies, with hashes, made by
+   `uv pip compile --generate-hashes`) is installed with
+   `--require-hashes` before our package, which is then installed with
+   `pip install --no-deps --no-build-isolation .`. So nothing reaches the
+   image, or CI's `pip install -e ".[dev]" --no-deps --no-build-isolation`,
+   that the lock or that file doesn't name. Dependabot's `pip` updates keep
+   that file current.
+3. **CI installs from the lock too**: the same export with `--extra dev`,
    installed with `--require-hashes`. A new step `uv lock --check` fails
    the PR when `pyproject.toml` and `uv.lock` disagree, so a dependency
    change always comes with its lock.
-3. **The audit checks what ships**: `pip-audit -r` on the exported runtime
+4. **The audit checks what ships**: `pip-audit -r` on the exported runtime
    requirements (`--no-deps`, hashes kept), instead of a fresh install.
-4. **Base images by digest**: `python:3.12-slim-bookworm@sha256:...` and
+5. **Base images by digest**: `python:3.12-slim-bookworm@sha256:...` and
    `caddy:2.<x.y>@sha256:...` (the digest of today's tag). The other
    compose images keep their exact versions (`garage v2.5.0`, `rclone
    1.71.0`, ...) and also get digests.
-5. **`.github/dependabot.yml`**, weekly, PRs into `staging`
+6. **`.github/dependabot.yml`**, weekly, PRs into `staging`
    (`target-branch`), one grouped PR per ecosystem: `uv` (`/backend`),
    `npm` (`/frontend`), `docker` (`/backend`), `docker-compose`
    (`/deploy`), `github-actions` (`/`). Security alerts keep their own
    immediate PRs, as today.
-6. Local development is unchanged (`uv sync`, or `pip install -e ".[dev]"`
+7. Local development is unchanged (`uv sync`, or `pip install -e ".[dev]"`
    still works). Adding a dependency now means `uv add` / `uv lock` and
    committing `uv.lock` (`code-standards.md` gets one line).
 
 ### Caddy access log (G2)
 
-7. **One JSON access log per site** (frontend, API, files) to stdout, so
+8. **One JSON access log per site** (frontend, API, files) to stdout, so
    Dozzle shows it and Docker's rotation (20 MB x 10) bounds it, as for
    every container. No log file on disk.
-8. **No full IPs**: `ip_mask` keeps `/24` for IPv4 and `/48` for IPv6
+9. **No full IPs**: `ip_mask` keeps `/24` for IPv4 and `/48` for IPv6
    (enough to see a scanner's network, not a person). No `Authorization`
    or `Cookie` header is logged (Caddy already redacts both by default;
    kept explicit).
-9. **No secrets in URLs**: on the files host the signed-link query
+10. **No secrets in URLs**: on the files host the signed-link query
    (`X-Amz-Signature`, `X-Amz-Credential`, ...) is deleted; on the API the
    OAuth callback's `code` and `state` are deleted and the invitation and
    friend codes in paths are replaced with `***`.
-10. **Health checks skipped** (`/health`, `/health/ready`,
+11. **Health checks skipped** (`/health`, `/health/ready`,
     `/health/backup`), as the backend already does, so the uptime
     monitors don't bury the rest.
-11. **Privacy notice**: one sentence in the 12 languages (server logs with
+12. **Privacy notice**: one sentence in the 12 languages (server logs with
     truncated IP addresses, kept a few weeks). `context/architecture.md`
     → Monitoring (ticket 75) gets a "Caddy access log" bullet with these
     rules, and ticket 75's "No Caddy access log" (its "As built" and
@@ -88,31 +97,31 @@ Status: **ticket, to confirm** (2026-11-18). Docs only; no code yet.
 
 ### Backups production can't delete (G3)
 
-12. **Two buckets on staging.** Production keeps pushing its nightly,
+13. **Two buckets on staging.** Production keeps pushing its nightly,
     encrypted backup to `exlibris-backups` as today (its key needs
     `write`, which in Garage includes delete). A new nightly job **on
     staging**, `backup-vault.sh`, then copies each new day into a second
     bucket, `exlibris-backups-vault`, with a staging-only key that can
     read the first bucket and write the second. Production has no key for
     the vault.
-13. **Retention moves to the vault**: the vault keeps today's rule (7
+14. **Retention moves to the vault**: the vault keeps today's rule (7
     days, 4 Sundays, 6 first-of-month). Production prunes its own bucket
     to the **3 newest days**, enough for `--copy-dest` (unchanged files are
     copied inside the server, not over the network).
-14. **Still encrypted, staging never holds the password**: the vault job
+15. **Still encrypted, staging never holds the password**: the vault job
     copies the encrypted objects as they are (plain `rclone copy` between
     the two buckets, server side), so a compromised staging can delete the
     vault but not read it. Losing everything now needs both servers.
-15. **Restore reads the vault**: `backup.sh check|fetch|restore-files`
+16. **Restore reads the vault**: `backup.sh check|fetch|restore-files`
     gain a way to read from `exlibris-backups-vault` (a second
     `backup.env`-style file with a read-only vault key, made by
     `backup-target-setup.sh vault-reader`), and `restore-runbook.md` says
     which to use. The plain bucket keeps working for the newest 3 days.
-16. **Monitored**: `backup-vault.sh` writes `status/backup-last-ok` on
+17. **Monitored**: `backup-vault.sh` writes `status/backup-last-ok` on
     staging, and staging's backend sets `BACKUP_STATUS_FILE`, so
     `https://api-staging.exlibris.world/health/backup` reports the vault's age; one
     more Uptime Kuma monitor ("Backup vault"), same 26 h threshold.
-17. **Rollout order**: deploy the scripts, run `backup-target-setup.sh
+18. **Rollout order**: deploy the scripts, run `backup-target-setup.sh
     vault` on staging, run `backup-vault.sh` once by hand (it copies every
     day already there), install its cron at 05:00 server time (after
     production's 03:30 run), check the monitor is green, and only then
