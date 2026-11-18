@@ -1,5 +1,12 @@
 # Production backend: Render → VPS migration plan
 
+> **History (2026-11-18):** this plan covers the 2026-10-08 move of the
+> production backend only. Ticket 73 (`feature/73 - Leave Vercel and
+> Supabase.md`) has since moved everything else (frontend, staging, sign-in,
+> files, database) to the VPSes, and backups and monitoring exist
+> (`restore-runbook.md`, `monitoring-guide.md`). `architecture.md` →
+> Environments describes the live setup.
+
 Written 2026-10-07 at the product owner's request. Scope: only the **production backend** moves. Staging stays on
 Render, the database (and Auth and Storage) stays on Supabase, the frontend
 stays on Vercel. The cutover happened on 2026-10-08: `architecture.md` →

@@ -1,5 +1,10 @@
 # 72 - Security hardening
 
+Status: **built and released** (PRs #325 and #327 into staging, release #329,
+2026-11-14; CSP enforced since 72_3). Left for the product owner: turn on
+GitHub private vulnerability reporting. The PKCE proposal for supabase-js
+below is moot since ticket 73 step 3 (own sign-in, supabase-js removed).
+
 ## Goals
 
 - Product owner's request (2026-11-14), while assessing how far the app is

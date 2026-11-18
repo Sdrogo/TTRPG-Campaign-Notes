@@ -113,8 +113,8 @@ them for day‑to‑day implementation use; IDs like `D-01`, `FR-D1`,
   file and can delete their account: permanent and immediate; content
   written in shared Rooms stays, shown as "Unknown user" (FR-A3, FR-A4,
   D-41). A public `/privacy` notice is reachable without signing in.
-  The legal review of that notice and the processing agreements with
-  Supabase, OVHcloud and Vercel are owed by the product owner.
+  The legal review of that notice and the processing agreement with
+  OVHcloud (the only host since ticket 73) are still owed by the product owner.
 
 ### Rooms
 - Create / edit / archive / delete a Room (FR-R1), with an optional
