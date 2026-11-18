@@ -40,6 +40,11 @@ if [ "${1:-}" = install ]; then
   exit 0
 fi
 [ -z "${1:-}" ] || { echo "unknown command: $1" >&2; exit 1; }
+# The status folder must be this user's: Docker makes it as root when the
+# backend's mount comes first (deploy.sh makes it for this user since ticket
+# 75), and the run would then fail at its very end.
+mkdir -p status
+[ -w status ] || { echo "status/ is not writable: sudo chown $(id -un):$(id -gn) status" >&2; exit 1; }
 
 source_bucket=exlibris-backups
 vault=exlibris-backups-vault
