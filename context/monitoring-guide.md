@@ -44,7 +44,7 @@ Beszel `localhost:8090`, Uptime Kuma `localhost:3001`, Dozzle staging
   10 s timeout: API `/health`,
   `/health/ready`, the site, and production's `/health/backup` (hourly); certificate expiry
   notification on. Staging monitors are in a recurring maintenance window
-  23:00-08:00 Europe/Rome.
+  00:00-09:00 Europe/Rome (the product owner's choice).
 
 ## Checks
 
