@@ -278,7 +278,9 @@ function Jobs({ label, counts }: { label: string; counts: AdminJobCounts }) {
     <Stack gap={4}>
       <Text fw={500}>{label}</Text>
       <Group gap="xs">
-        <Badge variant="light">{t('admin.jobs.running', { value: formatNumber(counts.running) })}</Badge>
+        <Badge variant="light" color={counts.running > 0 ? 'blue' : 'gray'}>
+          {t('admin.jobs.running', { value: formatNumber(counts.running) })}
+        </Badge>
         <Badge variant="light" color="teal">
           {t('admin.jobs.done', { value: formatNumber(counts.done_7d) })}
         </Badge>
