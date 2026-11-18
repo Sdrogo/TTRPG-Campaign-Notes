@@ -13,7 +13,7 @@ copy, in Italian, is `/mnt/project-files/vps/passo-monitoraggio.md`.
 | `.env` `MONITOR_NAME` | `prod` | `staging` |
 | `monitoring.env` (chmod 600) | `KEY`, `TOKEN`, `LISTEN=45876` | `KEY`, `TOKEN`, `LISTEN=127.0.0.1:45876`, `HUB_URL=http://127.0.0.1:8090` |
 | `ufw` | `allow from 57.129.179.240 to any port 45876 proto tcp` | nothing |
-| `backend.env` | `ADMIN_USER_IDS=<id>`, `BACKUP_STATUS_FILE=/srv/status/backup-last-ok` | same, with staging's ids |
+| `backend.env` | `ADMIN_USER_IDS=<id>`, `BACKUP_STATUS_FILE=/srv/status/backup-last-ok` | `ADMIN_USER_IDS` with staging's ids only: staging runs no `backup.sh` (the nightly backup goes from production to staging's Garage), so its `/health/backup` stays 404 |
 
 `KEY` and `TOKEN` come from Beszel's "Add system" dialog (one system per
 server). After changing `backend.env`: `docker compose up -d
@@ -34,10 +34,15 @@ Beszel `localhost:8090`, Uptime Kuma `localhost:3001`, Dozzle staging
 ## Alerts (email)
 
 - SMTP in Beszel (PocketBase admin `localhost:8090/_/` → Mail settings) and
-  in Uptime Kuma (Settings → Notifications, SMTP, default on).
-- Beszel per system: CPU 90% for 10 min, memory 90%, disk 80%, down.
-- Uptime Kuma, both environments, every minute, 3 retries: API `/health`,
-  `/health/ready`, `/health/backup` (hourly), the site; certificate expiry
+  in Uptime Kuma (Settings → Notifications, SMTP, default on). The sender is
+  a Gmail account with an app password (`smtp.gmail.com:587`, StartTLS; the
+  sender address must be that account); the recipient is the product owner's
+  Proton address. A free Proton account can receive but cannot send by SMTP.
+- Beszel per system: down for 2 min, CPU 90% for 10 min, memory 90% for
+  10 min, disk 80%.
+- Uptime Kuma, both environments, every minute, 3 retries 30 s apart,
+  10 s timeout: API `/health`,
+  `/health/ready`, the site, and production's `/health/backup` (hourly); certificate expiry
   notification on. Staging monitors are in a recurring maintenance window
   23:00-08:00 Europe/Rome.
 
