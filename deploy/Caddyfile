@@ -21,6 +21,10 @@
 			# Same-origin requests carry the full page URL here (invite codes,
 			# the sign-in callback's code), so it goes too.
 			request>headers>Referer delete
+			# The sign-in start redirects with the OAuth `state` in Location; the
+			# session cookies go out in Set-Cookie.
+			resp_headers>Location delete
+			resp_headers>Set-Cookie delete
 			request>uri regexp "(/invite/|/friends/add/|/invitations/|[?&](?:code|state|X-Amz-Credential|X-Amz-Signature)=)[^/?&#]+" "${1}***"
 		}
 	}
