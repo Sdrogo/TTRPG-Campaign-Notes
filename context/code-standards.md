@@ -82,7 +82,7 @@ only.
 - Pydantic models validate and parse every request body and query
   param at the API boundary before any domain code runs.
 - Domain logic in `backend/app/domain/` must not import FastAPI or
-  Supabase client code — it takes plain data in, returns plain data
+  database / storage client code — it takes plain data in, returns plain data
   out, so it can be unit-tested without a running server or database.
 - Prefer explicit, narrow exceptions (e.g. `NotOwnerError`,
   `VisibilityViolation`) over generic ones, so route handlers can map
@@ -179,7 +179,7 @@ Vitest + React Testing Library, run with `npm test`; coverage with
 pytest, split by what a test needs rather than by what it covers.
 
 - A test that requests the `db_session` fixture talks to whatever
-  database `DATABASE_URL` points at (the Supabase project locally, a
+  database `DATABASE_URL` points at (a staging or dev database locally, a
   throwaway Postgres in CI) and is marked `integration` automatically
   (`tests/conftest.py`). Don't add the marker by hand, and don't reach
   for the database from a test that doesn't need it: those tests are
@@ -206,8 +206,8 @@ pytest, split by what a test needs rather than by what it covers.
   `notes`, `comments`, `tags`, `relationship_maps`, `invitations`,
   `export`, …).
 - Dependency-injected auth: every protected route takes the
-  authenticated user (resolved from the Supabase JWT in
-  `backend/app/auth/`) as a FastAPI dependency — never re-parse the
+  authenticated user (resolved from our own access token in
+  `backend/app/auth/`, ticket 73 step 3) as a FastAPI dependency — never re-parse the
   token manually inside a handler.
 
 ## Styling
@@ -266,11 +266,11 @@ pytest, split by what a test needs rather than by what it covers.
   anything to `anon` or `authenticated`, and never add a permissive
   policy for them (including dashboard-suggested ones).
 
-- Metadata belongs in Postgres (Supabase): Rooms, Memberships,
+- Metadata belongs in Postgres: Rooms, Memberships,
   Documents, Notes, Tags, Comments, maps, Invitations, visibility
   grants, AuditLog.
-- Document images and other uploaded media belong in Supabase
-  Storage; Postgres stores only the reference (path/URL), never the
+- Document images and other uploaded media belong in the
+  bucket (Garage over S3); Postgres stores only the reference (path/URL), never the
   file bytes.
 - Do not store large generated content (e.g. a full Agent export
   payload) directly in a table row meant for interactive reads —
@@ -283,8 +283,7 @@ pytest, split by what a test needs rather than by what it covers.
 - **Every feature pull request targets `staging`, not `main`** (2026-10-01).
   The only pull request into `main` is the `staging` → `main` release PR
   described below.
-  Vercel and the production backend (the VPS deploy workflow, after
-  CI) deploy production on every merge to `main`, so
+  The VPS deploy workflow (after CI) deploys production on every merge to `main`, so
   feature PRs collect on `staging` and `main` only receives a
   `staging` → `main` PR when a batch is ready to ship. That keeps the
   number of production deploys down.
@@ -319,7 +318,7 @@ pytest, split by what a test needs rather than by what it covers.
 **`backend/app/`**
 - `api/` — FastAPI routers, one per resource; thin, no business rules.
 - `domain/` — business rules and invariants; framework-independent.
-- `db/` — Postgres queries/repositories and bucket calls (Garage over S3, or Supabase Storage until ticket 73 step 6).
+- `db/` — Postgres queries/repositories and bucket calls (Garage over S3).
 - `auth/` — our own access tokens (ticket 73 step 3) and user/session resolution.
 
 **`context/`**

@@ -70,11 +70,11 @@ Do not modify the following unless explicitly instructed:
 - `context/requirements.md` — this is the negotiated product spec; a
   code-driven change to it (rather than a product conversation) is
   out of bounds. Propose an addition to Open Questions instead. It is
-  changed only when the product owner asks (last: v0.6, 2026-10-27,
-  aligned with everything built up to spec 45).
+  changed only when the product owner asks (last: v0.7, 2026-11-18,
+  aligned with everything built up to spec 75).
 - Any third-party library internals (`node_modules`, installed
   Python packages).
-- Supabase-generated migration/type files — regenerate, don't hand-edit.
+- Generated files (lockfiles, generated types) — regenerate, don't hand-edit.
 
 ## Keeping Docs in Sync
 

@@ -8,7 +8,9 @@ the Strasbourg VPS, 2026-11-16). **Step 2 live** (staging on the Erith VPS,
 release #343; nightly encrypted backup to the staging VPS running).
 **Step 5 live** 2026-11-17 (section 2, update; PR #344, release #345;
 `db-setup.sh` ran on both servers). **Step 6 code built** 2026-11-17 (see the
-note under the table); the external clean-up is the product owner's.
+note under the table; PR #347, released with #351 on 2026-11-18); the
+external clean-up is the product owner's (Supabase projects paused, to be
+deleted about mid-December 2026 after a last dump).
 Questions: sign-in A (2026-11-16); files to
 Garage on the production VPS (2026-11-17, replacing "stay on Supabase for
 now"); backup age check through ticket 75 (question 9, 2026-11-17).
