@@ -155,10 +155,20 @@ jobs:
           # whatever a developer happens to run.
           python-version: '3.12'
           cache: pip
-          cache-dependency-path: backend/pyproject.toml
+          cache-dependency-path: backend/uv.lock
+
+      # uv only exports uv.lock for the install below (ticket 76).
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          version: '0.11.32'
+          enable-cache: false
+
+      # A dependency change in pyproject.toml must come with its uv.lock.
+      - name: Lock matches pyproject.toml
+        run: uv lock --check
 
       - name: Install
-        run: pip install -e ".[dev]"
+        run: bash ../.github/scripts/install-backend.sh
 
       - name: Lint
         run: ruff check .
@@ -225,10 +235,16 @@ jobs:
         with:
           python-version: '3.12'
           cache: pip
-          cache-dependency-path: backend/pyproject.toml
+          cache-dependency-path: backend/uv.lock
+
+      # uv only exports uv.lock for the install below (ticket 76).
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          version: '0.11.32'
+          enable-cache: false
 
       - name: Install
-        run: pip install -e ".[dev]"
+        run: bash ../.github/scripts/install-backend.sh
 
       - name: Prepare the database
         env:
@@ -286,12 +302,21 @@ jobs:
         with:
           python-version: '3.12'
           cache: pip
-          cache-dependency-path: backend/pyproject.toml
+          cache-dependency-path: backend/uv.lock
 
-      # Only coverage itself: it reads its settings from pyproject.toml and
-      # the sources from the checkout.
+      # uv only exports uv.lock for the install below (ticket 76).
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          version: '0.11.32'
+          enable-cache: false
+
+      # The locked dev tools, coverage among them (each checked against its
+      # hash), not our package: coverage reads its settings from
+      # pyproject.toml and the sources from the checkout.
       - name: Install
-        run: pip install "coverage[toml]>=7"
+        run: |
+          uv export --frozen --extra dev --no-emit-project --quiet --output-file /tmp/dev.txt
+          pip install --require-hashes -r /tmp/dev.txt
 
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
@@ -406,21 +431,29 @@ jobs:
         with:
           node-version: '24'
 
-      # The backend's runtime dependencies, installed as the image installs
-      # them (`pip install .`), in a venv of their own so only they are audited.
+      # The backend's runtime dependencies exactly as the image installs them:
+      # uv.lock exported with its hashes (ticket 76), audited without
+      # installing anything.
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          version: '0.11.32'
+          enable-cache: false
+
       - name: Backend dependency audit
         working-directory: backend
         run: |
+          uv export --frozen --no-dev --no-emit-project --quiet --output-file /tmp/requirements.txt
+          # pip-audit itself from the lock too (group `audit`), with hashes.
+          uv export --frozen --only-group audit --no-emit-project --quiet --output-file /tmp/audit-tool.txt
           python -m venv /tmp/audit
-          # The venv's own pip comes from the runner's Python and lags behind;
-          # it is a build tool, not a runtime dependency, so bring it current
-          # rather than fail on its advisories.
-          /tmp/audit/bin/python -m pip install --quiet --upgrade pip
-          /tmp/audit/bin/pip install --quiet . pip-audit
+          /tmp/audit/bin/pip install --quiet --require-hashes -r /tmp/audit-tool.txt
           # PyPI's advisory API is sometimes slow from the runners (2026-11-18:
           # three failures in a row on the default 15 s read timeout), so
           # allow 60 s and one more try before failing the check.
-          audit() { /tmp/audit/bin/pip-audit --skip-editable --progress-spinner off --timeout 60; }
+          audit() {
+            /tmp/audit/bin/pip-audit -r /tmp/requirements.txt --require-hashes --disable-pip \
+              --progress-spinner off --timeout 60
+          }
           audit || { echo "pip-audit failed, trying once more in 30 s"; sleep 30; audit; }
 
       # What ships to the browser only; dev tooling never reaches users.
@@ -436,7 +469,7 @@ jobs:
             -e CSP_CONNECT_SRC="https://api.example.com" \
             -e FILES_HOSTS="https://files.example.com" \
             -v "$PWD/deploy/Caddyfile:/etc/caddy/Caddyfile:ro" \
-            caddy:2 caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile
+            caddy:2.11@sha256:4851e54a46b206517c574821bb5cc67f170d2156041e9fbc4c9193b45e84a75b caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile
 
       # The scripts the deploy copies to the servers (shellcheck comes with
       # the runner image). deploy.sh lists its own release folders with `ls`,

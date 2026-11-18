@@ -134,6 +134,10 @@ One line per unit, dates 2026, newest first. Spec files live in
 
 ### 2026-11-05 → 11-18
 
+- **No 404 for a Document without a map** (11-18, no mig.): first read of
+  the logs showed the API's only real 404s were `mention-map` and
+  `linked-map` on every Document without one; both now answer `null` (200).
+  The rest were scanners (`/.env*`, `/.git`, `/wp-*`), harmless.
 - **CI in parallel shards** (11-18, PR #350, no mig.): frontend and backend
   tests each in four jobs; `Frontend coverage` / `Backend coverage` merge
   them and apply the 100% gates; `pip-audit` waits 60 s and retries once.
@@ -224,6 +228,12 @@ image search, read aloud, GDPR (10-01 → 10-10). See the older archives.
 
 ## Next Up
 
+- **76, Security hardening 2** (built 2026-11-18, PR #355 into staging):
+  pinned builds from `uv.lock` + digests + `dependabot.yml`, Caddy access
+  log with masked IPs, backup vault on staging (`backup-vault.sh`). After
+  merge, product owner on the servers: vault first run + cron + monitor,
+  then `BACKUP_KEEP_DAYS=7` on production (guide in
+  `/mnt/project-files/vps/`).
 - **73, external clean-up** (product owner): delete both Supabase projects
   about mid-December 2026 after a last dump (and the `supabase-*.dump`
   files on the servers), remove the old OAuth redirect URLs at Google,

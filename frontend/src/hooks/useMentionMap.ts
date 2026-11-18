@@ -29,7 +29,8 @@ export function mentionMapQueryKey(roomId: string, documentId: string) {
 
 /**
  * The Document's mention map as the viewer sees it, or null when it has none
- * (spec 36). With `refresh`, while the Room stream is down, it is read
+ * (spec 36). The API answers `null` then, not 404, so opening a Document
+ * leaves no error in the console; a 404 is a Document the viewer can't see. With `refresh`, while the Room stream is down, it is read
  * again every `MAP_REFRESH_MS`, like a free map (spec 52).
  */
 export function useMentionMap(roomId: string, documentId: string, refresh = false) {
@@ -38,7 +39,8 @@ export function useMentionMap(roomId: string, documentId: string, refresh = fals
     refetchInterval: refresh ? MAP_REFRESH_MS : false,
     queryFn: async () => {
       try {
-        return toMentionMap(await apiFetch<RawMentionMap>(mentionMapPath(roomId, documentId)));
+        const raw = await apiFetch<RawMentionMap | null>(mentionMapPath(roomId, documentId));
+        return raw ? toMentionMap(raw) : null;
       } catch (error) {
         if (error instanceof ApiError && error.status === 404) return null;
         throw error;
@@ -130,7 +132,8 @@ function linkedMapQueryKey(roomId: string, documentId: string) {
 
 /**
  * The map linked to the Document, as the viewer sees it, or null when it has
- * none or the map is hidden from them (spec 36 Decision 15). A geographic
+ * none or the map is hidden from them (spec 36 Decision 15): the API answers
+ * `null` for both. A geographic
  * map (spec 38) comes without its content, read from `useGeoMap`.
  */
 export function useLinkedMap(roomId: string, documentId: string) {
@@ -138,7 +141,8 @@ export function useLinkedMap(roomId: string, documentId: string) {
     queryKey: linkedMapQueryKey(roomId, documentId),
     queryFn: async () => {
       try {
-        return toMapDetail(await apiFetch<RawMapDetail>(`/rooms/${roomId}/documents/${documentId}/linked-map`));
+        const raw = await apiFetch<RawMapDetail | null>(`/rooms/${roomId}/documents/${documentId}/linked-map`);
+        return raw ? toMapDetail(raw) : null;
       } catch (error) {
         if (error instanceof ApiError && error.status === 404) return null;
         throw error;

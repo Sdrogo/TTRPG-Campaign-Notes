@@ -8,11 +8,13 @@
 # - the database, where this server has one (the `db` profile), a
 #   `pg_dump -Fc` per day under db/<YYYY-MM-DD>/exlibris.dump.
 # Kept, for each: the 7 newest days, the 4 newest Sundays and the 6 newest
-# first days of a month. The password is made on the first run, in
-# backup-password next to this script: keep a copy in the password manager,
-# since without it the copies can't be read. After a good run the time goes
-# to backup-last-ok and status/backup-last-ok, for the monitoring (ticket 75:
-# /health/backup).
+# first days of a month; or, when backup.env sets BACKUP_KEEP_DAYS=<n>, only
+# the n newest days (ticket 76: the long history lives in the vault on the
+# other VPS, backup-vault.sh, which this server can't delete). The password
+# is made on the first run, in backup-password next to this script: keep a
+# copy in the password manager, since without it the copies can't be read.
+# After a good run the time goes to backup-last-ok and status/backup-last-ok,
+# for the monitoring (ticket 75: /health/backup).
 #
 # Needs backup.env next to it (written by backup-target-setup.sh on the
 # other VPS). Run from /opt/exlibris:
@@ -30,9 +32,15 @@
 #                                 copies that day's files back into the
 #                                 bucket (adds and overwrites, deletes
 #                                 nothing)
+#   bash backup.sh vault check|fetch|restore-files [day]
+#                                 the same, reading the vault instead, with
+#                                 the read-only key in vault.env (made by
+#                                 `backup-target-setup.sh vault-reader`)
 # Restoring for real, also on a new server: context/restore-runbook.md.
 set -euo pipefail
 cd "$(dirname "$0")"
+# shellcheck source=/dev/null
+source ./backup-keep.sh
 
 if [ "${1:-}" = install ]; then
   command -v crontab >/dev/null || { echo "crontab is missing: sudo apt install -y cron" >&2; exit 1; }
@@ -42,10 +50,26 @@ if [ "${1:-}" = install ]; then
   exit 0
 fi
 
-[ -f backup.env ] || { echo "backup.env is missing (see backup-target-setup.sh)" >&2; exit 1; }
+env_file=backup.env
+if [ "${1:-}" = vault ]; then
+  env_file=vault.env
+  shift
+  case "${1:-}" in
+    check | fetch | restore-files) ;;
+    *) echo "from the vault: check, fetch or restore-files" >&2; exit 1 ;;
+  esac
+fi
+[ -f "$env_file" ] || { echo "$env_file is missing (see backup-target-setup.sh)" >&2; exit 1; }
 # shellcheck source=/dev/null
-source backup.env
+source "$env_file"
 : "${BACKUP_S3_URL:?}" "${BACKUP_BUCKET:?}" "${BACKUP_ACCESS_KEY_ID:?}" "${BACKUP_SECRET_ACCESS_KEY:?}"
+# The vault copies a day only once it is over, so a day stays here at least
+# 2 days before the vault can have it; the floor of 4 (7 recommended) leaves
+# room for a vault that is down a few days. Days the vault never got are
+# lost once pruned here, so keep it well above the time to notice the
+# "Backup vault" alert.
+[[ -z "${BACKUP_KEEP_DAYS:-}" || "${BACKUP_KEEP_DAYS:-}" =~ ^[4-9]$|^[1-9][0-9]+$ ]] \
+  || { echo "BACKUP_KEEP_DAYS must be a number of days, at least 4 (7 recommended)" >&2; exit 1; }
 
 if [ ! -s backup-password ]; then
   (umask 077 && openssl rand -base64 32 > backup-password)
@@ -107,12 +131,12 @@ SETTINGS
 # The work folder is mounted at /work, for the dump.
 rclone() {
   docker run --rm --network "$network" --env-file "$settings" -v "$work:/work" \
-    rclone/rclone:1.71.0 -q "$@"
+    rclone/rclone:1.71.0@sha256:fd635aecd9667ee3c3bf920d14118090d4f2a83a080c1fa77e0bafbd4587ca87 -q "$@"
 }
 # rclone wants the password in its own obscured form. Only this call reads
 # standard input (-i); the others must not, or a `while read` loop around
 # them would lose its lines to the container.
-obscured="$(docker run --rm -i rclone/rclone:1.71.0 obscure - < backup-password)"
+obscured="$(docker run --rm -i rclone/rclone:1.71.0@sha256:fd635aecd9667ee3c3bf920d14118090d4f2a83a080c1fa77e0bafbd4587ca87 obscure - < backup-password)"
 printf '%s\n' "RCLONE_CONFIG_SAFE_PASSWORD=$obscured" "RCLONE_CONFIG_SAFEDB_PASSWORD=$obscured" >> "$settings"
 
 psql_admin() { docker compose exec -T -e PGOPTIONS=--client-min-messages=warning db psql -U postgres -v ON_ERROR_STOP=1 -q "$@"; }
@@ -186,25 +210,11 @@ if $has_db; then
   echo "$(date -u +%FT%TZ) database ($(du -h "$work/exlibris.dump" | cut -f1)) copied to $BACKUP_BUCKET/db/$today/"
 fi
 
-# The days to keep, from the days present (one per line, any order): the 7
-# newest, the 4 newest Sundays and the 6 newest first days of a month.
-keep_days() {
-  sort -r | awk '
-    NF == 0 { next }
-    {
-      split($0, d, "-")
-      cmd = "date -u -d " $0 " +%u"; cmd | getline weekday; close(cmd)
-      keep = 0
-      if (++all <= 7) keep = 1
-      if (weekday == 7 && ++sundays <= 4) keep = 1
-      if (d[3] == "01" && ++firsts <= 6) keep = 1
-      if (keep) print
-    }'
-}
+# The days to keep: backup-keep.sh.
 prune() {
   local root="$1" days keep day
-  days="$(rclone lsf --dirs-only "$root" | tr -d / | grep -E '^[0-9]{4}-[0-9]{2}-[0-9]{2}$' || true)"
-  keep="$(keep_days <<<"$days")"
+  days="$(list_days "$root")"
+  keep="$(keep_days "${BACKUP_KEEP_DAYS:-}" <<<"$days")"
   while read -r day; do
     [ -n "$day" ] || continue
     if ! grep -qx "$day" <<<"$keep"; then

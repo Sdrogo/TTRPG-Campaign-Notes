@@ -221,7 +221,9 @@ describe('demoFetch', () => {
       expect((await get(`/rooms/demo/documents/${MIRAI}/versions`, MARCO_ID)).body).toEqual([]);
       expect((await get(`/rooms/demo/documents/${LOBN}/versions`)).body).toEqual([]);
       expect((await get(`/rooms/demo/documents/${MIRAI}/mention-suggestions`)).body).toEqual({ sources: [] });
-      expect((await get(`/rooms/demo/documents/${MIRAI}/linked-map`)).status).toBe(404);
+      expect(await get(`/rooms/demo/documents/${MIRAI}/linked-map`)).toMatchObject({ status: 200, body: null });
+      expect((await get(`/rooms/demo/documents/${MIRAI}/linked-map/x`)).status).toBe(404);
+      expect((await get(`/rooms/demo/documents/${MIRAI}/files`)).status).toBe(404);
     });
 
     it('gives Documents their image', async () => {
@@ -243,10 +245,11 @@ describe('demoFetch', () => {
     });
 
     it('has no mention map for a Document tied to nothing the viewer sees', async () => {
-      const statuses = await Promise.all(
-        demoData('it').documents.map(async (doc) => (await get(`/rooms/demo/documents/${doc.id}/mention-map`, GIULIA_ID)).status),
+      const answers = await Promise.all(
+        demoData('it').documents.map(async (doc) => await get(`/rooms/demo/documents/${doc.id}/mention-map`, GIULIA_ID)),
       );
-      expect(statuses).toContain(404);
+      // `null`, as the API answers, not a 404.
+      expect(answers).toContainEqual(expect.objectContaining({ status: 200, body: null }));
     });
   });
 

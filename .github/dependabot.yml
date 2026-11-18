@@ -1,0 +1,48 @@
+# Routine updates of everything we pin (ticket 76): one grouped PR per
+# ecosystem each week, into `staging` like any other change
+# (code-standards.md -> Branches and Pull Requests). Security alerts keep
+# opening their own PRs at once, as before. The rclone image in
+# deploy/backup.sh is pinned by hand (not a file Dependabot reads).
+version: 2
+updates:
+  - package-ecosystem: uv
+    directory: /backend
+    target-branch: staging
+    schedule:
+      interval: weekly
+    groups:
+      backend:
+        patterns: ["*"]
+
+  - package-ecosystem: npm
+    directory: /frontend
+    target-branch: staging
+    schedule:
+      interval: weekly
+    groups:
+      frontend:
+        patterns: ["*"]
+
+  - package-ecosystem: docker
+    directory: /backend
+    target-branch: staging
+    schedule:
+      interval: weekly
+
+  - package-ecosystem: docker-compose
+    directory: /deploy
+    target-branch: staging
+    schedule:
+      interval: weekly
+    groups:
+      server-images:
+        patterns: ["*"]
+
+  - package-ecosystem: github-actions
+    directory: /
+    target-branch: staging
+    schedule:
+      interval: weekly
+    groups:
+      actions:
+        patterns: ["*"]
