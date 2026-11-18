@@ -82,7 +82,9 @@ Status: **ticket, to confirm** (2026-11-18). Docs only; no code yet.
     monitors don't bury the rest.
 11. **Privacy notice**: one sentence in the 12 languages (server logs with
     truncated IP addresses, kept a few weeks). `context/architecture.md`
-    replaces "Caddy writes no access log".
+    → Monitoring (ticket 75) gets a "Caddy access log" bullet with these
+    rules, and ticket 75's "No Caddy access log" (its "As built" and
+    "Where we are" sections) is marked as superseded by this ticket.
 
 ### Backups production can't delete (G3)
 
@@ -146,6 +148,14 @@ outside the Dockerfile.
   the new monitor is green.
 
 ## Risks
+
+- Two Garage behaviours this design relies on are taken from its
+  documentation, not yet tried here: a bucket's `write` permission also
+  allows deleting, and a server-side copy works from one bucket to another
+  with a key that can read the first and write the second. 76_3 checks both
+  on staging first; if the copy is refused, the vault job copies through
+  rclone without server-side copy (same result, more traffic inside the
+  server).
 
 - A lock installed with hashes fails on a package with no wheel for the
   image's platform: CI builds the image, so it shows up before deploy.
