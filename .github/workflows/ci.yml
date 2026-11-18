@@ -443,8 +443,10 @@ jobs:
         working-directory: backend
         run: |
           uv export --frozen --no-dev --no-emit-project --quiet --output-file /tmp/requirements.txt
+          # pip-audit itself from the lock too (group `audit`), with hashes.
+          uv export --frozen --only-group audit --no-emit-project --quiet --output-file /tmp/audit-tool.txt
           python -m venv /tmp/audit
-          /tmp/audit/bin/pip install --quiet pip-audit
+          /tmp/audit/bin/pip install --quiet --require-hashes -r /tmp/audit-tool.txt
           # PyPI's advisory API is sometimes slow from the runners (2026-11-18:
           # three failures in a row on the default 15 s read timeout), so
           # allow 60 s and one more try before failing the check.

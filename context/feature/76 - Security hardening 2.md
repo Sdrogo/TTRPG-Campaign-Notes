@@ -18,6 +18,8 @@ built" below wins over the proposed Decisions where they differ.
   0.11.32). Base images: `python:3.12-slim-bookworm@sha256:935c3c…`,
   `caddy:2.11@sha256:4851e5…`; every compose image and the rclone image
   in the backup scripts by digest too.
+  The audit job's own `pip-audit` comes from the lock too (group `audit`,
+  `pip-audit==2.10.1`, hashes), so nothing in CI installs unpinned.
 - **76_2 Caddy access log**: as Decisions 8-11, in one shared `log_filter`
   snippet (`deploy/Caddyfile`) used by the access log of the three sites
   and by Caddy's own error lines (global `log default`, which otherwise

@@ -40,6 +40,8 @@ dev = [
 # with `--no-build-isolation` (ticket 76). Keep it equal to
 # `[build-system].requires`.
 [dependency-groups]
+# `pip-audit` for the CI audit job, installed from the lock like the rest.
+audit = ["pip-audit==2.10.1"]
 # `editables`: what hatchling needs for the editable install in CI.
 build = ["hatchling==1.33.0", "editables==0.6"]
 
