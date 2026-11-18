@@ -170,8 +170,9 @@ Confirmed by the product owner on 2026-10-14 unless marked *proposed*.
   the Documents list. No new visibility rule.
 - **Routes** (members only, 403; 404 when the viewer can't see the
   Document; all follow `X-View-As`, writes refused there):
-  - `GET /rooms/{id}/documents/{doc_id}/mention-map`: 404 when there is no
-    map; else the map (`depth`, `can_manage`) and its board in the spec 28
+  - `GET /rooms/{id}/documents/{doc_id}/mention-map`: `null` (200) when
+    there is no map (404 until 2026-11-18, which left an error in the
+    console on every Document without one); else the map (`depth`, `can_manage`) and its board in the spec 28
     `GET /maps/{map_id}` shape (cards with Document name, image, caption,
     color, position; relations), plus `documents_left_out`.
   - `GET /rooms/{id}/documents/{doc_id}/mention-map/preview?depth=n`: the
@@ -188,7 +189,8 @@ Confirmed by the product owner on 2026-10-14 unless marked *proposed*.
     Documents no longer on the map are kept (they come back in place if the
     mention does).
   - `GET /rooms/{id}/documents/{doc_id}/linked-map` (Decision 15): the
-    linked map as the viewer sees it (404 when none or hidden from them).
+    linked map as the viewer sees it (`null` when none or hidden from
+    them; 404 until 2026-11-18).
     `PUT` `{map_id}` links a free map the caller manages (404 hidden or a
     mention map, 403 not a manager; replacing a link needs managing the
     map linked so far) without touching the map, and returns it like

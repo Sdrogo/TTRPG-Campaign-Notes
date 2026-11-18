@@ -134,6 +134,10 @@ One line per unit, dates 2026, newest first. Spec files live in
 
 ### 2026-11-05 → 11-18
 
+- **No 404 for a Document without a map** (11-18, no mig.): first read of
+  the logs showed the API's only real 404s were `mention-map` and
+  `linked-map` on every Document without one; both now answer `null` (200).
+  The rest were scanners (`/.env*`, `/.git`, `/wp-*`), harmless.
 - **CI in parallel shards** (11-18, PR #350, no mig.): frontend and backend
   tests each in four jobs; `Frontend coverage` / `Backend coverage` merge
   them and apply the 100% gates; `pip-audit` waits 60 s and retries once.

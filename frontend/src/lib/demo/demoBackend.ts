@@ -550,12 +550,14 @@ function answer(path: string, viewer: Viewer): Answer {
         }
         case 'mention-suggestions':
           return ok({ sources: [] });
-        case 'mention-map': {
-          const map = rest.length === 3 ? mentionMap(viewer, doc) : null;
-          return map ? ok(map) : NOT_FOUND;
-        }
+        case 'mention-map':
+          // `null` for a Document without one, as the API answers.
+          return rest.length === 3 ? ok(mentionMap(viewer, doc)) : NOT_FOUND;
+        case 'linked-map':
+          // No linked map is part of the sample Room.
+          return rest.length === 3 ? ok(null) : NOT_FOUND;
         default:
-          // No linked map or file is part of the sample Room.
+          // No file is part of the sample Room.
           return NOT_FOUND;
       }
     }
