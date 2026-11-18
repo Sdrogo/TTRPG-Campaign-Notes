@@ -50,7 +50,17 @@ describe('useAccount', () => {
       pronouns: 'lei',
       bio: null,
       avatarUrl: 'http://a/v.webp',
+      appAdmin: false,
     });
+  });
+
+  it('marks an app admin', async () => {
+    fetchMock.mockResolvedValue(rawAccount({ app_admin: true }));
+
+    const { result } = renderHookWithProviders(() => useAccount(true));
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(result.current.data?.appAdmin).toBe(true);
   });
 
   it('does not fetch while disabled', () => {

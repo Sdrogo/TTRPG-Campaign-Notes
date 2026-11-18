@@ -354,6 +354,11 @@
       "deleteWord": "SUPPRIMER",
       "confirm": "Supprimer définitivement",
       "deleted": "Ton compte a été supprimé"
+    },
+    "admin": {
+      "title": "Admin",
+      "description": "Les chiffres de l'app : utilisateurs, Salles, trafic et erreurs. Toi seul peux les voir.",
+      "open": "Ouvrir la page Admin"
     }
   },
   "rooms": {
@@ -2140,6 +2145,65 @@
       "groupChip": "Groupe « {{name}} »",
       "missing": "Plus disponible",
       "noneLeft": "Aucune autre horloge ni groupe."
+    }
+  },
+  "admin": {
+    "title": "Admin",
+    "subtitle": "Les chiffres de toute l'app, au {{time}}. Des comptes uniquement, jamais de contenu.",
+    "signInRequired": "Connecte-toi pour ouvrir cette page.",
+    "notAvailable": "Cette page n'est pas disponible.",
+    "loadError": "Impossible de charger les chiffres. Réessaie dans un instant.",
+    "overview": {
+      "title": "Vue d'ensemble",
+      "users": "Utilisateurs",
+      "newUsers": "Nouveaux utilisateurs",
+      "activeUsers": "Utilisateurs actifs",
+      "last7and30": "7 / 30 derniers jours",
+      "rooms": "Salles",
+      "documents": "Documents",
+      "maps": "Cartes",
+      "geographic": "dont {{value}} géographiques",
+      "sessionZeros": "Session 0",
+      "clocks": "Horloges",
+      "files": "Fichiers",
+      "images": "Images",
+      "database": "Base de données"
+    },
+    "growth": {
+      "title": "Croissance",
+      "description": "Par semaine, sur les 26 dernières semaines.",
+      "newUsers": "Nouveaux utilisateurs par semaine",
+      "newRooms": "Nouvelles Salles par semaine"
+    },
+    "traffic": {
+      "title": "Trafic",
+      "description": "Requêtes à l'API sur les {{days}} derniers jours, et la rapidité des réponses.",
+      "perHour": "Requêtes par heure",
+      "empty": "Aucune requête comptée pour l'instant.",
+      "group": "Zone",
+      "requests": "Requêtes",
+      "clientErrors": "4xx",
+      "serverErrors": "5xx",
+      "median": "Médiane",
+      "p95": "95 %"
+    },
+    "errors": {
+      "title": "Erreurs du serveur",
+      "description": "Les 100 dernières, gardées 30 jours. L'id de la requête permet de retrouver le log complet dans Dozzle.",
+      "empty": "Aucune erreur du serveur. 🎉",
+      "time": "Quand",
+      "route": "Route",
+      "status": "Statut",
+      "type": "Erreur",
+      "requestId": "Id de requête"
+    },
+    "jobs": {
+      "title": "Tâches en arrière-plan",
+      "exports": "PDF des Salles",
+      "imports": "Imports",
+      "running": "En cours : {{value}}",
+      "done": "Terminées (7 jours) : {{value}}",
+      "failed": "Échouées (7 jours) : {{value}}"
     }
   }
 }

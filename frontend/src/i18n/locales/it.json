@@ -354,6 +354,11 @@
       "deleteWord": "ELIMINA",
       "confirm": "Elimina definitivamente",
       "deleted": "Il tuo account è stato eliminato"
+    },
+    "admin": {
+      "title": "Admin",
+      "description": "I numeri dell'app: utenti, Stanze, traffico ed errori. Solo tu puoi vederli.",
+      "open": "Apri la pagina Admin"
     }
   },
   "rooms": {
@@ -2138,6 +2143,65 @@
       "groupChip": "Gruppo «{{name}}»",
       "missing": "Non più disponibile",
       "noneLeft": "Nessun altro clock o gruppo."
+    }
+  },
+  "admin": {
+    "title": "Admin",
+    "subtitle": "I numeri di tutta l'app, aggiornati a {{time}}. Solo conteggi, mai contenuti.",
+    "signInRequired": "Accedi per aprire questa pagina.",
+    "notAvailable": "Questa pagina non è disponibile.",
+    "loadError": "Non è stato possibile caricare i numeri. Riprova tra poco.",
+    "overview": {
+      "title": "Panoramica",
+      "users": "Utenti",
+      "newUsers": "Nuovi utenti",
+      "activeUsers": "Utenti attivi",
+      "last7and30": "ultimi 7 / 30 giorni",
+      "rooms": "Stanze",
+      "documents": "Documenti",
+      "maps": "Mappe",
+      "geographic": "{{value}} geografiche",
+      "sessionZeros": "Sessione 0",
+      "clocks": "Clock",
+      "files": "File",
+      "images": "Immagini",
+      "database": "Database"
+    },
+    "growth": {
+      "title": "Crescita",
+      "description": "Per settimana, ultime 26 settimane.",
+      "newUsers": "Nuovi utenti per settimana",
+      "newRooms": "Nuove Stanze per settimana"
+    },
+    "traffic": {
+      "title": "Traffico",
+      "description": "Richieste all'API negli ultimi {{days}} giorni, e quanto velocemente hanno avuto risposta.",
+      "perHour": "Richieste all'ora",
+      "empty": "Nessuna richiesta ancora conteggiata.",
+      "group": "Area",
+      "requests": "Richieste",
+      "clientErrors": "4xx",
+      "serverErrors": "5xx",
+      "median": "Mediana",
+      "p95": "95%"
+    },
+    "errors": {
+      "title": "Errori del server",
+      "description": "Gli ultimi 100, conservati 30 giorni. Con l'id della richiesta trovi il log completo in Dozzle.",
+      "empty": "Nessun errore del server. 🎉",
+      "time": "Quando",
+      "route": "Percorso",
+      "status": "Stato",
+      "type": "Errore",
+      "requestId": "Id richiesta"
+    },
+    "jobs": {
+      "title": "Lavori in background",
+      "exports": "PDF delle Stanze",
+      "imports": "Importazioni",
+      "running": "In corso: {{value}}",
+      "done": "Completati (7 giorni): {{value}}",
+      "failed": "Falliti (7 giorni): {{value}}"
     }
   }
 }

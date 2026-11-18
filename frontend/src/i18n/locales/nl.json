@@ -354,6 +354,11 @@
       "deleteWord": "VERWIJDER",
       "confirm": "Definitief verwijderen",
       "deleted": "Je account is verwijderd"
+    },
+    "admin": {
+      "title": "Admin",
+      "description": "De cijfers van de app: gebruikers, Kamers, verkeer en fouten. Alleen jij ziet ze.",
+      "open": "Admin-pagina openen"
     }
   },
   "rooms": {
@@ -2138,6 +2143,65 @@
       "groupChip": "Groep ‘{{name}}’",
       "missing": "Niet meer beschikbaar",
       "noneLeft": "Geen andere klok of groep."
+    }
+  },
+  "admin": {
+    "title": "Admin",
+    "subtitle": "De cijfers van de hele app, per {{time}}. Alleen tellingen, nooit inhoud.",
+    "signInRequired": "Log in om deze pagina te openen.",
+    "notAvailable": "Deze pagina is niet beschikbaar.",
+    "loadError": "De cijfers konden niet worden geladen. Probeer het zo opnieuw.",
+    "overview": {
+      "title": "Overzicht",
+      "users": "Gebruikers",
+      "newUsers": "Nieuwe gebruikers",
+      "activeUsers": "Actieve gebruikers",
+      "last7and30": "laatste 7 / 30 dagen",
+      "rooms": "Kamers",
+      "documents": "Documenten",
+      "maps": "Kaarten",
+      "geographic": "waarvan {{value}} geografisch",
+      "sessionZeros": "Sessie 0",
+      "clocks": "Klokken",
+      "files": "Bestanden",
+      "images": "Afbeeldingen",
+      "database": "Database"
+    },
+    "growth": {
+      "title": "Groei",
+      "description": "Per week, de laatste 26 weken.",
+      "newUsers": "Nieuwe gebruikers per week",
+      "newRooms": "Nieuwe Kamers per week"
+    },
+    "traffic": {
+      "title": "Verkeer",
+      "description": "Verzoeken aan de API in de laatste {{days}} dagen, en hoe snel ze werden beantwoord.",
+      "perHour": "Verzoeken per uur",
+      "empty": "Nog geen verzoeken geteld.",
+      "group": "Gebied",
+      "requests": "Verzoeken",
+      "clientErrors": "4xx",
+      "serverErrors": "5xx",
+      "median": "Mediaan",
+      "p95": "95%"
+    },
+    "errors": {
+      "title": "Serverfouten",
+      "description": "De laatste 100, 30 dagen bewaard. Met het verzoek-id vind je het volledige log in Dozzle.",
+      "empty": "Geen serverfouten. 🎉",
+      "time": "Wanneer",
+      "route": "Route",
+      "status": "Status",
+      "type": "Fout",
+      "requestId": "Verzoek-id"
+    },
+    "jobs": {
+      "title": "Achtergrondtaken",
+      "exports": "Kamer-pdf's",
+      "imports": "Imports",
+      "running": "Bezig: {{value}}",
+      "done": "Klaar (7 dagen): {{value}}",
+      "failed": "Mislukt (7 dagen): {{value}}"
     }
   }
 }

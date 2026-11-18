@@ -354,6 +354,11 @@
       "deleteWord": "削除",
       "confirm": "完全に削除",
       "deleted": "アカウントを削除しました"
+    },
+    "admin": {
+      "title": "Admin",
+      "description": "アプリの数値:ユーザー、ルーム、トラフィック、エラー。あなただけが見られます。",
+      "open": "Adminページを開く"
     }
   },
   "rooms": {
@@ -2081,6 +2086,65 @@
       "groupChip": "グループ「{{name}}」",
       "missing": "利用できなくなりました",
       "noneLeft": "ほかのクロックやグループはありません。"
+    }
+  },
+  "admin": {
+    "title": "Admin",
+    "subtitle": "アプリ全体の数値({{time}}時点)。件数のみで、内容は含みません。",
+    "signInRequired": "このページを開くにはサインインしてください。",
+    "notAvailable": "このページは利用できません。",
+    "loadError": "数値を読み込めませんでした。しばらくしてからもう一度お試しください。",
+    "overview": {
+      "title": "概要",
+      "users": "ユーザー",
+      "newUsers": "新規ユーザー",
+      "activeUsers": "アクティブユーザー",
+      "last7and30": "過去7 / 30日",
+      "rooms": "ルーム",
+      "documents": "ドキュメント",
+      "maps": "マップ",
+      "geographic": "うち地理マップ {{value}}",
+      "sessionZeros": "セッション0",
+      "clocks": "クロック",
+      "files": "ファイル",
+      "images": "画像",
+      "database": "データベース"
+    },
+    "growth": {
+      "title": "成長",
+      "description": "週ごと、直近26週間。",
+      "newUsers": "週ごとの新規ユーザー",
+      "newRooms": "週ごとの新規ルーム"
+    },
+    "traffic": {
+      "title": "トラフィック",
+      "description": "過去{{days}}日間のAPIへのリクエストと応答の速さ。",
+      "perHour": "1時間あたりのリクエスト",
+      "empty": "まだリクエストは集計されていません。",
+      "group": "領域",
+      "requests": "リクエスト",
+      "clientErrors": "4xx",
+      "serverErrors": "5xx",
+      "median": "中央値",
+      "p95": "95%"
+    },
+    "errors": {
+      "title": "サーバーエラー",
+      "description": "最新100件(30日間保存)。リクエストIDでDozzleの完全なログを探せます。",
+      "empty": "サーバーエラーはありません。🎉",
+      "time": "日時",
+      "route": "ルート",
+      "status": "ステータス",
+      "type": "エラー",
+      "requestId": "リクエストID"
+    },
+    "jobs": {
+      "title": "バックグラウンド処理",
+      "exports": "ルームのPDF",
+      "imports": "インポート",
+      "running": "実行中: {{value}}",
+      "done": "完了(7日間): {{value}}",
+      "failed": "失敗(7日間): {{value}}"
     }
   }
 }

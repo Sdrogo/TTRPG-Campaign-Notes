@@ -14,6 +14,8 @@ export interface UserIdentity {
 /** The signed-in user's own profile, as the Account page edits it. */
 export interface AccountProfile extends UserIdentity {
   userId: string;
+  /** May open the Admin page (ticket 75); not the Room Administrator role. */
+  appAdmin?: boolean;
 }
 
 /** The Account page form's values. Blank strings stand for unset fields (see `toProfilePatch`). */

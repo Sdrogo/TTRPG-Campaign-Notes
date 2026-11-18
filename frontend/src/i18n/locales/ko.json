@@ -354,6 +354,11 @@
       "deleteWord": "삭제",
       "confirm": "완전히 삭제",
       "deleted": "계정이 삭제되었습니다"
+    },
+    "admin": {
+      "title": "Admin",
+      "description": "앱의 수치: 사용자, 룸, 트래픽, 오류. 나만 볼 수 있습니다.",
+      "open": "Admin 페이지 열기"
     }
   },
   "rooms": {
@@ -2081,6 +2086,65 @@
       "groupChip": "그룹 「{{name}}」",
       "missing": "더 이상 사용할 수 없음",
       "noneLeft": "다른 클락이나 그룹이 없습니다."
+    }
+  },
+  "admin": {
+    "title": "Admin",
+    "subtitle": "{{time}} 기준 앱 전체의 수치입니다. 개수만 표시하며 내용은 포함하지 않습니다.",
+    "signInRequired": "이 페이지를 열려면 로그인하세요.",
+    "notAvailable": "이 페이지는 사용할 수 없습니다.",
+    "loadError": "수치를 불러오지 못했습니다. 잠시 후 다시 시도하세요.",
+    "overview": {
+      "title": "개요",
+      "users": "사용자",
+      "newUsers": "신규 사용자",
+      "activeUsers": "활성 사용자",
+      "last7and30": "최근 7 / 30일",
+      "rooms": "룸",
+      "documents": "문서",
+      "maps": "지도",
+      "geographic": "지리 지도 {{value}}개",
+      "sessionZeros": "세션 0",
+      "clocks": "클락",
+      "files": "파일",
+      "images": "이미지",
+      "database": "데이터베이스"
+    },
+    "growth": {
+      "title": "성장",
+      "description": "주별, 최근 26주.",
+      "newUsers": "주별 신규 사용자",
+      "newRooms": "주별 신규 룸"
+    },
+    "traffic": {
+      "title": "트래픽",
+      "description": "최근 {{days}}일간의 API 요청과 응답 속도.",
+      "perHour": "시간당 요청",
+      "empty": "아직 집계된 요청이 없습니다.",
+      "group": "영역",
+      "requests": "요청",
+      "clientErrors": "4xx",
+      "serverErrors": "5xx",
+      "median": "중앙값",
+      "p95": "95%"
+    },
+    "errors": {
+      "title": "서버 오류",
+      "description": "최근 100건, 30일간 보관됩니다. 요청 ID로 Dozzle에서 전체 로그를 찾을 수 있습니다.",
+      "empty": "서버 오류가 없습니다. 🎉",
+      "time": "시각",
+      "route": "경로",
+      "status": "상태",
+      "type": "오류",
+      "requestId": "요청 ID"
+    },
+    "jobs": {
+      "title": "백그라운드 작업",
+      "exports": "룸 PDF",
+      "imports": "가져오기",
+      "running": "진행 중: {{value}}",
+      "done": "완료(7일): {{value}}",
+      "failed": "실패(7일): {{value}}"
     }
   }
 }

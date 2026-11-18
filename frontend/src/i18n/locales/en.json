@@ -354,6 +354,11 @@
       "deleteWord": "DELETE",
       "confirm": "Delete for good",
       "deleted": "Your account was deleted"
+    },
+    "admin": {
+      "title": "Admin",
+      "description": "The app's numbers: users, Rooms, traffic and errors. Only you can see this.",
+      "open": "Open the Admin page"
     }
   },
   "rooms": {
@@ -2138,6 +2143,65 @@
       "groupChip": "Group “{{name}}”",
       "missing": "No longer available",
       "noneLeft": "No other clock or group."
+    }
+  },
+  "admin": {
+    "title": "Admin",
+    "subtitle": "The whole app's numbers, as of {{time}}. Counts only, never content.",
+    "signInRequired": "Sign in to open this page.",
+    "notAvailable": "This page is not available.",
+    "loadError": "The numbers could not be loaded. Try again in a moment.",
+    "overview": {
+      "title": "Overview",
+      "users": "Users",
+      "newUsers": "New users",
+      "activeUsers": "Active users",
+      "last7and30": "last 7 / 30 days",
+      "rooms": "Rooms",
+      "documents": "Documents",
+      "maps": "Maps",
+      "geographic": "{{value}} geographic",
+      "sessionZeros": "Session 0",
+      "clocks": "Clocks",
+      "files": "Files",
+      "images": "Images",
+      "database": "Database"
+    },
+    "growth": {
+      "title": "Growth",
+      "description": "Per week, the last 26 weeks.",
+      "newUsers": "New users per week",
+      "newRooms": "New Rooms per week"
+    },
+    "traffic": {
+      "title": "Traffic",
+      "description": "Requests to the API in the last {{days}} days, and how fast they were answered.",
+      "perHour": "Requests per hour",
+      "empty": "No requests counted yet.",
+      "group": "Area",
+      "requests": "Requests",
+      "clientErrors": "4xx",
+      "serverErrors": "5xx",
+      "median": "Median",
+      "p95": "95%"
+    },
+    "errors": {
+      "title": "Server errors",
+      "description": "The latest 100, kept 30 days. The request id finds the full log in Dozzle.",
+      "empty": "No server errors. 🎉",
+      "time": "When",
+      "route": "Route",
+      "status": "Status",
+      "type": "Error",
+      "requestId": "Request id"
+    },
+    "jobs": {
+      "title": "Background jobs",
+      "exports": "Room PDFs",
+      "imports": "Imports",
+      "running": "Running: {{value}}",
+      "done": "Done (7 days): {{value}}",
+      "failed": "Failed (7 days): {{value}}"
     }
   }
 }

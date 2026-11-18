@@ -61,8 +61,17 @@ async def db_session() -> AsyncIterator[AsyncSession]:
             async def override_get_session() -> AsyncIterator[AsyncSession]:
                 # Mirrors get_session's after-commit handling (minus the
                 # real commit), so post-commit Storage cleanup runs here too.
+                # Each real request has a fresh session; here they share one,
+                # so rows an earlier request loaded are expired first, or a
+                # Core upsert since then could be read back stale from the
+                # identity map (whether it is depends on garbage collection).
+                session.expire_all()
                 try:
                     yield session
+                    # Stands in for get_session's commit: without it, the
+                    # next request's expire_all would drop changes this one
+                    # left unflushed.
+                    await session.flush()
                 except Exception:
                     discard_after_commit(session)
                     raise

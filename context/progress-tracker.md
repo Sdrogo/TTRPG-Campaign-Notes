@@ -47,7 +47,8 @@ database* runs them on demand (`architecture.md` → Environments). Before any
 release, list what is pending here and remind the product owner to label the
 release PR.
 
-- **Head in the repository**: `b5e2c8f1a4d7` (own sign-in, ticket 73 step 3).
+- **Head in the repository**: `c6f1a9d3e7b2` (request statistics and error
+  events, ticket 75; PR #339, needs the `db-migration` label).
 - **Staging database**: `b5e2c8f1a4d7 (head)`, 2026-11-17 from Actions (PR #337).
   Before: `e7b3d9a1c5f2`, applied 2026-11-09 with
   `backend/.env.staging` loaded (`d4a8f2c6b9e1` applied the same day,
@@ -58,7 +59,9 @@ release PR.
   #316: `d4a8f2c6b9e1` (arrow bend, spec 67) then `e7b3d9a1c5f2` (color
   legend, spec 68). Earlier: `c1d7e3a9f5b2` on 2026-11-03 before the release
   that shipped it (PR #302), with `e8c4a2f6b1d9` and `e9c4a2f7b1d8` the same day.
-- **Pending**: none. `b5e2c8f1a4d7` (own sign-in, ticket 73 step 3) ran
+- **Pending**: `c6f1a9d3e7b2` (ticket 75: tables `request_stats_hourly`,
+  `error_events`) on both databases, through the label on PR #339 and on
+  the release PR. Earlier: `b5e2c8f1a4d7` (own sign-in, ticket 73 step 3) ran
   from Actions on 2026-11-17: staging with PR #337, production with release
   PR #338 (31 identities copied).
 
@@ -67,7 +70,7 @@ top of the chain below. Per-migration apply history (who, when, which env
 file) up to 2026-11-04 is in the 2026-11-04 archive.
 
 Chain, newest first (where each came from):
-`b5e2c8f1a4d7` own sign-in (73 step 3) ← `e7b3d9a1c5f2` color legend and presets (68) ← `d4a8f2c6b9e1` arrow bend (67)
+`c6f1a9d3e7b2` request stats (75) ← `b5e2c8f1a4d7` own sign-in (73 step 3) ← `e7b3d9a1c5f2` color legend and presets (68) ← `d4a8f2c6b9e1` arrow bend (67)
 ← `c1d7e3a9f5b2` Clocks (61) ← `e9c4a2f7b1d8` import job progress (59) ←
 `e8c4a2f6b1d9` Section tools + block `collapsed`, drops
 `rooms.maps_position` (60_2) ← `d5b8e1f3a9c7` Room landing page (55) ←
@@ -253,6 +256,14 @@ image search, read aloud, GDPR (10-01 → 10-10). See the two older archives.
 
 ## Next Up
 
+- **75, Monitoring dashboards** (product owner, 2026-11-17): built in PR
+  #339 (migration `c6f1a9d3e7b2`). Beszel + Uptime Kuma hub on staging,
+  agents + Dozzle on both servers behind a read-only Docker proxy, all on
+  127.0.0.1 through an SSH tunnel; email alerts; JSON backend logs,
+  `/health/ready`, `/health/backup`; Admin page `/admin` for
+  `ADMIN_USER_IDS`. Product owner: the steps in
+  `context/monitoring-guide.md` (profiles, `monitoring.env`, ufw rule,
+  `ADMIN_USER_IDS`, `BACKUP_STATUS_FILE`, SMTP, monitors).
 - **74, Database migrations from GitHub Actions** (product owner,
   2026-11-16): confirmed and built in PR #334 (`deploy/migrate.sh`, label
   job in `deploy-vps.yml`, `migrate-db.yml` button, `migration-label.yml`

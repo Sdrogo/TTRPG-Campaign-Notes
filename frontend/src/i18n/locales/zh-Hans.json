@@ -354,6 +354,11 @@
       "deleteWord": "删除",
       "confirm": "永久删除",
       "deleted": "你的账户已删除"
+    },
+    "admin": {
+      "title": "Admin",
+      "description": "应用的数据:用户、房间、流量和错误。只有你能看到。",
+      "open": "打开 Admin 页面"
     }
   },
   "rooms": {
@@ -2081,6 +2086,65 @@
       "groupChip": "分组“{{name}}”",
       "missing": "已不可用",
       "noneLeft": "没有其他进度钟或分组。"
+    }
+  },
+  "admin": {
+    "title": "Admin",
+    "subtitle": "整个应用的数据,截至 {{time}}。只有计数,不含任何内容。",
+    "signInRequired": "登录后才能打开此页面。",
+    "notAvailable": "此页面不可用。",
+    "loadError": "无法加载数据,请稍后再试。",
+    "overview": {
+      "title": "概览",
+      "users": "用户",
+      "newUsers": "新用户",
+      "activeUsers": "活跃用户",
+      "last7and30": "最近 7 / 30 天",
+      "rooms": "房间",
+      "documents": "文档",
+      "maps": "地图",
+      "geographic": "其中地理地图 {{value}}",
+      "sessionZeros": "第 0 次会话",
+      "clocks": "进度钟",
+      "files": "文件",
+      "images": "图片",
+      "database": "数据库"
+    },
+    "growth": {
+      "title": "增长",
+      "description": "按周统计,最近 26 周。",
+      "newUsers": "每周新用户",
+      "newRooms": "每周新房间"
+    },
+    "traffic": {
+      "title": "流量",
+      "description": "最近 {{days}} 天对 API 的请求及其响应速度。",
+      "perHour": "每小时请求数",
+      "empty": "尚未统计到请求。",
+      "group": "区域",
+      "requests": "请求",
+      "clientErrors": "4xx",
+      "serverErrors": "5xx",
+      "median": "中位数",
+      "p95": "95%"
+    },
+    "errors": {
+      "title": "服务器错误",
+      "description": "最近 100 条,保留 30 天。用请求 ID 可以在 Dozzle 中找到完整日志。",
+      "empty": "没有服务器错误。🎉",
+      "time": "时间",
+      "route": "路由",
+      "status": "状态",
+      "type": "错误",
+      "requestId": "请求 ID"
+    },
+    "jobs": {
+      "title": "后台任务",
+      "exports": "房间 PDF",
+      "imports": "导入",
+      "running": "进行中:{{value}}",
+      "done": "已完成(7 天):{{value}}",
+      "failed": "失败(7 天):{{value}}"
     }
   }
 }

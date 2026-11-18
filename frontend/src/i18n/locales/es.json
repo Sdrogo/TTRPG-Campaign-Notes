@@ -354,6 +354,11 @@
       "deleteWord": "ELIMINAR",
       "confirm": "Eliminar definitivamente",
       "deleted": "Tu cuenta ha sido eliminada"
+    },
+    "admin": {
+      "title": "Admin",
+      "description": "Las cifras de la app: usuarios, Salas, tráfico y errores. Solo tú puedes verlas.",
+      "open": "Abrir la página Admin"
     }
   },
   "rooms": {
@@ -2138,6 +2143,65 @@
       "groupChip": "Grupo «{{name}}»",
       "missing": "Ya no disponible",
       "noneLeft": "Ningún otro reloj o grupo."
+    }
+  },
+  "admin": {
+    "title": "Admin",
+    "subtitle": "Las cifras de toda la app, a {{time}}. Solo recuentos, nunca contenido.",
+    "signInRequired": "Inicia sesión para abrir esta página.",
+    "notAvailable": "Esta página no está disponible.",
+    "loadError": "No se han podido cargar las cifras. Vuelve a intentarlo en un momento.",
+    "overview": {
+      "title": "Resumen",
+      "users": "Usuarios",
+      "newUsers": "Usuarios nuevos",
+      "activeUsers": "Usuarios activos",
+      "last7and30": "últimos 7 / 30 días",
+      "rooms": "Salas",
+      "documents": "Documentos",
+      "maps": "Mapas",
+      "geographic": "{{value}} geográficos",
+      "sessionZeros": "Sesión 0",
+      "clocks": "Relojes",
+      "files": "Archivos",
+      "images": "Imágenes",
+      "database": "Base de datos"
+    },
+    "growth": {
+      "title": "Crecimiento",
+      "description": "Por semana, las últimas 26 semanas.",
+      "newUsers": "Usuarios nuevos por semana",
+      "newRooms": "Salas nuevas por semana"
+    },
+    "traffic": {
+      "title": "Tráfico",
+      "description": "Peticiones a la API en los últimos {{days}} días y lo rápido que se respondieron.",
+      "perHour": "Peticiones por hora",
+      "empty": "Aún no hay peticiones contadas.",
+      "group": "Área",
+      "requests": "Peticiones",
+      "clientErrors": "4xx",
+      "serverErrors": "5xx",
+      "median": "Mediana",
+      "p95": "95 %"
+    },
+    "errors": {
+      "title": "Errores del servidor",
+      "description": "Los últimos 100, guardados 30 días. Con el id de la petición encuentras el log completo en Dozzle.",
+      "empty": "Ningún error del servidor. 🎉",
+      "time": "Cuándo",
+      "route": "Ruta",
+      "status": "Estado",
+      "type": "Error",
+      "requestId": "Id de petición"
+    },
+    "jobs": {
+      "title": "Tareas en segundo plano",
+      "exports": "PDF de Salas",
+      "imports": "Importaciones",
+      "running": "En curso: {{value}}",
+      "done": "Completadas (7 días): {{value}}",
+      "failed": "Fallidas (7 días): {{value}}"
     }
   }
 }

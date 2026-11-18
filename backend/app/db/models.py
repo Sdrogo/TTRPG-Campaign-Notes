@@ -7,6 +7,7 @@ from datetime import datetime
 from typing import Any
 
 from sqlalchemy import (
+    BigInteger,
     Boolean,
     CheckConstraint,
     Computed,
@@ -711,6 +712,40 @@ class StorageCleanupRow(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), index=True
     )
+
+
+class RequestStatsHourlyRow(Base):
+    """One hour of one route group's requests (ticket 75 Decision 7): how
+    many, how many answered 4xx and 5xx, and the latency histogram whose
+    bucket bounds are `app/domain/request_stats.py::LATENCY_BOUNDS_MS`.
+    Written by the minute flush (app/db/monitoring_repo.py), which adds to
+    the hour's row; kept 90 days. No user, path or IP."""
+
+    __tablename__ = "request_stats_hourly"
+
+    hour: Mapped[datetime] = mapped_column(DateTime(timezone=True), primary_key=True)
+    route_group: Mapped[str] = mapped_column(String(30), primary_key=True)
+    requests: Mapped[int] = mapped_column(Integer)
+    client_errors: Mapped[int] = mapped_column(Integer)
+    server_errors: Mapped[int] = mapped_column(Integer)
+    latency: Mapped[list[int]] = mapped_column(ARRAY(Integer))
+
+
+class ErrorEventRow(Base):
+    """A server error for the Admin page (ticket 75 Decision 7): when, which
+    route template and method, the status, the exception's class and the
+    request id to find its full log. Never the exception message (it can hold
+    personal data) or the user; kept 30 days."""
+
+    __tablename__ = "error_events"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    occurred_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
+    route: Mapped[str] = mapped_column(String(300))
+    method: Mapped[str] = mapped_column(String(10))
+    status: Mapped[int] = mapped_column(Integer)
+    exc_type: Mapped[str | None] = mapped_column(String(100))
+    request_id: Mapped[str] = mapped_column(String(32))
 
 
 class ExportJobRow(Base):

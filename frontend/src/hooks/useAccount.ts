@@ -10,10 +10,11 @@ import type { AccountProfile, ProfilePatch, RawUserIdentity } from '../types/pro
 
 interface RawAccount extends RawUserIdentity {
   user_id: string;
+  app_admin?: boolean;
 }
 
 function toAccount(raw: RawAccount): AccountProfile {
-  return { ...toUserIdentity(raw), userId: raw.user_id };
+  return { ...toUserIdentity(raw), userId: raw.user_id, appAdmin: raw.app_admin === true };
 }
 
 const ACCOUNT_QUERY_KEY = ['account'] as const;
