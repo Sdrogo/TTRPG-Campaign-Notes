@@ -50,7 +50,11 @@ RUN pip install --require-hashes -r /tmp/requirements.txt \
     && pip install --require-hashes -r /tmp/build-requirements.txt
 COPY pyproject.toml ./
 COPY app ./app
+# The build tools then leave the image (none of them is a runtime
+# dependency today; if one ever became one, the CI image job's import check
+# would fail).
 RUN pip install --no-deps --no-build-isolation . \
+    && pip uninstall --quiet -y -r /tmp/build-requirements.txt \
     && rm /tmp/requirements.txt /tmp/build-requirements.txt
 
 # Run as an unprivileged user (review of PR #96). It has a home directory so
