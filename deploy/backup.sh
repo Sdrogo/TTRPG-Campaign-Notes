@@ -11,8 +11,8 @@
 # first days of a month; or, when backup.env sets BACKUP_KEEP_DAYS=<n>, only
 # the n newest days (ticket 76: the long history lives in the vault on the
 # other VPS, backup-vault.sh, which this server can't delete). The password
-# is made on the first run, in backup-password next to this script: keep a copy in the password manager,
-# since without it the copies can't be read. After a good run the time goes
+# is made on the first run, in backup-password next to this script: keep a
+# copy in the password manager, since without it the copies can't be read. After a good run the time goes
 # to backup-last-ok and status/backup-last-ok, for the monitoring (ticket 75:
 # /health/backup).
 #
