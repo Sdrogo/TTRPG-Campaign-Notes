@@ -6,7 +6,7 @@ itself (VR-07). Reads follow `X-View-As`, which refuses every write."""
 import uuid
 from datetime import UTC, datetime
 
-from fastapi import APIRouter, status
+from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -267,14 +267,19 @@ async def get_mention_map(
     current_user: CurrentUserDep,
     session: SessionDep,
     locale: LocaleDep,
-) -> MentionMapResponse:
+) -> MentionMapResponse | None:
     """The Document's mention map as the requester sees it (Decisions 7, 8):
     whoever sees the Document sees it, with only the Documents and relations
-    behind mentions they see. 404 when the Document has none."""
+    behind mentions they see. `null` when the Document has none: most
+    Documents have none and their page asks every time, so a 404 here would
+    fill the browser console and the Admin page's 4xx rate. A Document
+    the requester can't see is still 404."""
     membership, center = await _center(
         session, room_id, document_id, uuid.UUID(current_user.id), locale
     )
-    mention_map = await _get_map(session, document_id, locale)
+    mention_map = await relationship_maps_repo.get_mention_map(session, document_id)
+    if mention_map is None:
+        return None
     return await _response(session, mention_map, center, membership)
 
 
@@ -500,15 +505,24 @@ async def get_linked_map(
     current_user: CurrentUserDep,
     session: SessionDep,
     locale: LocaleDep,
-) -> MapDetailResponse:
+) -> MapDetailResponse | None:
     """Decision 15: the map linked to the Document, as the requester
-    sees it, for its page. 404 when the Document has none, or when the map is
-    hidden from them (then it is simply not shown)."""
+    sees it, for its page. `null` when the Document has none, or when the map
+    is hidden from them (then it is simply not shown, and the two answers
+    can't be told apart); not a 404, for the reason given at
+    `get_mention_map`. A Document the requester can't see is still 404."""
     membership, center = await _center(
         session, room_id, document_id, uuid.UUID(current_user.id), locale
     )
-    map_id = await _linked_map_id(session, center.id, locale)
-    return await visible_map_detail(session, room_id, map_id, membership, locale)
+    map_id = await relationship_maps_repo.get_linked_map_id(session, center.id)
+    if map_id is None:
+        return None
+    try:
+        return await visible_map_detail(session, room_id, map_id, membership, locale)
+    except HTTPException as exc:
+        if exc.status_code != status.HTTP_404_NOT_FOUND:  # pragma: no cover - only 404 is raised
+            raise
+        return None
 
 
 @linked_router.put("")

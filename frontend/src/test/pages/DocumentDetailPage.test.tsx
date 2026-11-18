@@ -77,9 +77,8 @@ function mockApi(onWrite: (path: string) => Promise<unknown> = () => Promise.res
         : Promise.reject(new ApiError(404, 'No map'));
     }
     if (path === `${DOC}/linked-map`) {
-      return routes.linkedMap
-        ? Promise.resolve(routes.linkedMap)
-        : Promise.reject(new ApiError(404, 'No map'));
+      // The API answers `null` for a Document with no linked map.
+      return Promise.resolve(routes.linkedMap ?? null);
     }
     if (path.startsWith(`${DOC}/mention-map/preview`)) {
       return Promise.resolve({ documents: 1, relations: 1, documents_left_out: 0 });

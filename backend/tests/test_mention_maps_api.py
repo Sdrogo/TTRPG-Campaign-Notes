@@ -10,7 +10,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 import pytest_asyncio
-from httpx import ASGITransport, AsyncClient
+from httpx import ASGITransport, AsyncClient, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.main import app
@@ -156,6 +156,12 @@ async def _village(client: AsyncClient, room: _Room) -> dict[str, dict[str, Any]
     return {"thorn": thorn, "aldric": aldric, "mira": mira, "tavern": tavern, "lyra": lyra}
 
 
+def _none(response: Response) -> bool:
+    """A Document with no such map (or one hidden from the requester) answers
+    200 with `null`, not 404: its page asks every time it opens."""
+    return response.status_code == 200 and response.json() is None
+
+
 async def test_a_mention_map_draws_the_document_and_its_mentions(
     db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
 ) -> None:
@@ -275,7 +281,9 @@ async def test_creating_needs_something_to_map_and_happens_once(
     alone = await _document(client, room, "Alone")
     nothing = await client.post(_url(room, alone), json={"depth": 0}, headers=room.master)
     assert nothing.status_code == 409
-    assert (await client.get(_url(room, alone), headers=room.master)).status_code == 404
+    assert _none(await client.get(_url(room, alone), headers=room.master))
+    # Changing a map that isn't there is still not found.
+    assert (await client.delete(_url(room, alone), headers=room.master)).status_code == 404
 
     v = await _village(client, room)
     await _create(client, room, v["mira"], headers=room.player)
@@ -326,7 +334,7 @@ async def test_who_may_create_and_manage(
 
     # The Master manages a Player's map too, and deletes it.
     assert (await client.delete(_url(room, v["mira"]), headers=room.master)).status_code == 204
-    assert (await client.get(_url(room, v["mira"]), headers=room.player)).status_code == 404
+    assert _none(await client.get(_url(room, v["mira"]), headers=room.player))
 
     # Deleting the Document deletes its map.
     await _create(client, room, v["thorn"])
@@ -438,7 +446,7 @@ async def test_an_existing_map_is_linked_to_the_document_unchanged(
     assert saved.status_code == 200, saved.text
     before = saved.json()
     linked = _linked(room, v["mira"])
-    assert (await client.get(linked, headers=room.master)).status_code == 404
+    assert _none(await client.get(linked, headers=room.master))
 
     response = await client.put(linked, json={"map_id": court["id"]}, headers=room.master)
     assert response.status_code == 200, response.text
@@ -450,7 +458,7 @@ async def test_an_existing_map_is_linked_to_the_document_unchanged(
     after = await client.get(f"{room.url}/maps/{court['id']}", headers=room.master)
     assert after.json()["cards"] == before["cards"]
     # No mention map is created, and a Document with no mentions links too.
-    assert (await client.get(_url(room, v["mira"]), headers=room.master)).status_code == 404
+    assert _none(await client.get(_url(room, v["mira"]), headers=room.master))
     loner = await _document(client, room, "Loner")
     assert (
         await client.put(_linked(room, loner), json={"map_id": court["id"]}, headers=room.master)
@@ -480,7 +488,7 @@ async def test_linking_needs_a_free_map_the_user_manages(
     tavern_map = await _get(client, room, v["tavern"], room.master)
     mention = await client.put(linked, json={"map_id": tavern_map["id"]}, headers=room.master)
     assert mention.status_code == 404
-    assert (await client.get(linked, headers=room.master)).status_code == 404
+    assert _none(await client.get(linked, headers=room.master))
 
 
 async def test_a_linked_map_is_replaced_and_unlinked_by_who_manages_it(
@@ -505,7 +513,7 @@ async def test_a_linked_map_is_replaced_and_unlinked_by_who_manages_it(
     assert (await client.get(linked, headers=room.player)).status_code == 200
     assert (await client.delete(linked, headers=room.player)).status_code == 403
     assert (await client.delete(linked, headers=room.master)).status_code == 204
-    assert (await client.get(linked, headers=room.master)).status_code == 404
+    assert _none(await client.get(linked, headers=room.master))
     assert (await client.delete(linked, headers=room.master)).status_code == 404
     assert (
         await client.get(f"{room.url}/maps/{inn['id']}", headers=room.master)
@@ -517,7 +525,7 @@ async def test_a_linked_map_is_replaced_and_unlinked_by_who_manages_it(
     ).status_code == 200
     # Deleting the map takes the link with it.
     await client.delete(f"{room.url}/maps/{mine['id']}", headers=room.player)
-    assert (await client.get(linked, headers=room.master)).status_code == 404
+    assert _none(await client.get(linked, headers=room.master))
 
 
 async def test_a_hidden_linked_map_is_neither_shown_nor_revealed(
@@ -530,7 +538,7 @@ async def test_a_hidden_linked_map_is_neither_shown_nor_revealed(
     linked = _linked(room, v["mira"])
     await client.put(linked, json={"map_id": secret["id"]}, headers=room.master)
     assert (await client.get(linked, headers=room.master)).status_code == 200
-    assert (await client.get(linked, headers=room.player)).status_code == 404
+    assert _none(await client.get(linked, headers=room.player))
     # Replacing it answers as if it weren't there.
     refused = await client.put(linked, json={"map_id": mine["id"]}, headers=room.player)
     assert refused.status_code == 404

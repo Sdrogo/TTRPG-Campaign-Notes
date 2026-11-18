@@ -43,6 +43,10 @@ describe('the mention map queries', () => {
   });
 
   it('answers null when the Document has no map, and fails on other errors', async () => {
+    fetchMock.mockResolvedValue(null);
+    const none = renderHookWithProviders(() => useMentionMap('room-1', 'doc-3'));
+    await waitFor(() => expect(none.result.current.data).toBeNull());
+
     fetchMock.mockRejectedValue(new ApiError(404, 'Nessuna mappa'));
     const { result } = renderHookWithProviders(() => useMentionMap('room-1', 'doc-1'));
     await waitFor(() => expect(result.current.data).toBeNull());
