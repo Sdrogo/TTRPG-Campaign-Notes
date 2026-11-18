@@ -10,7 +10,7 @@
 # The lock, exported with its hashes (ticket 76): runtime packages and the
 # build tool. uv only runs in this stage (its image has no shell, hence the
 # exec form); the image below never carries it.
-FROM ghcr.io/astral-sh/uv:0.11.32@sha256:df4cae8f3a96d175e2e5f992e597550000edbe78fdc2594d5cd8de1a217f504c AS lock
+FROM ghcr.io/astral-sh/uv:0.13.9@sha256:d3b601f0c7b118bc1753febf7c41cc80981df678445e0254284eecf84db79a7d AS lock
 WORKDIR /src
 COPY pyproject.toml uv.lock ./
 RUN ["/uv", "export", "--frozen", "--no-dev", "--no-emit-project", "--quiet", "--output-file", "/src/requirements.txt"]
