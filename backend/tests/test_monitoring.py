@@ -292,6 +292,9 @@ async def test_request_line_is_logged(
     entry = json.loads(line)
     assert entry["status"] == 404
     assert entry["group"] == "unmatched"
+    # The probed path is shown, without its query string.
+    assert entry["path"] == "/no/such/route"
+    assert entry["message"] == "GET /no/such/route 404"
 
 
 async def test_health_is_not_logged(client: AsyncClient, caplog: pytest.LogCaptureFixture) -> None:

@@ -112,15 +112,20 @@ class RequestMetricsMiddleware:
         if group in _QUIET_GROUPS and status < 500:
             return
         level = logging.ERROR if status >= 500 else logging.INFO
+        # No route template to show for a path no route knows (bots probing
+        # `/.env` and the like), so the path itself, never the query string,
+        # cut short. Matched routes log only their template.
+        path = None if template else str(scope.get("path", ""))[:200]
         logger.log(
             level,
             "%s %s %s",
             method,
-            template or "(no route)",
+            template or path or "(no route)",
             status,
             extra={
                 "method": method,
                 "route": template,
+                "path": path,
                 "status": status,
                 "duration_ms": round(duration_ms, 1),
                 "group": group,
