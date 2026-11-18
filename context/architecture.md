@@ -256,7 +256,8 @@ duplication and the History are untouched.
   import request; Document images go one per request).
 - **API docs** (`/docs`, `/redoc`, `/openapi.json`) are off unless
   `API_DOCS_ENABLED=true` (local `.env`).
-- **CI** job "Security checks": `pip-audit`, `npm audit --omit=dev
+- **CI** job "Security checks": `pip-audit` (60 s timeout and one retry,
+  since PyPI's API sometimes hangs), `npm audit --omit=dev
   --audit-level=high`, `caddy validate`.
 
 ## Auth and Access Model
@@ -350,10 +351,10 @@ Added 2026-10-04. On the product owner's machine the env files are split by envi
 
 ## Continuous Integration
 
-`.github/workflows/ci.yml` runs on every pull request and on pushes to `main` and `staging` (PRs target `staging`, see `code-standards.md` → Branches and Pull Requests), as two independent jobs matching the two codebases.
+`.github/workflows/ci.yml` runs on every pull request and on pushes to `main` and `staging` (PRs target `staging`, see `code-standards.md` → Branches and Pull Requests), with jobs for each codebase: lint and build or type-check once, the tests in four parallel shards, then a coverage job that merges the shards and applies the gate.
 
-- **Frontend**: `npm ci`, `npm run lint`, `npm run build` (which type-checks), then `npm run test:coverage`. The coverage bar lives in `frontend/vitest.config.ts`, not in the workflow, so it is versioned with the code it measures and the same command gates locally and in CI.
-- **Backend**: `ruff check` (which also fails on a public module, class or function in `app/` without a docstring — pydocstyle `D1`, see `code-standards.md` → Documentation), `mypy app tests`, then `alembic upgrade head` and the **whole** `pytest` suite against a throwaway Postgres, with coverage gates on `app/domain` and `app/`.
+- **Frontend**: the `Frontend` job runs `npm ci`, `npm run lint` and `npm run build` (which type-checks). The tests run in four parallel `Frontend tests (n/4)` jobs (`vitest --shard`, each writing a blob report with its coverage), and `Frontend coverage` merges them (`vitest --merge-reports --coverage`), so the gate still covers the whole suite. One runner had grown to about 12 minutes (2026-11-18). Locally `npm run test:coverage` is the same gate in one go. The coverage bar lives in `frontend/vitest.config.ts`, not in the workflow, so it is versioned with the code it measures and the same command gates locally and in CI.
+- **Backend**: `ruff check` (which also fails on a public module, class or function in `app/` without a docstring — pydocstyle `D1`, see `code-standards.md` → Documentation), `mypy app tests` in the `Backend` job. The **whole** `pytest` suite runs in four parallel `Backend tests (n/4)` jobs, each with its own throwaway Postgres and `alembic upgrade head` (test files dealt out largest first, round robin), and `Backend coverage` combines their coverage data and applies the gates on `app/domain` and `app/` (2026-11-18; one runner took about 7.5 minutes).
 - **Job summary**: each job ends with an `if: always()` step that writes its Markdown section of the run's summary from `.github/scripts/` (`frontend-summary.mjs`, `backend-summary.py`): test counts (Vitest's own reporter writes the frontend's), a coverage totals table, then a per-file table collapsed under `<details>` unless a file is below 100%. Empty files (the backend's `__init__.py`) are left out.
 
 **Backend CI runs every test, database tests included, and needs no secrets** (since 2026-09-23; before that it skipped the 90 database tests). The database tests don't need Supabase itself: `tests/conftest.py` signs its own tokens and fakes Storage, and `db_session` wraps each test in a savepoint that is rolled back. They only need Postgres, so the job runs a `postgres:17.6` service container (production's version, pinned by digest) and nothing ever connects to the live project, on fork PRs either. Two Supabase-specific pieces the migrations rely on are recreated first by `backend/tests/ci/supabase_shim.sql`:
