@@ -111,7 +111,7 @@ services:
   # scripts reach it, at db:5432 on the compose network. Memory settings come
   # from .env, sized by db-setup.sh for the box.
   db:
-    image: postgres:17.6@sha256:00bc86618629af00d2937fdc5a5d63db3ff8450acf52f0636ec813c7f4902929
+    image: postgres:18.7@sha256:2ea8630df176ad090ec92136dee850397c5af8781e4bcf2e4162593691c61bbc
     profiles: [db]
     env_file:
       - path: postgres.env
