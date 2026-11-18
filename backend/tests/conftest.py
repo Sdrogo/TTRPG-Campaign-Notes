@@ -128,9 +128,9 @@ def fake_storage(monkeypatch: pytest.MonkeyPatch) -> dict[str, bytes]:
             raise storage.StorageError("Storage answered 404")
         return objects[path]
 
-    def fake_as_download(signed_url: str, file_name: str) -> str:
-        # The fake links aren't S3 ones: mark the attachment name visibly.
-        return f"{signed_url}&download={quote(file_name, safe='')}"
+    def fake_as_download(path: str, file_name: str) -> str:
+        # Like the signed links above, with the attachment name visible.
+        return f"https://signed.test/{path}?token=t&download={quote(file_name, safe='')}"
 
     monkeypatch.setattr(storage, "as_download", fake_as_download)
     monkeypatch.setattr(storage, "download_signed", fake_download_signed)

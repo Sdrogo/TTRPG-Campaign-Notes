@@ -246,16 +246,14 @@ async def _read_limited(  # pragma: no cover - real Storage HTTP only
         raise StorageError(f"Could not download: {exc}") from exc
 
 
-def as_download(signed_url: str, file_name: str) -> str:
-    """A signed link that makes the bucket serve the object as an attachment
+def as_download(path: str, file_name: str) -> str:
+    """A signed link to `path` that makes the bucket serve it as an attachment
     named `file_name` (`Content-Disposition: attachment`), so the browser
     downloads it instead of rendering it. PDF Attachments are always served
     this way (D-22): a PDF can carry scripts and must never open as a page.
-    The override is part of the signature, so the link is signed again with
-    it, for the time a fresh link gets."""
-    path = own_object_path(signed_url)
-    if path is None:
-        raise StorageError("Not a link of this app's bucket")
+    The override is part of the signature, so it can't be changed; the link
+    lasts as long as a fresh signed link. Callers only pass a path the
+    requester may see (the same check as for `signed_urls`)."""
     return s3_presigned_url(path, SIGNED_URL_TTL_SECONDS, download_name=file_name)
 
 

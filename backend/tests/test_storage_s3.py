@@ -94,20 +94,13 @@ def test_own_object_path_reads_both_link_shapes(s3: None, url: str, expected: st
     assert storage.own_object_path(url) == expected
 
 
-def test_an_own_link_becomes_a_signed_attachment_on_s3(s3: None) -> None:
-    signed = storage.s3_presigned_url("r/f.pdf", 3600)
-
-    url = storage.as_download(signed, "f.pdf")
+def test_a_download_link_is_a_signed_attachment(s3: None) -> None:
+    url = storage.as_download("r/f.pdf", "f.pdf")
 
     assert urlsplit(url).path == "/document-images/r/f.pdf"
     assert query(url)["response-content-disposition"] == [
         "attachment; filename=\"f.pdf\"; filename*=UTF-8''f.pdf"
     ]
-
-
-def test_a_foreign_link_is_never_made_a_download(s3: None) -> None:
-    with pytest.raises(storage.StorageError):
-        storage.as_download("https://elsewhere.test/f.pdf?token=t", "f.pdf")
 
 
 class Calls:

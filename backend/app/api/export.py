@@ -330,7 +330,7 @@ async def _document_sources(
     image_urls = await sign_images(all_images)
     signed_files = await sign_files(all_files)
     file_urls = {
-        file.storage_path: storage.as_download(signed_files[file.storage_path], file.display_name)
+        file.storage_path: storage.as_download(file.storage_path, file.display_name)
         for file in all_files
         if file.storage_path in signed_files
     }
