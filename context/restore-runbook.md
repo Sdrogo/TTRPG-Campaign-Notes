@@ -16,9 +16,35 @@ How to bring back the database and the images from the nightly backup
 - The password is in `backup-password` on production and in the product
   owner's password manager. **Without it the backup cannot be read.**
 - Kept: the 7 newest days, the 4 newest Sundays and the 6 newest first days
-  of a month.
+  of a month; or only the newest `BACKUP_KEEP_DAYS` days when `backup.env`
+  sets it (7, once the vault below runs; at least 4, since a day pruned
+  here before the vault copied it is lost).
 - After each good run, `backup-last-ok` holds its time (UTC). The monitoring
   of ticket 75 reads it.
+- **The vault** (ticket 76): every day at 05:00 `deploy/backup-vault.sh` on
+  staging copies each finished day into a second bucket,
+  `exlibris-backups-vault`, still encrypted. Production has no key for it,
+  so it holds the long history (7 days, 4 Sundays, 6 months) even if
+  production is compromised. Its last good run is staging's
+  `/health/backup` (monitor "Backup vault").
+
+## Which copy to restore from
+
+- The newest days (today and the few before): the plain commands below,
+  which read `exlibris-backups`.
+- Anything older, or when production's bucket looks emptied or tampered
+  with: the vault. On staging, print a read-only key for it into the
+  restoring server's `vault.env`, from your own computer:
+  ```
+  ssh debian@<staging> 'bash /opt/exlibris/backup-target-setup.sh vault-reader' | ssh debian@<production> 'umask 077 && cat > /opt/exlibris/vault.env'
+  ```
+  then put `vault` before any of the commands below:
+  `bash backup.sh vault check 2026-11-01`, `bash backup.sh vault fetch
+  2026-11-01`, `bash backup.sh vault restore-files 2026-11-01`. The key can
+  only read, so `vault.env` may stay; the backup password is the same.
+- If the vault run fails with `MISMATCH` in `backup-vault.log` on staging,
+  production's bucket changed a day the vault already holds: treat
+  production as suspect, and restore from the vault.
 
 ## Check that a backup restores
 
@@ -84,8 +110,10 @@ untouched.
    time:
    ```
    ssh debian@<staging> 'bash /opt/exlibris/backup-target-setup.sh' | ssh debian@<new production> 'umask 077 && cat > /opt/exlibris/backup.env'
+   echo BACKUP_KEEP_DAYS=7 | ssh debian@<new production> 'cat >> /opt/exlibris/backup.env'
    ```
-   then on the new server, put the password from the password manager in
+   (and `vault.env` as in "Which copy to restore from", to restore from
+   the vault), then on the new server, put the password from the password manager in
    `backup-password` (`nano backup-password`, then `chmod 600 backup-password`).
 7. **Files back**: `bash backup.sh restore-files` (the newest day).
 8. **Database back**: `bash backup.sh fetch`, then

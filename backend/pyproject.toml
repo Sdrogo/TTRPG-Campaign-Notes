@@ -36,6 +36,15 @@ dev = [
     "ruff>=0.7",
 ]
 
+# Installed from uv.lock (with hashes) before our own package is built
+# with `--no-build-isolation` (ticket 76). Keep it equal to
+# `[build-system].requires`.
+[dependency-groups]
+# `pip-audit` for the CI audit job, installed from the lock like the rest.
+audit = ["pip-audit==2.10.1"]
+# `editables`: what hatchling needs for the editable install in CI.
+build = ["hatchling==1.33.0", "editables==0.6"]
+
 [tool.mypy]
 strict = true
 python_version = "3.12"
@@ -86,7 +95,10 @@ markers = [
 concurrency = ["greenlet", "thread"]
 
 [build-system]
-requires = ["hatchling"]
+# Pinned, and the same version in the `build` group below so it is in
+# uv.lock with its hashes: the image and CI install it from there and build
+# without isolation, so no unpinned build tool is fetched (ticket 76).
+requires = ["hatchling==1.33.0"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]

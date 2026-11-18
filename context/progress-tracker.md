@@ -228,6 +228,12 @@ image search, read aloud, GDPR (10-01 → 10-10). See the older archives.
 
 ## Next Up
 
+- **76, Security hardening 2** (built 2026-11-18, PR #355 into staging):
+  pinned builds from `uv.lock` + digests + `dependabot.yml`, Caddy access
+  log with masked IPs, backup vault on staging (`backup-vault.sh`). After
+  merge, product owner on the servers: vault first run + cron + monitor,
+  then `BACKUP_KEEP_DAYS=7` on production (guide in
+  `/mnt/project-files/vps/`).
 - **73, external clean-up** (product owner): delete both Supabase projects
   about mid-December 2026 after a last dump (and the `supabase-*.dump`
   files on the servers), remove the old OAuth redirect URLs at Google,
