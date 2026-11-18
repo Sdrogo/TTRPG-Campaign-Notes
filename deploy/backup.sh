@@ -76,6 +76,14 @@ if [ ! -s backup-password ]; then
   echo "new backup password in $PWD/backup-password: copy it to the password manager"
 fi
 
+# The status folder must be this user's: Docker makes it as root when the
+# backend's mount comes first (deploy.sh makes it for this user since ticket
+# 75), and the run would then fail at its very end, after the copy.
+if [ -z "${1:-}" ]; then
+  mkdir -p status
+  [ -w status ] || { echo "status/ is not writable: sudo chown $(id -un):$(id -gn) status" >&2; exit 1; }
+fi
+
 # Whether this server has a database comes from its settings, not from a
 # running container: a stopped database must fail the backup, not skip it.
 has_db=false
