@@ -238,4 +238,6 @@ date -u +%FT%TZ > backup-last-ok
 # The same time where the backend reads it, for /health/backup and the
 # uptime monitor (ticket 75); readable by the backend's user.
 mkdir -p status
-(umask 022 && cp backup-last-ok status/backup-last-ok)
+# Replaced, not overwritten: a leftover file owned by another user (root,
+# from a run before status/ was made for this user) can then not block it.
+(umask 022 && cp backup-last-ok status/.backup-last-ok.new && mv -f status/.backup-last-ok.new status/backup-last-ok)

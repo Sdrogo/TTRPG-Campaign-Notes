@@ -147,5 +147,6 @@ date -u +%FT%TZ > backup-vault-last-ok
 # uptime monitor; readable by the backend's user. (Staging runs no
 # backup.sh, so this file is the vault's alone.)
 mkdir -p status
-(umask 022 && cp backup-vault-last-ok status/backup-last-ok)
+# Replaced, not overwritten (see backup.sh).
+(umask 022 && cp backup-vault-last-ok status/.backup-last-ok.new && mv -f status/.backup-last-ok.new status/backup-last-ok)
 log "vault run ok"
