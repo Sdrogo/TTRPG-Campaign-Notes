@@ -69,6 +69,18 @@ def authenticated_user(
     )
 
 
+def token_user_or_none(
+    credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(_bearer_scheme)],
+) -> CurrentUser | None:
+    """The caller from the bearer token, or None when it is missing, invalid
+    or expired: for routes that answer 404 to anyone they don't serve, such
+    as the Admin API (ticket 75). Ignores `X-View-As`."""
+    try:
+        return authenticated_user(credentials, "en")
+    except HTTPException:
+        return None
+
+
 def rate_limited(exc: RateLimitedError, locale: str) -> HTTPException:
     """429 for a user over a limit, with the seconds to wait (spec 72)."""
     return HTTPException(

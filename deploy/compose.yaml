@@ -4,10 +4,16 @@
 #   garage.env   Garage's RPC secret (chmod 600, written by garage-setup.sh)
 #   postgres.env the database superuser's password (chmod 600, written by
 #                db-setup.sh)
+#   monitoring.env the Beszel agent's key and token (ticket 75, chmod 600,
+#                from the Beszel hub's "Add system")
+#   status/      backup-last-ok, written by backup.sh and read (read-only) by
+#                the backend for /health/backup (ticket 75)
 #   .env         non-secret settings for this file: API_HOSTS,
 #                FRONTEND_HOSTS, FRONTEND_REDIRECT_HOSTS, FILES_HOSTS,
 #                CSP_CONNECT_SRC, COMPOSE_PROFILES (`files` once Garage is
-#                set up, `db` once Postgres is), PG_SHARED_BUFFERS and
+#                set up, `db` once Postgres is, `monitoring` on both servers
+#                and `monitoring-hub` on staging, ticket 75),
+#                MONITOR_NAME, PG_SHARED_BUFFERS and
 #                PG_EFFECTIVE_CACHE_SIZE (db-setup.sh, from the box's
 #                memory) and BACKEND_TAG once deploy.sh has run
 #   site/        the built frontend: releases/<sha>-<time>, and `current`, a link
@@ -22,6 +28,10 @@ services:
     env_file: backend.env
     environment:
       PORT: "10000"
+    # The backup's status, for /health/backup (ticket 75). Read-only; the
+    # backend only reads it where backend.env sets BACKUP_STATUS_FILE.
+    volumes:
+      - ./status:/srv/status:ro
     # No `ports:`: only Caddy reaches the backend, over the compose network.
     # (Docker would bypass ufw for a published port.)
     restart: unless-stopped
@@ -37,11 +47,13 @@ services:
       timeout: 5s
       retries: 3
       start_period: 20s
+    # What Dozzle shows (ticket 75): up to 200 MB per container, weeks of
+    # logs at today's traffic.
     logging: &logging
       driver: json-file
       options:
-        max-size: 10m
-        max-file: "5"
+        max-size: 20m
+        max-file: "10"
 
   caddy:
     image: caddy:2
@@ -111,6 +123,13 @@ services:
       - shared_buffers=${PG_SHARED_BUFFERS:-128MB}
       - -c
       - effective_cache_size=${PG_EFFECTIVE_CACHE_SIZE:-512MB}
+      # Slow queries in the log, for Dozzle (ticket 75): any statement over
+      # half a second, without the values bound to it (they can hold
+      # personal data). Errors are logged as by default.
+      - -c
+      - log_min_duration_statement=500
+      - -c
+      - log_parameter_max_length=0
     # Docker's default 64 MB of shared memory is too small for parallel
     # queries.
     shm_size: 256mb
@@ -124,6 +143,113 @@ services:
       retries: 5
     logging: *logging
 
+  # --- Monitoring (ticket 75) ---------------------------------------------
+  # Nothing here is reachable from the internet: the dashboards are
+  # published on 127.0.0.1 only and opened through an SSH tunnel
+  # (context/monitoring-guide.md), and only the Beszel agent of production
+  # listens on the network, for the hub on staging (ufw lets in only that
+  # address). Every tool reads Docker through docker-proxy, which allows
+  # GET requests only: they can watch, never start, stop or change anything.
+
+  # The only service with the Docker socket. Read-only API: containers
+  # (list, inspect, logs, stats), events, info, version. POST=0 refuses
+  # every write. Inspect shows each container's environment, secrets
+  # included: accepted by the product owner (ticket 75 Question 7), which is
+  # why only Dozzle (its network) and the host's loopback reach it. Published on 127.0.0.1 for the Beszel agent, which runs in
+  # the host's network.
+  docker-proxy:
+    image: tecnativa/docker-socket-proxy:v0.5.0
+    profiles: [monitoring]
+    environment:
+      CONTAINERS: "1"
+      INFO: "1"
+      EVENTS: "1"
+      VERSION: "1"
+      PING: "1"
+      POST: "0"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    # Its own network, shared only with Dozzle: the backend, Caddy and the
+    # other services can't reach it.
+    networks: [docker-api]
+    ports:
+      - "127.0.0.1:2375:2375"
+    restart: unless-stopped
+    logging: *logging
+
+  # CPU, memory, disk, network and each container, for the Beszel hub. In
+  # the host's network to see the host's interfaces. Its settings (KEY,
+  # TOKEN, LISTEN, HUB_URL) are in monitoring.env.
+  beszel-agent:
+    image: henrygd/beszel-agent:0.21.2
+    profiles: [monitoring]
+    network_mode: host
+    env_file:
+      - path: monitoring.env
+        required: false
+    environment:
+      DOCKER_HOST: tcp://127.0.0.1:2375
+      # No registry lookups for image updates.
+      DOCKER_IMAGE_CHECK: "false"
+    volumes:
+      - beszel_agent_data:/var/lib/beszel-agent
+    depends_on:
+      - docker-proxy
+    restart: unless-stopped
+    logging: *logging
+
+  # The log viewer: every container's logs, live and searchable, through
+  # docker-proxy. Actions and shell are off (watch only).
+  dozzle:
+    image: amir20/dozzle:v11.4.3
+    profiles: [monitoring]
+    environment:
+      DOZZLE_REMOTE_HOST: tcp://docker-proxy:2375|${MONITOR_NAME:-server}
+      DOZZLE_HOSTNAME: ${MONITOR_NAME:-server}
+      DOZZLE_NO_ANALYTICS: "true"
+      DOZZLE_ENABLE_ACTIONS: "false"
+      DOZZLE_ENABLE_SHELL: "false"
+    networks: [docker-api]
+    ports:
+      - "127.0.0.1:8081:8080"
+    volumes:
+      - dozzle_data:/data
+    depends_on:
+      - docker-proxy
+    restart: unless-stopped
+    logging: *logging
+
+  # The Beszel hub (staging only): charts and alerts for both servers. It
+  # reaches production's agent on port 45876; staging's agent connects to
+  # it (HUB_URL=http://127.0.0.1:8090).
+  beszel:
+    image: henrygd/beszel:0.21.2
+    profiles: [monitoring-hub]
+    environment:
+      APP_URL: http://localhost:8090
+    ports:
+      - "127.0.0.1:8090:8090"
+    volumes:
+      - beszel_data:/beszel_data
+    restart: unless-stopped
+    logging: *logging
+
+  # Uptime checks and their alerts (staging only): API, site, database,
+  # backup age and certificates of both environments, from outside.
+  uptime-kuma:
+    image: louislam/uptime-kuma:2.5.11-slim
+    profiles: [monitoring-hub]
+    ports:
+      - "127.0.0.1:3001:3001"
+    volumes:
+      - uptime_kuma_data:/app/data
+    restart: unless-stopped
+    logging: *logging
+
+networks:
+  # docker-proxy and Dozzle only (ticket 75), away from the app's network.
+  docker-api:
+
 volumes:
   # The database. Dumped every night by backup.sh to the other VPS.
   pg_data:
@@ -134,3 +260,9 @@ volumes:
   # The certificates. Losing it only means Caddy asks for new ones.
   caddy_data:
   caddy_config:
+  # Monitoring (ticket 75): history and settings. Losing them loses the
+  # charts and the alert settings, nothing of the app.
+  beszel_agent_data:
+  beszel_data:
+  dozzle_data:
+  uptime_kuma_data:

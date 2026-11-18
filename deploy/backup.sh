@@ -11,7 +11,8 @@
 # first days of a month. The password is made on the first run, in
 # backup-password next to this script: keep a copy in the password manager,
 # since without it the copies can't be read. After a good run the time goes
-# to backup-last-ok, for the monitoring (ticket 75).
+# to backup-last-ok and status/backup-last-ok, for the monitoring (ticket 75:
+# /health/backup).
 #
 # Needs backup.env next to it (written by backup-target-setup.sh on the
 # other VPS). Run from /opt/exlibris:
@@ -119,7 +120,7 @@ psql_admin() { docker compose exec -T -e PGOPTIONS=--client-min-messages=warning
 row_counts() {
   local query
   query="$(psql_admin -d "$1" -At -c "SELECT string_agg(format('SELECT %L, count(*) FROM public.%I', tablename, tablename), ' UNION ALL ') || ' ORDER BY 1' FROM pg_tables WHERE schemaname = 'public'")"
-  psql_admin -d "$1" -At -F ' ' -c "$query"
+  psql_admin -d "$1" -At -F ' ' -c "$query" | LC_ALL=C sort
 }
 
 # The given day, or the newest copy in that root.
@@ -216,3 +217,7 @@ prune safe:
 $has_db && prune safedb:
 
 date -u +%FT%TZ > backup-last-ok
+# The same time where the backend reads it, for /health/backup and the
+# uptime monitor (ticket 75); readable by the backend's user.
+mkdir -p status
+(umask 022 && cp backup-last-ok status/backup-last-ok)

@@ -24,6 +24,10 @@ set_tag() {
 }
 touch .env
 mkdir -p site/releases
+# The backup's status for /health/backup (ticket 75), made here so it
+# belongs to this user: if Docker made it for the mount, it would be root's
+# and backup.sh could not write into it.
+mkdir -p status
 # frontend.tgz belongs to this run only: never left, even by a failure, for
 # a later run (a rollback by hand) to pick up.
 trap 'rm -f frontend.tgz' EXIT

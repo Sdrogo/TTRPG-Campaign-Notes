@@ -355,6 +355,11 @@
       "deleteWord": "USUŃ",
       "confirm": "Usuń na stałe",
       "deleted": "Twoje konto zostało usunięte"
+    },
+    "admin": {
+      "title": "Admin",
+      "description": "Liczby aplikacji: użytkownicy, pokoje, ruch i błędy. Widzisz je tylko ty.",
+      "open": "Otwórz stronę Admin"
     }
   },
   "rooms": {
@@ -2253,6 +2258,65 @@
       "groupChip": "Grupa „{{name}}”",
       "missing": "Już niedostępny",
       "noneLeft": "Brak innych zegarów i grup."
+    }
+  },
+  "admin": {
+    "title": "Admin",
+    "subtitle": "Liczby całej aplikacji, stan na {{time}}. Tylko liczby, nigdy treść.",
+    "signInRequired": "Zaloguj się, aby otworzyć tę stronę.",
+    "notAvailable": "Ta strona jest niedostępna.",
+    "loadError": "Nie udało się wczytać liczb. Spróbuj ponownie za chwilę.",
+    "overview": {
+      "title": "Przegląd",
+      "users": "Użytkownicy",
+      "newUsers": "Nowi użytkownicy",
+      "activeUsers": "Aktywni użytkownicy",
+      "last7and30": "ostatnie 7 / 30 dni",
+      "rooms": "Pokoje",
+      "documents": "Dokumenty",
+      "maps": "Mapy",
+      "geographic": "w tym geograficzne: {{value}}",
+      "sessionZeros": "Sesja 0",
+      "clocks": "Zegary",
+      "files": "Pliki",
+      "images": "Obrazy",
+      "database": "Baza danych"
+    },
+    "growth": {
+      "title": "Wzrost",
+      "description": "Tygodniowo, ostatnie 26 tygodni.",
+      "newUsers": "Nowi użytkownicy na tydzień",
+      "newRooms": "Nowe pokoje na tydzień"
+    },
+    "traffic": {
+      "title": "Ruch",
+      "description": "Żądania do API w ostatnich dniach ({{days}}) i jak szybko na nie odpowiedziano.",
+      "perHour": "Żądania na godzinę",
+      "empty": "Nie policzono jeszcze żadnych żądań.",
+      "group": "Obszar",
+      "requests": "Żądania",
+      "clientErrors": "4xx",
+      "serverErrors": "5xx",
+      "median": "Mediana",
+      "p95": "95%"
+    },
+    "errors": {
+      "title": "Błędy serwera",
+      "description": "Ostatnie 100, przechowywane 30 dni. Po id żądania znajdziesz pełny log w Dozzle.",
+      "empty": "Brak błędów serwera. 🎉",
+      "time": "Kiedy",
+      "route": "Ścieżka",
+      "status": "Status",
+      "type": "Błąd",
+      "requestId": "Id żądania"
+    },
+    "jobs": {
+      "title": "Zadania w tle",
+      "exports": "PDF pokoi",
+      "imports": "Importy",
+      "running": "W toku: {{value}}",
+      "done": "Ukończone (7 dni): {{value}}",
+      "failed": "Nieudane (7 dni): {{value}}"
     }
   }
 }

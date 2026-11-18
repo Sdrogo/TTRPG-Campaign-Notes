@@ -72,6 +72,16 @@ class Settings(BaseSettings):
     discord_client_secret: str = ""
     github_client_id: str = ""
     github_client_secret: str = ""
+    # Who sees the Admin page (ticket 75): user ids, comma-separated. Empty
+    # means nobody; the page and its API then answer 404 to everyone.
+    admin_user_ids: Annotated[list[str], NoDecode] = []
+    # The nightly backup's status file (ticket 75 Decision 6), mounted
+    # read-only from the server: backup.sh writes the time of its last good
+    # run there. Unset (servers without a backup): `/health/backup` is 404.
+    backup_status_file: str = ""
+    # Older than this, `/health/backup` answers 503 and the uptime monitor
+    # alerts: a night's run plus some slack.
+    backup_max_age_hours: int = 26
 
     @model_validator(mode="after")
     def _check_s3(self) -> "Settings":
@@ -103,6 +113,14 @@ class Settings(BaseSettings):
         except re.error as exc:
             raise ValueError(f"CORS_ORIGIN_REGEX is not a valid regex: {exc}") from exc
         return pattern
+
+    @field_validator("admin_user_ids", mode="before")
+    @classmethod
+    def _parse_admin_user_ids(cls, value: object) -> object:
+        """A comma-separated list of user ids, blanks dropped."""
+        if isinstance(value, str):
+            return [item.strip() for item in value.split(",") if item.strip()]
+        return value
 
     @field_validator("cors_origins", mode="before")
     @classmethod
