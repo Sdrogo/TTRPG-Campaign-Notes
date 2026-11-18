@@ -17,7 +17,10 @@ jobs:
   review:
     name: Review
     # Drafts are reviewed once they are marked ready, like CodeRabbit did.
-    if: github.event.pull_request.draft == false
+    # Dependabot PRs are skipped: their runs only see Dependabot secrets (not
+    # the Actions secrets holding the Claude credentials) and get a read-only
+    # token, so the action cannot authenticate or comment there.
+    if: github.event.pull_request.draft == false && github.actor != 'dependabot[bot]'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     permissions:

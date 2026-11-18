@@ -26,6 +26,8 @@ Full history is archived; read it only when you need that detail:
   23c, 25 and 25b were dropped by the product owner; 46b (DDI invitation)
   is not written yet. Latest: 75 monitoring (PRs #339, #348), 73 step 6
   cleanup (PR #347), CI in parallel shards (PR #350).
+  Claude review now skips Dependabot PRs (it cannot read Actions secrets
+  there).
 - **No more Vercel, Render or Supabase** (ticket 73, 2026-11-16 → 11-18):
   frontend, API, sign-in, files and database run on two OVH VPSes
   (production in Strasbourg, staging on the Erith VPS). Both Supabase
