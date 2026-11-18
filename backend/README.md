@@ -1,7 +1,7 @@
 # Backend
 
 The FastAPI service for Ex Libris. It is the only component that
-talks to Postgres and Storage: it verifies the user's Supabase token and applies
+talks to Postgres and Storage: it verifies the user's access token (its own, issued after an OAuth sign-in) and applies
 every visibility and ownership rule before answering. Overview of the whole
 project: [../README.md](../README.md).
 
@@ -31,21 +31,18 @@ env files.
 
 | Variable | Meaning |
 | --- | --- |
-| `SUPABASE_URL` | Supabase project URL (Storage) |
-| `SUPABASE_SECRET_KEY` | Supabase secret key, for Storage |
 | `STORAGE_BUCKET` | Private bucket for images and files (`document-images`) |
-| `S3_ENDPOINT` | Set: the bucket is on S3 (Garage, `http://garage:3900` on the VPS) instead of Supabase Storage. Unset: Supabase |
+| `S3_ENDPOINT` | Where the backend reaches the S3 bucket (Garage, `http://garage:3900` on the VPS) |
 | `S3_PUBLIC_URL` | The host browsers fetch signed links from (`https://files.exlibris.world`) |
 | `S3_REGION` | Signing region, `garage` (default) |
 | `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY` | The key `deploy/garage-setup.sh` creates, limited to the bucket |
-| `DATABASE_URL` | `postgresql+asyncpg://…`. On a VPS after ticket 73 step 5, `…@db:5432/exlibris`, written by `deploy/db-setup.sh`; before that, Supabase's **Session Pooler** (the direct host is IPv6-only) |
+| `DATABASE_URL` | `postgresql+asyncpg://…`. On a VPS after ticket 73 step 5, `…@db:5432/exlibris`, written by `deploy/db-setup.sh` |
 | `CORS_ORIGINS` | Exact allowed origins: a JSON list or comma-separated, no trailing `/` |
-| `CORS_ORIGIN_REGEX` | Optional pattern for generated hosts (staging's Vercel Previews); blank = none |
 | `API_PUBLIC_URL` | The API's public address; providers send users back to `<API_PUBLIC_URL>/auth/<provider>/callback` |
 | `AUTH_TOKEN_SECRET` | **Required**, 32+ random characters (`openssl rand -base64 48`): signs the access tokens. The app refuses to start without it |
 | `GOOGLE_CLIENT_ID`/`_SECRET`, `DISCORD_…`, `GITHUB_…` | Each provider's OAuth app; a provider without a client id is not offered |
 | `AUTH_COOKIE_SECURE` | `true` (default): the session cookie is `Secure`. Off only for plain HTTP other than localhost |
-| `DB_POOL_SIZE`, `DB_MAX_OVERFLOW` | Connections per process (5 + 2). The Session Pooler allows 15 per project across every backend on that database |
+| `DB_POOL_SIZE`, `DB_MAX_OVERFLOW` | Connections per process (5 + 2) |
 
 ## Checks
 
@@ -63,7 +60,7 @@ env files.
 | `api/` | FastAPI routers, one per area; request and response models |
 | `domain/` | The rules (visibility, ownership, roles), framework-free |
 | `db/` | SQLAlchemy models, one `*_repo.py` per area, the session (`session.py`) |
-| `auth/` | Supabase JWT verification and the current-user dependency |
+| `auth/` | Access tokens, the OAuth providers and the current-user dependency |
 | `pdf/` | Room PDF templates, styles and bundled fonts |
 | `i18n/` | API error messages in Italian and English (`locales/`) |
 | `config.py` | Every setting, read from the environment |
@@ -87,8 +84,9 @@ CI's `Backend image` job builds it and renders a PDF inside it).
   over SSH. Settings live in `/opt/exlibris/backend.env` on the server.
   Operating it (logs, settings, rollback):
   [../context/vps-migration-plan.md](../context/vps-migration-plan.md) §12.
-- **Staging** runs it as a Render Docker service, deployed from `staging` after
-  CI, with its settings in the Render dashboard.
+- **Staging** runs it the same way on the staging VPS
+  (`https://api-staging.exlibris.world`), deployed from `staging` after CI by
+  `../.github/workflows/deploy-staging.yml`.
 
 Only one or two backend processes should run against the same database at a
 time: each one starts the background sweepers, and at startup the Room PDF

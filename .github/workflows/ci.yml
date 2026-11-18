@@ -182,10 +182,10 @@ jobs:
         working-directory: backend
 
     # A throwaway Postgres for the database tests, so the whole suite runs
-    # here with no Supabase credentials - on fork PRs too. Same major/minor
-    # as production (17.6), pinned by digest like the actions above. The
-    # Supabase-specific bits the migrations need are recreated by
-    # tests/ci/supabase_shim.sql. See "Continuous Integration" in
+    # here with no credentials - on fork PRs too. Same major/minor as
+    # production (17.6), pinned by digest like the actions above. The
+    # Supabase-era bits the old migrations need (roles, `auth` tables) are
+    # recreated by tests/ci/supabase_shim.sql. See "Continuous Integration" in
     # context/architecture.md.
     services:
       postgres:
@@ -206,10 +206,6 @@ jobs:
 
     env:
       DATABASE_URL: postgresql+asyncpg://postgres:postgres@127.0.0.1:5432/postgres
-      # Never contacted: tests sign their own tokens and fake Storage
-      # (tests/conftest.py).
-      SUPABASE_URL: http://supabase.invalid
-      SUPABASE_SECRET_KEY: ci-not-a-real-key
       # The Room PDF's rendering test (spec 23b) fails, rather than skips,
       # when WeasyPrint can't load Pango, so it can't pass by not running.
       REQUIRE_WEASYPRINT: '1'
@@ -346,8 +342,6 @@ jobs:
         run: |
           docker run --rm \
             -e DATABASE_URL=postgresql+asyncpg://u:p@127.0.0.1:5432/db \
-            -e SUPABASE_URL=http://supabase.invalid \
-            -e SUPABASE_SECRET_KEY=ci-not-a-real-key \
             --entrypoint python ttrpg-backend -c "
           import app.main, weasyprint
           pdf = weasyprint.HTML(string='<p>ok</p>').write_pdf()
@@ -363,8 +357,6 @@ jobs:
         run: |
           docker run --rm \
             -e DATABASE_URL=postgresql+asyncpg://u:p@127.0.0.1:5432/db \
-            -e SUPABASE_URL=http://supabase.invalid \
-            -e SUPABASE_SECRET_KEY=ci-not-a-real-key \
             --entrypoint python ttrpg-backend -c "
           import datetime, io, uuid
           from pypdf import PdfReader

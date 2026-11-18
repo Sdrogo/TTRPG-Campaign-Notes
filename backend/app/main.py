@@ -89,14 +89,12 @@ async def lifespan(_: FastAPI) -> AsyncIterator[None]:
 
 
 def add_cors(target: FastAPI, config: Settings) -> None:
-    """Allows the frontend's origins: the exact `cors_origins`, plus any
-    origin matching `cors_origin_regex` (Vercel preview deploys). A function
+    """Allows the frontend's origins, exactly as listed in `cors_origins`. A function
     rather than inline so tests can check a preflight against a throwaway
     app wired exactly like this one."""
     target.add_middleware(
         CORSMiddleware,
         allow_origins=config.cors_origins,
-        allow_origin_regex=config.cors_origin_regex,
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],

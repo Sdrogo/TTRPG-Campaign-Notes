@@ -2,7 +2,6 @@
 database or network: where a sign-in may send the user back to, and what a
 refresh token presented to `/auth/refresh` is worth."""
 
-import re
 from datetime import datetime, timedelta
 from enum import StrEnum
 from urllib.parse import urlsplit
@@ -13,9 +12,7 @@ SESSION_TTL = timedelta(days=30)
 ROTATION_GRACE = timedelta(seconds=60)
 
 
-def allowed_return_origin(
-    value: str | None, origins: list[str], origin_regex: str | None
-) -> str | None:
+def allowed_return_origin(value: str | None, origins: list[str]) -> str | None:
     """The origin to send the user back to after signing in, or None when
     `value` isn't one of the frontend's origins (the same list CORS allows).
     Only a bare origin is accepted, never a path, so a sign-in can't be
@@ -29,8 +26,6 @@ def allowed_return_origin(
         return None
     origin = f"{parts.scheme}://{parts.netloc}".lower()
     if origin in (allowed.lower() for allowed in origins):
-        return origin
-    if origin_regex and re.fullmatch(origin_regex, origin):
         return origin
     return None
 

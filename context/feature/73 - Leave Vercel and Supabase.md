@@ -6,8 +6,9 @@ the Strasbourg VPS, 2026-11-16). **Step 2 live** (staging on the Erith VPS,
 #338; staging checked by the product owner with linking across providers).
 **Step 4 live** 2026-11-17 (files to Garage on both VPSes, PR #342,
 release #343; nightly encrypted backup to the staging VPS running).
-**Step 5 built** 2026-11-17 (section 2, update; PR #344, confirmed by the
-product owner the same day): live once `db-setup.sh` runs on each server.
+**Step 5 live** 2026-11-17 (section 2, update; PR #344, release #345;
+`db-setup.sh` ran on both servers). **Step 6 code built** 2026-11-17 (see the
+note under the table); the external clean-up is the product owner's.
 Questions: sign-in A (2026-11-16); files to
 Garage on the production VPS (2026-11-17, replacing "stay on Supabase for
 now"); backup age check through ticket 75 (question 9, 2026-11-17).
@@ -387,6 +388,22 @@ keeps running between steps.
 | 4 | Files to Garage, a local S3 service on the production VPS (decided 2026-11-17; was hosted object storage), plus the copy script (lists Supabase objects, copies each, checks size; safe to re-run, only copies what is missing) | ~1.5 h | none: copy, deploy, copy again for anything uploaded meanwhile | DNS for `files` and `files-staging`, run the setup and copy scripts on each VPS (guide) |
 | 5 | Database to the VPS, plus nightly encrypted off-site backups and the restore runbook | ~1.5 h | **~15–30 min** maintenance (API answers 503 while `pg_dump` / `pg_restore` of ~46 MB runs) | run the dump/restore at a quiet hour with the runbook |
 | 6 | Clean-up: remove the Vercel project and domains, the Render staging service (`ttrpg-campaign-notes-2`) and the suspended Render services, `next`/`api-next` from `CORS_ORIGINS` and Supabase Redirect URLs, `CORS_ORIGIN_REGEX` (Vercel Previews only); remove Supabase settings and code paths, the old Supabase callback URIs in the Google/Discord/GitHub consoles, the "sign in once more" landing notice (`auth.signInAgain`), the `VITE_SUPABASE_*` variables in the GitHub environments, the CI shim's Supabase roles where no migration needs them, docs (`architecture.md`, privacy notice: processors and data location), tracker | ~1 h | none | delete the Supabase projects and Render service after ~4 weeks, keeping a final dump; delete `supabase-*.dump` on both servers (the copies `db-setup.sh` kept) |
+
+**Step 6 in the code (2026-11-17)**: removed `frontend/vercel.json` (its
+header test now reads the Caddyfile), `CORS_ORIGIN_REGEX`, the Supabase
+Storage side of `storage.py` (S3 only), `SUPABASE_URL`/`SUPABASE_SECRET_KEY`,
+`app/storage_copy.py` and the copy step of `garage-setup.sh`,
+`backup-files.sh`, the Supabase origins in the default `CSP_CONNECT_SRC`,
+the "sign in once more" notice, the dummy Supabase values in CI. Kept:
+`own_object_path` still reads the old Supabase link shape of the two
+projects (constant `LEGACY_SUPABASE_URLS`), so exports made before step 4
+import their images; the CI shim's `anon`/`authenticated` roles and `auth`
+tables (migrations `f1c8a2e6d493`, `b5e2c8f1a4d7` need them);
+`db-setup.sh`'s Supabase path and the commented `#SUPABASE_DATABASE_URL`
+line (the database rollback until the projects are deleted). The privacy
+notice names OVHcloud in Strasbourg, the backups in the UK, the two sign-in
+cookies, and Supabase only as the copy kept until about mid-December 2026;
+that line goes when the projects are deleted.
 
 Total: about **9–10 hours of Claude build time**, spread over several
 sessions because each step waits for staging checks and the product owner's

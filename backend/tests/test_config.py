@@ -60,10 +60,9 @@ def test_cors_origins_rejects_a_non_list_json_value(
         load_settings()
 
 
-def test_db_pool_defaults_fit_two_backends(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Supabase's Session Pooler allows 15 clients per project, shared by
-    every backend on the database: by default two processes must fit
-    (see app/config.py)."""
+def test_db_pool_defaults_stay_small(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Small enough that two backends together stay far below Postgres's
+    default of 100 connections (see app/config.py)."""
     monkeypatch.delenv("DB_POOL_SIZE", raising=False)
     monkeypatch.delenv("DB_MAX_OVERFLOW", raising=False)
     settings = load_settings()

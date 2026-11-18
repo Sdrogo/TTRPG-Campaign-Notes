@@ -251,11 +251,9 @@ describe('HomePage', () => {
       expect(scrollIntoView).toHaveBeenCalledTimes(1);
     });
 
-    // Ticket 73 step 3: everyone signs in again once after the move.
-    it('asks returning users to sign in once more', () => {
+    it('shows no error when nothing went wrong', () => {
       renderWithProviders(<HomePage />);
 
-      expect(screen.getByText(/accedi un'altra volta/)).toBeInTheDocument();
       expect(screen.queryByRole('alert')).not.toBeInTheDocument();
     });
 

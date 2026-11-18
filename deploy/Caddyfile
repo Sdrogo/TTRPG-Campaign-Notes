@@ -4,12 +4,11 @@
 # in API_HOSTS and FRONTEND_HOSTS (set in compose.yaml / the server's .env);
 # each must already resolve to this server.
 
-# The frontend (ticket 73 step 1, replacing Vercel): the built SPA, unpacked
-# by deploy.sh into site/releases/<sha>-<time> and switched in through the
-# site/current link. The headers are the ones vercel.json set, plus HSTS;
-# CSP_CONNECT_SRC lists the API and Supabase origins the app talks to, and
-# FILES_HOSTS the bucket's host (the app fetches some files, e.g. PDFs to
-# preview).
+# The frontend (ticket 73 step 1): the built SPA, unpacked by deploy.sh into
+# site/releases/<sha>-<time> and switched in through the site/current link.
+# The headers are spec 72's (checked by caddyFrontendHeaders.test.ts);
+# CSP_CONNECT_SRC lists the API origin the app talks to, and FILES_HOSTS the
+# bucket's host (the app fetches some files, e.g. PDFs to preview).
 {$FRONTEND_HOSTS} {
 	header {
 		Strict-Transport-Security "max-age=31536000"
@@ -42,7 +41,7 @@
 	}
 }
 
-# www goes to the apex, as it did on Vercel, so sign-in only ever returns to
+# www goes to the apex, so sign-in only ever returns to
 # one origin. Off by default, like FRONTEND_HOSTS.
 {$FRONTEND_REDIRECT_HOSTS} {
 	redir https://exlibris.world{uri} permanent
@@ -52,7 +51,7 @@
 # fetch signed links here; the backend talks to garage:3900 directly. Every
 # request needs a valid signature (the bucket is private), so the nightly
 # backup from the other VPS also writes through this host. CORS for any
-# origin, as Supabase Storage answered: a link is only usable while its
+# origin: a link is only usable while its
 # signature is. The sandbox CSP keeps a file opened here from running
 # anything.
 {$FILES_HOSTS} {

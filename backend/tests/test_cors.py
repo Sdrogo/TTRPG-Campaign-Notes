@@ -1,5 +1,3 @@
-import re
-
 import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
@@ -7,19 +5,15 @@ from fastapi.testclient import TestClient
 from app.config import Settings
 from app.main import add_cors
 
-PRODUCTION = "https://ttrpg-campaign-notes-eight.vercel.app"
-# The value set on Render (kept 2026-10-03): hyphens are allowed so branch
-# previews (`...-git-<branch>-rum11`) reach the backend too.
-PREVIEW_PATTERN = r"https://ttrpg-campaign-notes-[a-z0-9-]+-rum11\.vercel\.app"
+PRODUCTION = "https://exlibris.world"
 
 
-def client_for(cors_origins: list[str], cors_origin_regex: str | None = None) -> TestClient:
+def client_for(cors_origins: list[str]) -> TestClient:
     """A throwaway app with the production CORS wiring (`add_cors`)."""
     app = FastAPI()
     config = Settings(
         _env_file=None,  # type: ignore[call-arg]
         cors_origins=cors_origins,
-        cors_origin_regex=cors_origin_regex,
     )
     add_cors(app, config)
 
@@ -42,72 +36,25 @@ def preflight(client: TestClient, origin: str) -> str | None:
 
 @pytest.fixture
 def client() -> TestClient:
-    return client_for(cors_origins=[PRODUCTION], cors_origin_regex=PREVIEW_PATTERN)
+    return client_for(cors_origins=[PRODUCTION])
 
 
-@pytest.mark.parametrize(
-    "origin",
-    [
-        PRODUCTION,
-        "https://ttrpg-campaign-notes-jspixip1f-rum11.vercel.app",
-        "https://ttrpg-campaign-notes-a1b2c3d4e-rum11.vercel.app",
-        "https://ttrpg-campaign-notes-git-feature-x-rum11.vercel.app",
-    ],
-)
-def test_listed_origin_and_previews_are_allowed(client: TestClient, origin: str) -> None:
-    assert preflight(client, origin) == origin
-
-
-@pytest.mark.parametrize(
-    "origin",
-    [
-        "https://evil-ttrpg-campaign-notes-abc123-rum11.vercel.app",
-        "https://ttrpg-campaign-notes-abc123-rum11.vercel.app.evil.com",
-        "http://ttrpg-campaign-notes-abc123-rum11.vercel.app",
-        "https://ttrpg-campaign-notes-abc123-rum11xvercel.app",
-    ],
-)
-def test_look_alike_origins_are_rejected(client: TestClient, origin: str) -> None:
-    assert preflight(client, origin) is None
-
-
-def test_a_scope_ending_in_rum11_is_an_accepted_gap() -> None:
-    """Accepted on 2026-10-03: the pattern admits another Vercel account whose
-    scope ends in "-rum11". Excluding hyphens would block branch previews and
-    still admit a project named `ttrpg-campaign-notes-<word>-rum11`; the
-    Bearer token, which a foreign origin never has, is the real barrier."""
-    assert re.fullmatch(
-        PREVIEW_PATTERN, "https://ttrpg-campaign-notes-abc123-evil-rum11.vercel.app"
-    )
-
-
-def test_without_a_pattern_only_listed_origins_are_allowed() -> None:
-    client = client_for(cors_origins=[PRODUCTION])
+def test_a_listed_origin_is_allowed(client: TestClient) -> None:
     assert preflight(client, PRODUCTION) == PRODUCTION
-    assert preflight(client, "https://ttrpg-campaign-notes-jspixip1f-rum11.vercel.app") is None
 
 
-def test_cors_origin_regex_defaults_to_none(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.delenv("CORS_ORIGIN_REGEX", raising=False)
-    assert Settings(_env_file=None).cors_origin_regex is None  # type: ignore[call-arg]
-
-
-@pytest.mark.parametrize("value", ["", "   "])
-def test_blank_cors_origin_regex_means_unset(value: str, monkeypatch: pytest.MonkeyPatch) -> None:
-    """A dashboard may keep an emptied variable rather than delete it."""
-    monkeypatch.setenv("CORS_ORIGIN_REGEX", value)
-    assert Settings(_env_file=None).cors_origin_regex is None  # type: ignore[call-arg]
-
-
-def test_cors_origin_regex_is_trimmed(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("CORS_ORIGIN_REGEX", f"  {PREVIEW_PATTERN}\n")
-    assert Settings(_env_file=None).cors_origin_regex == PREVIEW_PATTERN  # type: ignore[call-arg]
-
-
-def test_invalid_cors_origin_regex_fails_at_startup(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("CORS_ORIGIN_REGEX", "https://(unclosed")
-    with pytest.raises(ValueError, match="CORS_ORIGIN_REGEX"):
-        Settings(_env_file=None)  # type: ignore[call-arg]
+@pytest.mark.parametrize(
+    "origin",
+    [
+        "https://evil.exlibris.world",
+        "https://exlibris.world.evil.com",
+        "http://exlibris.world",
+        # Vercel Previews were allowed by a pattern until ticket 73 step 6.
+        "https://ttrpg-campaign-notes-jspixip1f-rum11.vercel.app",
+    ],
+)
+def test_any_other_origin_is_rejected(client: TestClient, origin: str) -> None:
+    assert preflight(client, origin) is None
 
 
 def test_cors_origins_of_the_wrong_type_is_rejected() -> None:

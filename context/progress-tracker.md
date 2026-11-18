@@ -30,8 +30,7 @@ Full history is archived; read it only when you need that detail:
   migrations were applied to production beforehand. Dependabot PRs land on
   `main`: merge `main` into `staging` before opening a release PR.
 - **Waiting on the product owner**: review of 55 (Room landing); 52 live
-  updates to test with two browsers; legal review of `/privacy` and the DPAs with Supabase, OVHcloud and
-  Vercel (spec 31; shipped before those were done). Keeping shared content
+  updates to test with two browsers; legal review of `/privacy` and the DPA with OVHcloud (spec 31; shipped before those were done). Keeping shared content
   anonymised after an account deletion is the default in place, not
   explicitly confirmed.
 - **Test baseline**: backend and frontend both at 100% coverage with exact
@@ -298,8 +297,14 @@ image search, read aloud, GDPR (10-01 → 10-10). See the two older archives.
   row-count check, switch, rollback line kept; also restores a backup file),
   `deploy/backup.sh` (was `backup-files.sh`; adds the nightly `pg_dump`,
   `check`/`fetch`/`restore-files`, `backup-last-ok`),
-  `context/restore-runbook.md`. Live once the product owner runs
-  `db-setup.sh` on staging, then production. Then step 6 cleanup.
+  `context/restore-runbook.md`; live on both servers 2026-11-17.
+  Step 6 code cleanup built 2026-11-17 (no migration): `vercel.json`,
+  `CORS_ORIGIN_REGEX`, the Supabase Storage side of `storage.py`,
+  `storage_copy.py`, `SUPABASE_*` settings, `backup-files.sh` and the
+  "sign in once more" notice removed; `own_object_path` still reads old
+  Supabase links in exports; privacy notice updated (OVH Strasbourg, the two
+  sign-in cookies, backups). Left for the product owner: the external
+  services, and dropping Supabase from the notice once it is deleted.
 - **License** (product owner, 2026-11-15): GPL-3.0 replaced by the
   Functional Source License `FSL-1.1-ALv2` (no commercial competing service;
   each version becomes Apache-2.0 after two years), licensor Andrea Partenope.
