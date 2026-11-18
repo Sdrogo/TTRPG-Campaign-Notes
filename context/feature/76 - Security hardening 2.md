@@ -112,6 +112,13 @@ Status: **ticket, to confirm** (2026-11-18). Docs only; no code yet.
     copies the encrypted objects as they are (plain `rclone copy` between
     the two buckets, server side), so a compromised staging can delete the
     vault but not read it. Losing everything now needs both servers.
+    **The vault never changes what it already holds**: the job copies only
+    day folders the vault doesn't have yet, with `rclone copy --immutable`
+    (refuses to modify an existing object), so a production server that
+    rewrites or empties an old day in its own bucket can't carry that into
+    the vault. If it finds a day already in the vault whose objects differ
+    from the source, it logs them and exits with an error without writing
+    `backup-last-ok`, so the "Backup vault" monitor alerts.
 16. **Restore reads the vault**: `backup.sh check|fetch|restore-files`
     gain a way to read from `exlibris-backups-vault` (a second
     `backup.env`-style file with a read-only vault key, made by
@@ -153,7 +160,9 @@ outside the Dockerfile.
 - 76_3: `bash -n` / `shellcheck` on the scripts (as for the existing
   ones); on staging, `backup-vault.sh` copies the existing days and a second
   run copies nothing; production's key gets `403` on the vault bucket
-  (checked by hand with rclone); `backup.sh check` restores from the vault;
+  (checked by hand with rclone); a file of an old day changed in the source
+  bucket, then a vault run: the vault copy is unchanged and the run fails
+  with the mismatch logged; `backup.sh check` restores from the vault;
   the new monitor is green.
 
 ## Risks
