@@ -32,8 +32,11 @@ built" below wins over the proposed Decisions where they differ.
   - The vault copies only **finished days** (before today, UTC): backup.sh
     only ever writes today's folder, so a past day never changes
     legitimately and a manual second run on the same day is no false
-    alarm. The copy is therefore a day behind, so production keeps the
-    **4** newest days (`BACKUP_KEEP_DAYS=4`), not 3.
+    alarm. The copy is therefore a day behind. Production keeps the **7**
+    newest days (`BACKUP_KEEP_DAYS=7`, not 3; `backup.sh` refuses less
+    than 4): a day production prunes before the vault copied it is lost, so
+    this is how long the vault may be down before anything is lost
+    (review of PR #355).
   - A day copied completely gets a marker `done/<day>` in the vault; a run
     cut short is finished by the next one (`--immutable` adds what is
     missing, changes nothing). Marked days still in the source are

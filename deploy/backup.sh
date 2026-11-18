@@ -63,8 +63,13 @@ fi
 # shellcheck source=/dev/null
 source "$env_file"
 : "${BACKUP_S3_URL:?}" "${BACKUP_BUCKET:?}" "${BACKUP_ACCESS_KEY_ID:?}" "${BACKUP_SECRET_ACCESS_KEY:?}"
-[[ -z "${BACKUP_KEEP_DAYS:-}" || "${BACKUP_KEEP_DAYS:-}" =~ ^[2-9]$|^[1-9][0-9]+$ ]] \
-  || { echo "BACKUP_KEEP_DAYS must be a number of days, at least 2" >&2; exit 1; }
+# The vault copies a day only once it is over, so a day stays here at least
+# 2 days before the vault can have it; the floor of 4 (7 recommended) leaves
+# room for a vault that is down a few days. Days the vault never got are
+# lost once pruned here, so keep it well above the time to notice the
+# "Backup vault" alert.
+[[ -z "${BACKUP_KEEP_DAYS:-}" || "${BACKUP_KEEP_DAYS:-}" =~ ^[4-9]$|^[1-9][0-9]+$ ]] \
+  || { echo "BACKUP_KEEP_DAYS must be a number of days, at least 4 (7 recommended)" >&2; exit 1; }
 
 if [ ! -s backup-password ]; then
   (umask 077 && openssl rand -base64 32 > backup-password)

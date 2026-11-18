@@ -17,7 +17,8 @@ How to bring back the database and the images from the nightly backup
   owner's password manager. **Without it the backup cannot be read.**
 - Kept: the 7 newest days, the 4 newest Sundays and the 6 newest first days
   of a month; or only the newest `BACKUP_KEEP_DAYS` days when `backup.env`
-  sets it (4, once the vault below runs).
+  sets it (7, once the vault below runs; at least 4, since a day pruned
+  here before the vault copied it is lost).
 - After each good run, `backup-last-ok` holds its time (UTC). The monitoring
   of ticket 75 reads it.
 - **The vault** (ticket 76): every day at 05:00 `deploy/backup-vault.sh` on
@@ -109,7 +110,7 @@ untouched.
    time:
    ```
    ssh debian@<staging> 'bash /opt/exlibris/backup-target-setup.sh' | ssh debian@<new production> 'umask 077 && cat > /opt/exlibris/backup.env'
-   echo BACKUP_KEEP_DAYS=4 | ssh debian@<new production> 'cat >> /opt/exlibris/backup.env'
+   echo BACKUP_KEEP_DAYS=7 | ssh debian@<new production> 'cat >> /opt/exlibris/backup.env'
    ```
    (and `vault.env` as in "Which copy to restore from", to restore from
    the vault), then on the new server, put the password from the password manager in
