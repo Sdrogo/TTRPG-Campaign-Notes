@@ -83,7 +83,7 @@ describe('ExportRoomModal', () => {
     render();
 
     expect(
-      await screen.findByText(/I link a immagini e file PDF scadono entro un'ora/),
+      await screen.findByText(/I link a immagini e file PDF scadono entro 48 ore/),
     ).toBeInTheDocument();
   });
 
