@@ -110,7 +110,7 @@ describe('ExportRoomModal, PDF format (spec 23b Frontend)', () => {
     expect(screen.getByRole('radio', { name: 'A4' })).toBeChecked();
     expect(screen.getByText(/resta disponibile per 24 ore/)).toBeInTheDocument();
     // The one-hour link note belongs to the files, not to the PDF.
-    expect(screen.queryByText(/scadono entro 48 ore/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/scadono dopo un'ora/)).not.toBeInTheDocument();
   });
 
   it('asks for nothing PDF-related while another format is chosen', async () => {

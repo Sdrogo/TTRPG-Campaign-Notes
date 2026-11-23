@@ -456,14 +456,14 @@ def test_a_main_item_naming_a_missing_tag_is_ignored_and_a_combination_joins_nam
 def test_markdown_gives_long_link_lifetimes_in_hours() -> None:
     text = render_markdown(_export(ALICE, [_castle()], link_ttl_seconds=172800))
 
-    assert "expire within 48 hours of the export" in text
+    assert "links to images within 48 hours of the export" in text
 
 
 def test_markdown_reads_the_header_the_tags_and_the_filter() -> None:
     text = render_markdown(_export(ALICE, [_castle()], tag_filter=[NPC]))
 
     assert text.startswith("# Barovia\n\nD&D 5e · Exported 2026-10-02\n")
-    assert "expire within 60 minutes" in text
+    assert "links to images within 60 minutes" in text
     assert "Only Documents tagged: NPC" in text
     assert f'- <a id="tag-{NPC}"></a>NPC (Type)' in text
     assert f'- <a id="tag-{PLACE}"></a>Place\n' in text

@@ -899,7 +899,7 @@
       "pdf": "Un manual maquetado para imprimir o entregar a los jugadores."
     },
     "tagFilter": "Solo los Documentos con estas Etiquetas (opcional)",
-    "linksExpire": "Los enlaces a imágenes y archivos PDF caducan en 48 horas. Vuelve a exportar para actualizarlos.",
+    "linksExpire": "Los enlaces a archivos PDF caducan en una hora y los de las imágenes en 48 horas. Vuelve a exportar para actualizarlos.",
     "done": "Exportación descargada.",
     "pdf": {
       "style": "Estilo",

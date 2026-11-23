@@ -899,7 +899,7 @@
       "pdf": "Un manuale impaginato da stampare o consegnare ai giocatori."
     },
     "tagFilter": "Solo i Documenti con questi Tag (facoltativo)",
-    "linksExpire": "I link a immagini e file PDF scadono entro 48 ore. Esporta di nuovo per aggiornarli.",
+    "linksExpire": "I link ai file PDF scadono dopo un'ora, quelli delle immagini entro 48 ore. Esporta di nuovo per aggiornarli.",
     "done": "Esportazione scaricata.",
     "pdf": {
       "style": "Stile",
