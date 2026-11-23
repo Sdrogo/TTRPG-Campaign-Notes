@@ -515,7 +515,9 @@ async def _seed(session: AsyncSession, now: datetime) -> None:
             "INSERT INTO rooms (id, name, status, created_by, created_at)"
             " VALUES (:id, 'R', 'active', :by, :at)"
         ),
-        {"id": uuid.uuid4(), "by": user_new, "at": now - timedelta(days=1)},
+        # `now`, not a day ago: on a Monday "yesterday" is last week's bucket and
+        # the "new_rooms in the current week" assertion would fail.
+        {"id": uuid.uuid4(), "by": user_new, "at": now},
     )
     histogram = [0] * BUCKET_COUNT
     histogram[2] = 4

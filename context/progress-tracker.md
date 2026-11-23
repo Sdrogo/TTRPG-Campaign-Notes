@@ -132,7 +132,10 @@ Details in `architecture.md` → Environments, `restore-runbook.md` and
 
 One line per unit, dates 2026, newest first. Spec files live in
 `context/feature/`; details in the archives and in `architecture.md`.
+
 "no mig." = no migration.
+
+- **2026-11-23 Postgres pinned back to 17.6** (no mig.): a Dependabot bump to `postgres:18.7` broke the staging `db` (the 18+ image refuses the 17 data directory); pinned back, and Dependabot now ignores postgres major bumps.
 
 ### 2026-11-05 → 11-18
 

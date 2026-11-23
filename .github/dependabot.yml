@@ -37,6 +37,12 @@ updates:
     groups:
       server-images:
         patterns: ["*"]
+    ignore:
+      # The data directory on the VPSes is Postgres 17. A major bump needs
+      # a dump/restore or pg_upgrade (and the 18+ image uses a different
+      # data path), so it is done by hand, never by a Dependabot PR.
+      - dependency-name: postgres
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: github-actions
     directory: /
