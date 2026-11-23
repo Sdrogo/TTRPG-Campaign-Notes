@@ -721,9 +721,14 @@ def render_markdown(export: Export) -> str:
         meta.append(_md(export.game_system))
     meta.append(f"Exported {export.generated_at:%Y-%m-%d}")
     lines += [" · ".join(meta), ""]
+    # An upper bound: a PDF link lasts 1 hour, an image link up to 48.
+    lifetime = (
+        f"{export.link_ttl_seconds // 3600} hours"
+        if export.link_ttl_seconds >= 7200
+        else f"{export.link_ttl_seconds // 60} minutes"
+    )
     lines += [
-        f"Links to images and files expire within {export.link_ttl_seconds // 60} minutes "
-        "of the export.",
+        f"Links to images and files expire within {lifetime} of the export.",
         "",
     ]
     if export.tag_filter:

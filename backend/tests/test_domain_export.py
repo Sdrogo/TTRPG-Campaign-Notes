@@ -453,6 +453,12 @@ def test_a_main_item_naming_a_missing_tag_is_ignored_and_a_combination_joins_nam
     assert "99" not in text.split("## NPC + Place")[0]
 
 
+def test_markdown_gives_long_link_lifetimes_in_hours() -> None:
+    text = render_markdown(_export(ALICE, [_castle()], link_ttl_seconds=172800))
+
+    assert "expire within 48 hours of the export" in text
+
+
 def test_markdown_reads_the_header_the_tags_and_the_filter() -> None:
     text = render_markdown(_export(ALICE, [_castle()], tag_filter=[NPC]))
 
