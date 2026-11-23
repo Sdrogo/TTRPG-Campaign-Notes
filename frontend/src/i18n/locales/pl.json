@@ -919,7 +919,7 @@
       "pdf": "Złożony podręcznik do wydruku lub przekazania graczom."
     },
     "tagFilter": "Tylko dokumenty z tymi tagami (opcjonalnie)",
-    "linksExpire": "Linki do obrazów i plików PDF wygasają w ciągu godziny. Wyeksportuj ponownie, aby je odświeżyć.",
+    "linksExpire": "Linki do plików PDF wygasają po godzinie, a linki do obrazów w ciągu 48 godzin. Wyeksportuj ponownie, aby je odświeżyć.",
     "done": "Eksport pobrany.",
     "pdf": {
       "style": "Styl",

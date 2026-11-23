@@ -384,7 +384,7 @@ async def load_export(
             file_urls=file_urls,
             tag_filter=tag_ids,
             generated_at=datetime.now(UTC),
-            link_ttl_seconds=storage.SIGNED_URL_TTL_SECONDS,
+            link_ttl_seconds=storage.SIGNED_URL_VALID_SECONDS,
         )
     )
     return export if document_id is None else restrict_to_document(export, document_id)

@@ -1,6 +1,8 @@
 import io
 import uuid
 from collections.abc import AsyncIterator, Callable, Collection
+from datetime import UTC, datetime
+from urllib.parse import parse_qs, urlsplit
 
 import pytest
 import pytest_asyncio
@@ -8,97 +10,72 @@ from httpx import ASGITransport, AsyncClient
 from PIL import Image
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.config import settings
 from app.db import storage
 from app.main import app
 
 
 @pytest.fixture
-def signer(monkeypatch: pytest.MonkeyPatch) -> list[list[str]]:
-    """Fake Storage signing on an empty link cache; records each request's
-    paths. Links carry a counter, so a re-signed path gets a new URL."""
-    requests: list[list[str]] = []
-
-    async def fake_create(paths: Collection[str], expires_in: int) -> dict[str, str]:
-        requests.append(list(paths))
-        return {path: f"https://signed.test/{path}?n={len(requests)}" for path in paths}
-
-    monkeypatch.setattr(storage, "_signed_cache", {})
-    monkeypatch.setattr(storage, "create_signed_urls", fake_create)
-    return requests
+def s3(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(settings, "s3_public_url", "https://files.test")
+    monkeypatch.setattr(settings, "s3_access_key_id", "GKtestkey")
+    monkeypatch.setattr(settings, "s3_secret_access_key", "secret")
+    monkeypatch.setattr(settings, "storage_bucket", "document-images")
 
 
 @pytest.fixture
 def clock(monkeypatch: pytest.MonkeyPatch) -> list[float]:
-    now = [1000.0]
-    monkeypatch.setattr(storage, "_now", lambda: now[0])
+    # Two hours into a window.
+    now = [19_675 * 86_400.0 + 7200]
+    monkeypatch.setattr(storage, "_wall_clock", lambda: now[0])
     return now
 
 
-async def test_paths_are_signed_in_one_request(signer: list[list[str]]) -> None:
+async def test_paths_are_signed_in_one_call_without_duplicates(s3: None) -> None:
     urls = await storage.signed_urls(["a.webp", "b.webp", "a.webp"])
 
     assert set(urls) == {"a.webp", "b.webp"}
-    assert signer == [["a.webp", "b.webp"]]
 
 
-async def test_a_link_is_reused_while_it_has_time_left(
-    signer: list[list[str]], clock: list[float]
-) -> None:
+async def test_a_link_is_the_same_for_the_whole_window(s3: None, clock: list[float]) -> None:
     first = await storage.signed_urls(["a.webp"])
-    clock[0] += storage.SIGNED_URL_TTL_SECONDS - storage.SIGNED_URL_MIN_REMAINING_SECONDS
-    again = await storage.signed_urls(["a.webp", "b.webp"])
+    clock[0] += storage.SIGNED_URL_WINDOW_SECONDS - 7201  # the window's last second
 
-    # Same URL for the same image, so the browser cache keeps working...
-    assert again["a.webp"] == first["a.webp"]
-    # ... and only the new path was signed.
-    assert signer == [["a.webp"], ["b.webp"]]
+    # Same URL for the same image, so the browser cache keeps working
+    # (also after a restart: nothing is kept in memory).
+    assert (await storage.signed_urls(["a.webp"])) == first
 
 
-async def test_a_link_close_to_expiry_is_renewed(
-    signer: list[list[str]], clock: list[float]
-) -> None:
+async def test_a_link_changes_with_the_next_window(s3: None, clock: list[float]) -> None:
     first = await storage.signed_urls(["a.webp"])
-    clock[0] += storage.SIGNED_URL_TTL_SECONDS - storage.SIGNED_URL_MIN_REMAINING_SECONDS + 1
+    clock[0] += storage.SIGNED_URL_WINDOW_SECONDS
 
-    renewed = await storage.signed_urls(["a.webp"])
-
-    assert renewed["a.webp"] != first["a.webp"]
-    assert len(signer) == 2
+    assert (await storage.signed_urls(["a.webp"]))["a.webp"] != first["a.webp"]
 
 
-async def test_a_fully_expired_link_is_dropped_from_the_cache(
-    signer: list[list[str]], clock: list[float]
+async def test_a_link_is_valid_for_at_least_a_window_and_at_most_two(
+    s3: None, clock: list[float]
 ) -> None:
-    await storage.signed_urls(["a.webp"])
-    assert "a.webp" in storage._signed_cache
+    now = int(clock[0])
+    (url,) = (await storage.signed_urls(["a.webp"])).values()
 
-    clock[0] += storage.SIGNED_URL_TTL_SECONDS + 1
-    await storage.signed_urls(["b.webp"])
-
-    assert "a.webp" not in storage._signed_cache
+    params = parse_qs(urlsplit(url).query)
+    signed_at = datetime.strptime(params["X-Amz-Date"][0], "%Y%m%dT%H%M%SZ").replace(tzinfo=UTC)
+    expires = int(params["X-Amz-Expires"][0])
+    assert signed_at.timestamp() % storage.SIGNED_URL_WINDOW_SECONDS == 0
+    remaining = signed_at.timestamp() + expires - now
+    assert storage.SIGNED_URL_WINDOW_SECONDS <= remaining <= storage.SIGNED_URL_VALID_SECONDS
 
 
 async def test_storage_outage_leaves_paths_out_instead_of_failing(
-    signer: list[list[str]], monkeypatch: pytest.MonkeyPatch
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    cached = await storage.signed_urls(["a.webp"])
-
     async def storage_down(paths: Collection[str], expires_in: int) -> dict[str, str]:
         raise storage.StorageError("Storage unavailable")
 
     monkeypatch.setattr(storage, "create_signed_urls", storage_down)
-    urls = await storage.signed_urls(["a.webp", "b.webp"])
 
-    assert urls == cached  # the cached link still works; b is just missing
-
-
-async def test_removed_objects_are_no_longer_handed_out(signer: list[list[str]]) -> None:
-    first = await storage.signed_urls(["a.webp"])
-    storage.forget_signed_urls(["a.webp"])
-
-    again = await storage.signed_urls(["a.webp"])
-
-    assert again["a.webp"] != first["a.webp"]
+    assert await storage.signed_urls(["a.webp", "b.webp"]) == {}
 
 
 # --- Through the API -----------------------------------------------------
@@ -163,7 +140,6 @@ async def test_documents_still_load_when_signing_fails(
     async def storage_down(paths: Collection[str], expires_in: int) -> dict[str, str]:
         raise storage.StorageError("Storage unavailable")
 
-    monkeypatch.setattr(storage, "_signed_cache", {})
     monkeypatch.setattr(storage, "create_signed_urls", storage_down)
     response = await client.get(document_url, headers=headers)
 

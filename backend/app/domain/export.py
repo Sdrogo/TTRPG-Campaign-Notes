@@ -706,6 +706,10 @@ def _group_documents(export: Export) -> list[tuple[str, list[ExportDocument]]]:
     return [(title, documents) for title, documents in titled if documents]
 
 
+def _lifetime(seconds: int) -> str:
+    return f"{seconds // 3600} hours" if seconds >= 7200 else f"{seconds // 60} minutes"
+
+
 def render_markdown(export: Export) -> str:
     """The export as one readable Markdown file: the Room, its Tags, then the
     Documents grouped like the list. A Document is written in full under the
@@ -722,8 +726,8 @@ def render_markdown(export: Export) -> str:
     meta.append(f"Exported {export.generated_at:%Y-%m-%d}")
     lines += [" · ".join(meta), ""]
     lines += [
-        f"Links to images and files expire within {export.link_ttl_seconds // 60} minutes "
-        "of the export.",
+        "Links to PDF files expire after one hour and links to images within "
+        f"{_lifetime(export.link_ttl_seconds)} of the export.",
         "",
     ]
     if export.tag_filter:
