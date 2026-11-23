@@ -26,6 +26,7 @@ Full history is archived; read it only when you need that detail:
   23c, 25 and 25b were dropped by the product owner; 46b (DDI invitation)
   is not written yet. Latest: 75 monitoring (PRs #339, #348), 73 step 6
   cleanup (PR #347), CI in parallel shards (PR #350).
+  Image cache (2026-11-23): signed image links are now stable per UTC day (24-48 h) and objects get `max-age=86400`, so the browser stops re-downloading images every hour (see architecture.md, bucket is private).
   Claude review now skips Dependabot PRs (it cannot read Actions secrets
   there).
 - **No more Vercel, Render or Supabase** (ticket 73, 2026-11-16 → 11-18):
