@@ -82,7 +82,7 @@ describe('ExportDocumentModal (spec 27)', () => {
     const { user } = render();
 
     await user.click(screen.getByText('JSON'));
-    expect(screen.getByText(/I link a immagini e file PDF scadono/)).toBeInTheDocument();
+    expect(screen.getByText(/I link ai file PDF scadono dopo un'ora/)).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Esporta' }));
 
     await waitFor(() =>
