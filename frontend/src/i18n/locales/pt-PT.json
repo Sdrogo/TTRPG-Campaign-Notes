@@ -901,7 +901,7 @@
       "pdf": "Um manual paginado para imprimir ou entregar aos jogadores."
     },
     "tagFilter": "Só os Documentos com estas Tags (facultativo)",
-    "linksExpire": "Os links para imagens e ficheiros PDF expiram em uma hora. Exporta de novo para os atualizar.",
+    "linksExpire": "Os links para imagens e ficheiros PDF expiram em 48 horas. Exporta de novo para os atualizar.",
     "done": "Exportação transferida.",
     "pdf": {
       "style": "Estilo",

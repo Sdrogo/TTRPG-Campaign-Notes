@@ -899,7 +899,7 @@
       "pdf": "Een opgemaakt handboek om af te drukken of aan de spelers te geven."
     },
     "tagFilter": "Alleen Documenten met deze Tags (optioneel)",
-    "linksExpire": "Links naar afbeeldingen en pdf-bestanden verlopen binnen een uur. Exporteer opnieuw om ze te vernieuwen.",
+    "linksExpire": "Links naar afbeeldingen en pdf-bestanden verlopen binnen 48 uur. Exporteer opnieuw om ze te vernieuwen.",
     "done": "Export gedownload.",
     "pdf": {
       "style": "Stijl",
