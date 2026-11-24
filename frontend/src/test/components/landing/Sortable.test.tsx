@@ -64,7 +64,7 @@ describe('the sortable lists', () => {
     const real = vi.mocked(useSortable).getMockImplementation()!;
     vi.mocked(useSortable).mockImplementation((args) => ({ ...real(args), transform: { x: 1.4, y: 2.6, scaleX: 1, scaleY: 1 }, isDragging: true }));
     renderWithProviders(<List onMove={vi.fn()} />);
-    expect(screen.getByTestId('item-a').style.transform).toBe('translate3d(1px, 3px, 0)');
+    expect(screen.getByTestId('item-a').style.transform).toBe('translate3d(1px, 3px, 0px)');
     expect(screen.getByTestId('item-a').style.zIndex).toBe('5');
     vi.mocked(useSortable).mockImplementation(real);
   });

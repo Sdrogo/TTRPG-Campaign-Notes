@@ -10,6 +10,8 @@ request at all."""
 import logging
 import time
 from collections.abc import Collection, Mapping
+from datetime import UTC, datetime
+from typing import Any
 from urllib.parse import quote, unquote, urlsplit
 
 import httpx
@@ -26,9 +28,10 @@ class StorageError(Exception):
     """Storage answered with an error."""
 
 
-# How long a browser may keep an object it fetched through a signed link,
-# as Supabase Storage, the bucket's first home, told it (3600 seconds).
-OBJECT_CACHE_CONTROL = "max-age=3600"
+# How long a browser may keep an object it fetched through a signed link.
+# Object paths are never reused for new content (every upload gets a fresh
+# path), so a copy can't go stale; a day matches the link window.
+OBJECT_CACHE_CONTROL = "max-age=86400"
 
 
 def _s3_credentials() -> Credentials:
@@ -64,10 +67,29 @@ def content_disposition(file_name: str) -> str:
     return f"attachment; filename=\"{fallback}\"; filename*=UTF-8''{quote(file_name, safe='')}"
 
 
-def s3_presigned_url(path: str, expires_in: int, download_name: str | None = None) -> str:
+class _FixedDateQueryAuth(S3SigV4QueryAuth):  # type: ignore[misc]
+    """Query signing with a chosen date instead of now, so the same request
+    always yields the same URL."""
+
+    def __init__(self, *args: Any, signed_at: datetime, **kwargs: Any) -> None:
+        super().__init__(*args, **kwargs)
+        self._signed_at = signed_at
+
+    def _modify_request_before_signing(self, request: AWSRequest) -> None:
+        request.context["timestamp"] = self._signed_at.strftime("%Y%m%dT%H%M%SZ")
+        super()._modify_request_before_signing(request)
+
+
+def s3_presigned_url(
+    path: str,
+    expires_in: int,
+    download_name: str | None = None,
+    signed_at: datetime | None = None,
+) -> str:
     """A GET link to `path` on the public host, valid for `expires_in`
-    seconds. With `download_name`, Garage serves it as an attachment of that
-    name; the override is part of the signature, so it can't be changed."""
+    seconds from `signed_at` (default: now). With `download_name`, Garage
+    serves it as an attachment of that name; the override is part of the
+    signature, so it can't be changed."""
     params = (
         {}
         if download_name is None
@@ -76,9 +98,15 @@ def s3_presigned_url(path: str, expires_in: int, download_name: str | None = Non
     request = AWSRequest(
         method="GET", url=_s3_object_url(settings.s3_public_url, path), params=params
     )
-    S3SigV4QueryAuth(_s3_credentials(), "s3", settings.s3_region, expires=expires_in).add_auth(
-        request
-    )
+    if signed_at is None:
+        auth: S3SigV4QueryAuth = S3SigV4QueryAuth(
+            _s3_credentials(), "s3", settings.s3_region, expires=expires_in
+        )
+    else:
+        auth = _FixedDateQueryAuth(
+            _s3_credentials(), "s3", settings.s3_region, expires=expires_in, signed_at=signed_at
+        )
+    auth.add_auth(request)
     return str(request.url)
 
 
@@ -121,61 +149,47 @@ async def _s3_remove(path: str) -> None:  # pragma: no cover - real Storage HTTP
 
 
 # The bucket is private: every image URL a response carries is a signed link
-# that expires. Links are reused while they have a while left, so the same
-# image keeps the same URL (and stays in the browser's cache) between
-# requests instead of changing on every response.
+# that expires. The browser caches an image under its full URL, so the URL
+# must not change between requests: links are signed with the start of the
+# current window (a UTC day) as their date and stay valid for two windows.
+# Within a window the same image gets the same URL for everyone, across
+# restarts and deploys, so the browser reuses its copy; the link works for
+# 24 to 48 hours after it is first handed out. (Earlier: re-signed every
+# 45 to 60 minutes, and again on every restart.)
+SIGNED_URL_WINDOW_SECONDS = 24 * 3600
+SIGNED_URL_VALID_SECONDS = 2 * SIGNED_URL_WINDOW_SECONDS
+# A link for one download (an attachment), signed at the moment of the request.
 SIGNED_URL_TTL_SECONDS = 3600
-SIGNED_URL_MIN_REMAINING_SECONDS = 900
 
-_now = time.monotonic
-_signed_cache: dict[str, tuple[str, float]] = {}
+_wall_clock = time.time
+
+
+def _window_start() -> datetime:
+    now = int(_wall_clock())
+    return datetime.fromtimestamp(now - now % SIGNED_URL_WINDOW_SECONDS, UTC)
 
 
 async def create_signed_urls(paths: Collection[str], expires_in: int) -> dict[str, str]:
-    """Signed read links for `paths`, signed here with no request (so a
+    """Signed read links for `paths`, dated at the start of the current
+    window so they don't change within it. Signed here with no request (so a
     missing object gets a link that answers 404)."""
-    return {path: s3_presigned_url(path, expires_in) for path in paths}
+    window = _window_start()
+    return {path: s3_presigned_url(path, expires_in, signed_at=window) for path in paths}
 
 
 async def signed_urls(paths: Collection[str]) -> dict[str, str]:
-    """Signed read URLs for `paths`, from the cache when a link still has
-    enough time left. Callers must only pass paths the requester is allowed
-    to see - a signed link works for whoever holds it until it expires.
+    """Signed read URLs for `paths`, stable for the whole window (see above).
+    Callers must only pass paths the requester is allowed to see - a signed
+    link works for whoever holds it until it expires.
 
     If Storage can't sign right now, the missing paths are simply absent
     from the result: an image is left out of the response and an avatar
     falls back to initials, rather than failing the whole request."""
-    now = _now()
-    for path, (_, expires_at) in list(_signed_cache.items()):
-        if expires_at <= now:
-            del _signed_cache[path]
-
-    result: dict[str, str] = {}
-    missing: list[str] = []
-    for path in dict.fromkeys(paths):
-        cached = _signed_cache.get(path)
-        if cached is not None and cached[1] - now >= SIGNED_URL_MIN_REMAINING_SECONDS:
-            result[path] = cached[0]
-        else:
-            missing.append(path)
-    if not missing:
-        return result
-
     try:
-        fresh = await create_signed_urls(missing, SIGNED_URL_TTL_SECONDS)
+        return await create_signed_urls(list(dict.fromkeys(paths)), SIGNED_URL_VALID_SECONDS)
     except (StorageError, httpx.HTTPError):
-        logger.warning("Could not sign %d image URL(s)", len(missing), exc_info=True)
-        return result
-    for path, url in fresh.items():
-        _signed_cache[path] = (url, now + SIGNED_URL_TTL_SECONDS)
-    return result | fresh
-
-
-def forget_signed_urls(paths: Collection[str]) -> None:
-    """Stops handing out cached links for removed objects. Links already
-    given out keep working until they expire."""
-    for path in paths:
-        _signed_cache.pop(path, None)
+        logger.warning("Could not sign %d image URL(s)", len(paths), exc_info=True)
+        return {}
 
 
 # Where the bucket lived before ticket 73 step 4: the production and staging
@@ -252,7 +266,7 @@ def as_download(path: str, file_name: str) -> str:
     downloads it instead of rendering it. PDF Attachments are always served
     this way (D-22): a PDF can carry scripts and must never open as a page.
     The override is part of the signature, so it can't be changed; the link
-    lasts as long as a fresh signed link. Callers only pass a path the
+    lasts `SIGNED_URL_TTL_SECONDS` from the request. Callers only pass a path the
     requester may see (the same check as for `signed_urls`)."""
     return s3_presigned_url(path, SIGNED_URL_TTL_SECONDS, download_name=file_name)
 

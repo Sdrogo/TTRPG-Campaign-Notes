@@ -26,6 +26,7 @@ Full history is archived; read it only when you need that detail:
   23c, 25 and 25b were dropped by the product owner; 46b (DDI invitation)
   is not written yet. Latest: 75 monitoring (PRs #339, #348), 73 step 6
   cleanup (PR #347), CI in parallel shards (PR #350).
+  Image cache (2026-11-23): signed image links are now stable per UTC day (24-48 h) and objects get `max-age=86400`, so the browser stops re-downloading images every hour (see architecture.md, bucket is private).
   Claude review now skips Dependabot PRs (it cannot read Actions secrets
   there).
 - **No more Vercel, Render or Supabase** (ticket 73, 2026-11-16 → 11-18):
@@ -132,7 +133,10 @@ Details in `architecture.md` → Environments, `restore-runbook.md` and
 
 One line per unit, dates 2026, newest first. Spec files live in
 `context/feature/`; details in the archives and in `architecture.md`.
+
 "no mig." = no migration.
+
+- **2026-11-23 Postgres pinned back to 17.6** (no mig.): a Dependabot bump to `postgres:18.7` broke the staging `db` (the 18+ image refuses the 17 data directory); pinned back, and Dependabot now ignores postgres major bumps.
 
 ### 2026-11-05 → 11-18
 
@@ -235,7 +239,12 @@ image search, read aloud, GDPR (10-01 → 10-10). See the older archives.
   log with masked IPs, backup vault on staging (`backup-vault.sh`). After
   merge, product owner on the servers: vault first run + cron + monitor,
   then `BACKUP_KEEP_DAYS=7` on production (guide in
-  `/mnt/project-files/vps/`).
+  `/mnt/project-files/vps/`). **Live 2026-11-18** (vault on staging, monitor
+  green, `BACKUP_KEEP_DAYS=7` on prod). Follow-ups #356, #366: both backup
+  scripts check `status/` is writable up front and replace
+  `status/backup-last-ok` (Docker had made the folder, and a file in it, as
+  root, which failed the runs at their last line). Left: confirm tonight's
+  03:30 (prod) and 05:00 (vault) runs.
 - **73, external clean-up** (product owner): delete both Supabase projects
   about mid-December 2026 after a last dump (and the `supabase-*.dump`
   files on the servers), remove the old OAuth redirect URLs at Google,

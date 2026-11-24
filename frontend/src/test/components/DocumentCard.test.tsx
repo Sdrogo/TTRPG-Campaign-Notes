@@ -81,18 +81,18 @@ describe('DocumentCard', () => {
   it('shows the subtitle under a name one size larger', () => {
     render({ subtitle: 'La Idol' });
 
-    expect(screen.getByRole('heading', { name: 'Il Cancello' })).toHaveStyle({
-      fontSize: 'var(--mantine-h3-font-size)',
-    });
+    expect(screen.getByRole('heading', { name: 'Il Cancello' }).style.fontSize).toBe(
+      'var(--mantine-h3-font-size)',
+    );
     expect(screen.getByText('La Idol')).toBeInTheDocument();
   });
 
   it('keeps the larger name without a subtitle', () => {
     render();
 
-    expect(screen.getByRole('heading', { name: 'Il Cancello' })).toHaveStyle({
-      fontSize: 'var(--mantine-h3-font-size)',
-    });
+    expect(screen.getByRole('heading', { name: 'Il Cancello' }).style.fontSize).toBe(
+      'var(--mantine-h3-font-size)',
+    );
   });
 
   it('shows the visibility level', () => {

@@ -899,7 +899,7 @@
       "pdf": "A manual-style document to print or hand to your players."
     },
     "tagFilter": "Only Documents with these Tags (optional)",
-    "linksExpire": "Links to images and PDF files expire within an hour. Export again to refresh them.",
+    "linksExpire": "Links to PDF files expire after an hour, links to images within 48 hours. Export again to refresh them.",
     "done": "Export downloaded.",
     "pdf": {
       "style": "Style",

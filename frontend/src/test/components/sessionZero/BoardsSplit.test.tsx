@@ -27,7 +27,9 @@ describe('BoardsSplit', () => {
   it('starts Lines & Veils at a third', () => {
     const { handle, side } = render();
     expect(handle).toHaveAttribute('aria-valuenow', '33');
-    expect(side().style.flex).toBe(`0 0 ${DEFAULT_SIDE_PERCENT}%`);
+    // jsdom rounds the serialized percentage to four decimals.
+    expect(side().style.flex).toMatch(/^0 0 [\d.]+%$/);
+    expect(parseFloat(side().style.flex.slice(4))).toBeCloseTo(DEFAULT_SIDE_PERCENT, 3);
     expect(screen.getByText('Retro')).toBeInTheDocument();
     expect(screen.getByText('Linee')).toBeInTheDocument();
   });

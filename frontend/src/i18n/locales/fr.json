@@ -901,7 +901,7 @@
       "pdf": "Un manuel mis en page à imprimer ou à remettre aux joueurs."
     },
     "tagFilter": "Seulement les Documents avec ces Tags (facultatif)",
-    "linksExpire": "Les liens vers les images et les fichiers PDF expirent au bout d'une heure. Exporte à nouveau pour les actualiser.",
+    "linksExpire": "Les liens vers les fichiers PDF expirent au bout d'une heure, ceux des images au bout de 48 heures au plus. Exporte à nouveau pour les actualiser.",
     "done": "Export téléchargé.",
     "pdf": {
       "style": "Style",

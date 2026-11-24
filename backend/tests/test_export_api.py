@@ -15,6 +15,7 @@ from sqlalchemy import event
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.export import ExportJson
+from app.db import storage
 from app.main import app
 
 PDF = b"%PDF-1.7\n1 0 obj\n<<>>\nendobj\ntrailer\n<<>>\n%%EOF\n"
@@ -175,6 +176,7 @@ async def test_a_player_and_the_master_export_the_same_room_in_both_formats(
 
     # Everything the Master sees is in their export.
     master = await _json(client, room, room.master)
+    assert master["links_expire_within_seconds"] == storage.SIGNED_URL_VALID_SECONDS
     assert set(_by_name(master)) == {"Castle", "Vampire lair"}
     castle = _by_name(master)["Castle"]
     assert [n["title"] for n in castle["notes"]] == ["Rumor", "Real truth"]

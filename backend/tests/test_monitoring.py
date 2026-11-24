@@ -515,7 +515,9 @@ async def _seed(session: AsyncSession, now: datetime) -> None:
             "INSERT INTO rooms (id, name, status, created_by, created_at)"
             " VALUES (:id, 'R', 'active', :by, :at)"
         ),
-        {"id": uuid.uuid4(), "by": user_new, "at": now - timedelta(days=1)},
+        # `now`, not a day ago: on a Monday "yesterday" is last week's bucket and
+        # the "new_rooms in the current week" assertion would fail.
+        {"id": uuid.uuid4(), "by": user_new, "at": now},
     )
     histogram = [0] * BUCKET_COUNT
     histogram[2] = 4
@@ -551,7 +553,8 @@ async def test_admin_stats(
     assert overview["database_bytes"] > 0
     assert overview["sign_ins_by_provider"]["github"] >= 1
     assert len(body["growth"]) == 26
-    assert body["growth"][-1]["new_rooms"] >= 1
+    # The Room was made yesterday: on a Monday that is still last week.
+    assert sum(week["new_rooms"] for week in body["growth"][-2:]) >= 1
     assert body["growth"][-1]["week"].endswith("Z") or "+00:00" in body["growth"][-1]["week"]
     documents = next(g for g in body["traffic"]["groups"] if g["group"] == "documents")
     assert documents["requests"] >= 4

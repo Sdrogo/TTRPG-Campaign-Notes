@@ -12,7 +12,7 @@ from PIL import Image
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.db import account_repo, relationship_maps_repo, storage
+from app.db import account_repo, relationship_maps_repo
 from app.db.models import (
     AuditLogRow,
     RelationshipMapArrowRow,
@@ -490,7 +490,6 @@ async def test_a_document_card_shows_its_name_subtitle_caption_first_image_and_t
 
     # An image Storage can't sign is left out, like everywhere else.
     fake_storage.clear()
-    monkeypatch.setattr(storage, "_signed_cache", {})
     unsigned = await _get(client, room, relationship_map["id"], room.master)
     assert all(c["document"]["image"] is None for c in unsigned["cards"])
 

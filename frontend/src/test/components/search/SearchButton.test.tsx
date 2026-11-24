@@ -29,10 +29,12 @@ describe('SearchButton', () => {
   it('opens the search from the field on wide screens and the icon on phones', async () => {
     const user = render();
 
-    // Both are in the page; CSS shows one per screen size.
-    const [field, icon] = screen.getAllByRole('button', { name: /Cerca/ });
+    // Both are in the page; CSS shows one per screen size. jsdom applies the
+    // media queries, so the icon is hidden and has no accessible name here.
+    const field = screen.getByRole('button', { name: /Cerca/ });
+    const icon = screen.getByLabelText('Cerca', { selector: 'button.mantine-hidden-from-md' });
     expect(field).toHaveTextContent('Ctrl K');
-    await user.click(icon);
+    fireEvent.click(icon);
     expect(dialog()).toBeInTheDocument();
 
     await user.keyboard('{Escape}');

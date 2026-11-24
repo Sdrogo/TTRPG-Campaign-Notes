@@ -899,7 +899,7 @@
       "pdf": "Ein gesetztes Handbuch zum Drucken oder Weitergeben an die Spieler."
     },
     "tagFilter": "Nur Dokumente mit diesen Tags (optional)",
-    "linksExpire": "Links zu Bildern und PDF-Dateien laufen innerhalb einer Stunde ab. Exportiere erneut, um sie zu aktualisieren.",
+    "linksExpire": "Links zu PDF-Dateien laufen nach einer Stunde ab, Links zu Bildern innerhalb von 48 Stunden. Exportiere erneut, um sie zu aktualisieren.",
     "done": "Export heruntergeladen.",
     "pdf": {
       "style": "Stil",
