@@ -89,7 +89,7 @@ export function useUpdateColorPalette() {
     },
     onError: (_error, palette, context) => {
       // Only when nothing was picked since: a later pick stays drawn.
-      if (context && currentPalette() === palette) applyPalette(context.previous);
+      if (currentPalette() === palette) applyPalette(context!.previous);
     },
     onSuccess: applyAccount,
   });

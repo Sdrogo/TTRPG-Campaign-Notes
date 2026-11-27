@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { MAP_COLORS } from '../../lib/maps';
 import {
   applyPalette,
@@ -130,6 +130,12 @@ function closestPair(palette: ColorPalette, kind?: keyof typeof MACHADO): number
   return min;
 }
 
+describe('currentPalette', () => {
+  it('is standard before any palette is applied', () => {
+    expect(currentPalette()).toBe('standard');
+  });
+});
+
 describe('palettes (spec 78)', () => {
   it('give every palette all 17 colors, with the text color as default', () => {
     for (const palette of COLOR_PALETTES) {
@@ -171,6 +177,22 @@ describe('applyPalette', () => {
     expect(root.style.getPropertyValue('--palette-red')).toBe(PALETTES.standard.red);
     expect(root.dataset.palette).toBeUndefined();
     expect(readStoredPalette()).toBe('standard');
+  });
+
+  it('still draws the palette when the browser blocks storage', () => {
+    const get = vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
+      throw new Error('blocked');
+    });
+    const set = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+      throw new Error('blocked');
+    });
+
+    applyPalette('protan');
+
+    expect(currentPalette()).toBe('protan');
+    expect(readStoredPalette()).toBe('standard');
+    get.mockRestore();
+    set.mockRestore();
   });
 
   it('reads an unknown stored or API value as standard', () => {

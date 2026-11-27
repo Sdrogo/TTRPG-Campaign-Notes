@@ -76,6 +76,24 @@ describe('ColorPaletteSection (spec 78)', () => {
     expect(currentPalette()).toBe('standard');
   });
 
+  it('keeps a later pick when an earlier save fails', async () => {
+    let failFirst: (error: Error) => void = () => {};
+    fetchMock
+      .mockImplementationOnce(() => new Promise((_resolve, reject) => (failFirst = reject)))
+      .mockResolvedValueOnce(account('tritan'));
+    const user = userEvent.setup();
+    renderWithProviders(<ColorPaletteSection value="standard" />);
+
+    await user.click(screen.getByRole('radio', { name: /Protanopia \(rosso\)/ }));
+    expect(screen.getByRole('radio', { name: /Protanopia \(rosso\)/ })).toBeChecked();
+    await user.click(screen.getByRole('radio', { name: /Tritanopia \(blu\)/ }));
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
+    failFirst(new Error('offline'));
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(currentPalette()).toBe('tritan');
+  });
+
   it('puts the previous palette back when the save fails', async () => {
     fetchMock.mockRejectedValue(new Error('offline'));
     const user = userEvent.setup();

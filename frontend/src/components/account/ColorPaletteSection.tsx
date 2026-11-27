@@ -20,7 +20,7 @@ export function ColorPaletteSection({ value }: { value: ColorPalette }) {
   const { t } = useTranslation();
   const update = useUpdateColorPalette();
   // While saving, the card shows the pick (it is already drawn).
-  const selected = update.isPending && update.variables ? update.variables : value;
+  const selected = update.isPending ? update.variables : value;
 
   return (
     <AccountSection
@@ -29,9 +29,7 @@ export function ColorPaletteSection({ value }: { value: ColorPalette }) {
     >
       <Radio.Group
         value={selected}
-        onChange={(next) => {
-          if (next !== selected) update.mutate(next as ColorPalette, { onError: notifyError });
-        }}
+        onChange={(next) => update.mutate(next as ColorPalette, { onError: notifyError })}
         aria-label={t('account.palette.title')}
       >
         <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="sm">
