@@ -12,7 +12,16 @@ from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.types import Text
 
-from app.db.models import SEARCH_CONFIG, DocumentRow, DocumentTagRow, NoteRow, PostRow, TagRow
+from app.db.models import (
+    SEARCH_CONFIG,
+    DocumentRow,
+    DocumentTagRow,
+    GlossaryEntryRow,
+    GlossaryEntryTagRow,
+    NoteRow,
+    PostRow,
+    TagRow,
+)
 from app.domain.models import PostKind
 from app.domain.search import START_MARK, STOP_MARK
 
@@ -134,6 +143,35 @@ async def match_tag_ids(
         .where(TagRow.room_id == room_id, TagRow.search_vector.op("@@")(query))
         .order_by(func.ts_rank(TagRow.search_vector, query).desc(), TagRow.name, TagRow.id)
         .limit(cap)
+    )
+    return list(result.scalars())
+
+
+async def match_glossary_entry_ids(
+    session: AsyncSession,
+    room_id: uuid.UUID,
+    tsquery: str,
+    tag_ids: Sequence[uuid.UUID],
+    cap: int,
+) -> list[uuid.UUID]:
+    """The Room's Glossary entries whose term, aliases or definition match,
+    best first; with Tags, only those carrying every one of them."""
+    query = _query(tsquery)
+    statement = select(GlossaryEntryRow.id).where(
+        GlossaryEntryRow.room_id == room_id, GlossaryEntryRow.search_vector.op("@@")(query)
+    )
+    if tag_ids:
+        tagged = (
+            select(GlossaryEntryTagRow.entry_id)
+            .where(GlossaryEntryTagRow.tag_id.in_(tag_ids))
+            .group_by(GlossaryEntryTagRow.entry_id)
+            .having(func.count(func.distinct(GlossaryEntryTagRow.tag_id)) == len(set(tag_ids)))
+        )
+        statement = statement.where(GlossaryEntryRow.id.in_(tagged))
+    result = await session.execute(
+        statement.order_by(
+            func.ts_rank(GlossaryEntryRow.search_vector, query).desc(), GlossaryEntryRow.id
+        ).limit(cap)
     )
     return list(result.scalars())
 

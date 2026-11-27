@@ -232,3 +232,28 @@ async def test_delete_entry(client: AsyncClient, make_token: Callable[..., str])
     deleted = await client.delete(f"{room.url}/{entry['id']}", headers=room.master.headers)
     assert deleted.status_code == 204
     assert (await client.get(room.url, headers=room.master.headers)).json() == []
+
+
+async def test_search_finds_visible_entries_only(
+    client: AsyncClient, make_token: Callable[..., str]
+) -> None:
+    room = await _room(client, make_token)
+    await _define(
+        client, room, "Mist", aliases=["Fog"], definition="A deadly haze.", visibility="room"
+    )
+    await _define(client, room, "Mystery", definition="Hidden.", visibility="master")
+
+    async def search(who: _Member, query: str) -> dict[str, Any]:
+        response = await client.get(
+            f"/rooms/{room.id}/search", params={"q": query}, headers=who.headers
+        )
+        return dict(response.json())
+
+    # By alias and by definition text; a prefix finds the visible one only.
+    for query in ("fog", "haze", "mis"):
+        found = await search(room.player, query)
+        assert [h["title"]["text"] for h in found["glossary"]["items"]] == ["Mist"], query
+    by_master = await search(room.master, "my")
+    assert [h["title"]["text"] for h in by_master["glossary"]["items"]] == ["Mystery"]
+    by_player = await search(room.player, "my")
+    assert by_player["glossary"]["items"] == []

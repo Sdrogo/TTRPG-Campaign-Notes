@@ -15,7 +15,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.access import lookup_content, require_membership
 from app.api.errors import http_error
 from app.auth.dependencies import CurrentUserDep
-from app.db import search_repo, tags_repo
+from app.db import glossary_repo, search_repo, tags_repo
 from app.db.session import SessionDep
 from app.domain.search import (
     MAX_CANDIDATES_PER_KIND,
@@ -29,6 +29,7 @@ from app.domain.search import (
     read_headline,
     searchable_text,
 )
+from app.domain.visibility import is_glossary_entry_visible
 from app.i18n.dependencies import LocaleDep
 
 router = APIRouter(tags=["search"])
@@ -76,6 +77,9 @@ class SearchResponse(BaseModel):
     notes: SearchGroupResponse
     comments: SearchGroupResponse
     tags: SearchGroupResponse
+    # Spec 79: the Glossary's terms, whose `title` is the term and `excerpt`
+    # the definition; `document_id` is null.
+    glossary: SearchGroupResponse
 
 
 @dataclass
@@ -130,7 +134,13 @@ async def search_room(
     tsquery = prefix_query(q)
     kinds = kinds_to_search(kind, bool(tag_ids))
     if tsquery is None or not kinds:
-        return SearchResponse(documents=_empty(), notes=_empty(), comments=_empty(), tags=_empty())
+        return SearchResponse(
+            documents=_empty(),
+            notes=_empty(),
+            comments=_empty(),
+            tags=_empty(),
+            glossary=_empty(),
+        )
 
     document_ids = (
         await search_repo.match_document_ids(
@@ -159,6 +169,14 @@ async def search_room(
         else []
     )
 
+    entry_hits = (
+        await search_repo.match_glossary_entry_ids(
+            session, room_id, tsquery, tag_ids, MAX_CANDIDATES_PER_KIND
+        )
+        if SearchKind.GLOSSARY in kinds
+        else []
+    )
+
     # Filter first (Invariant 1): only what survives is paged, counted and
     # read for excerpts. Only the best `MAX_CANDIDATES_PER_KIND` matches of a
     # kind are checked, so a short prefix stays cheap in a large Room.
@@ -171,6 +189,22 @@ async def search_room(
     # Every member sees every Tag of the Room (D-14).
     tags, more_tags = first_page(tag_hits, limit)
     tags_by_id = {t.id: t for t in await tags_repo.get_tags_by_ids(session, room_id, tags)}
+
+    entries_by_id = {e.id: e for e in await glossary_repo.list_entries_by_ids(session, entry_hits)}
+    entry_grants = await glossary_repo.list_grants(session, list(entries_by_id))
+    seen_entries = [
+        i
+        for i in entry_hits
+        if i in entries_by_id
+        and is_glossary_entry_visible(
+            entries_by_id[i].visibility,
+            entries_by_id[i].created_by,
+            membership.user_id,
+            membership.role,
+            entry_grants[i],
+        )
+    ]
+    glossary_page, more_glossary = first_page(seen_entries, limit)
 
     hits: list[_Hit] = []
     for document_id in documents:
@@ -202,6 +236,9 @@ async def search_room(
         hits.append(
             _Hit(SearchKind.COMMENT, comment.id, parent.id, parent.name, None, comment.body)
         )
+    for entry_id in glossary_page:
+        entry = entries_by_id[entry_id]
+        hits.append(_Hit(SearchKind.GLOSSARY, entry.id, None, None, entry.term, entry.definition))
     for tag_id in tags:
         hits.append(_Hit(SearchKind.TAG, tag_id, None, None, tags_by_id[tag_id].name, None))
 
@@ -226,6 +263,7 @@ async def search_room(
         notes=SearchGroupResponse(items=responses[SearchKind.NOTE], has_more=more_notes),
         comments=SearchGroupResponse(items=responses[SearchKind.COMMENT], has_more=more_comments),
         tags=SearchGroupResponse(items=responses[SearchKind.TAG], has_more=more_tags),
+        glossary=SearchGroupResponse(items=responses[SearchKind.GLOSSARY], has_more=more_glossary),
     )
 
 

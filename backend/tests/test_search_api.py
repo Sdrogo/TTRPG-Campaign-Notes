@@ -312,7 +312,7 @@ async def test_short_queries_and_outsiders(
     await _document(client, room, "A")
     found = await _search(client, room, room.player, "a")
     assert all(found[group] == {"items": [], "has_more": False} for group in found)
-    assert set(found) == {"documents", "notes", "comments", "tags"}
+    assert set(found) == {"documents", "notes", "comments", "tags", "glossary"}
 
     outsider = _headers(make_token, str(uuid.uuid4()))
     response = await client.get(f"{room.url}/search", params={"q": "abc"}, headers=outsider)

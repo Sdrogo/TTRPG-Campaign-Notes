@@ -121,6 +121,18 @@ async def list_entries(session: AsyncSession, room_id: uuid.UUID) -> list[Glossa
     return [_entry_from_row(row) for row in result.scalars()]
 
 
+async def list_entries_by_ids(
+    session: AsyncSession, entry_ids: Sequence[uuid.UUID]
+) -> list[GlossaryEntry]:
+    """The entries with these ids, in no particular order."""
+    if not entry_ids:
+        return []
+    result = await session.execute(
+        select(GlossaryEntryRow).where(GlossaryEntryRow.id.in_(entry_ids))
+    )
+    return [_entry_from_row(row) for row in result.scalars()]
+
+
 async def get_entry(session: AsyncSession, entry_id: uuid.UUID) -> GlossaryEntry | None:
     """The entry, or None."""
     row = await session.get(GlossaryEntryRow, entry_id)
