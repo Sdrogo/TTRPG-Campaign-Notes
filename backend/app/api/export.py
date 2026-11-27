@@ -249,7 +249,7 @@ class SectionJson(BaseModel):
 
 
 class ExportJson(BaseModel):
-    """The JSON export (`schema_version` 5; 1 had no Document `subtitle`, 2 no
+    """The JSON export (`schema_version` 7; 1 had no Document `subtitle`, 2 no
     `maps`, 3 no `sections`, 4 no clocks, 6 no `glossary`).
     Every object carries its UUID and refers to others by id. `main_items` is
     the Room's grouping in order, each a list of Tag ids (one Tag, or a
