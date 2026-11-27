@@ -1,6 +1,8 @@
 import { useMemo, type ReactNode } from 'react';
 import { useCreateDocument, useDocuments } from '../../hooks/useDocuments';
 import { useCreateTag, useTags } from '../../hooks/useTags';
+import { useGlossary } from '../../hooks/useGlossary';
+import { useGlossaryHighlight } from '../../lib/glossaryPreference';
 import { useMembers } from '../../hooks/useMembers';
 import { useRoom } from '../../hooks/useRooms';
 import { DocumentMentionsContext } from '../../hooks/useDocumentMentions';
@@ -22,6 +24,8 @@ interface DocumentMentionsProviderProps {
 export function DocumentMentionsProvider({ roomId, currentUserId, children }: DocumentMentionsProviderProps) {
   const documents = useDocuments(roomId, true);
   const tags = useTags(roomId, true);
+  const glossary = useGlossary(roomId, true);
+  const highlightTerms = useGlossaryHighlight();
   const members = useMembers(roomId, true);
   const room = useRoom(roomId, true);
   const { mutateAsync: createDocument } = useCreateDocument(roomId);
@@ -42,11 +46,12 @@ export function DocumentMentionsProvider({ roomId, currentUserId, children }: Do
       roomId,
       documents: documents.data ?? [],
       tags: tags.data ?? [],
+      glossary: highlightTerms ? (glossary.data ?? []) : [],
       canCreateDocument,
       canCreateTag,
       create,
     };
-  }, [roomId, documents.data, tags.data, canCreateDocument, canCreateTag, createDocument, createTag]);
+  }, [roomId, documents.data, tags.data, glossary.data, highlightTerms, canCreateDocument, canCreateTag, createDocument, createTag]);
 
   return <DocumentMentionsContext value={value}>{children}</DocumentMentionsContext>;
 }

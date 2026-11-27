@@ -22,6 +22,7 @@ import { FriendsSection } from '../components/account/FriendsSection';
 import { RoomInvitationsSection } from '../components/account/RoomInvitationsSection';
 import { RevealsSection } from '../components/account/RevealsSection';
 import { SpeechSection } from '../components/account/SpeechSection';
+import { GlossarySection } from '../components/account/GlossarySection';
 import { ColorPaletteSection } from '../components/account/ColorPaletteSection';
 import { PrivacySection } from '../components/account/PrivacySection';
 import type { AccountProfile } from '../types/profile';
@@ -138,6 +139,7 @@ function AccountContent({ profile }: { profile: AccountProfile }) {
       <FriendsSection />
 
       <SpeechSection />
+      <GlossarySection />
 
       <ColorPaletteSection value={profile.colorPalette} />
 

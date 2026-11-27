@@ -421,6 +421,20 @@
     },
     "rateLimit": {
       "tooMany": "Too many requests: wait a moment and try again"
+    },
+    "glossary": {
+      "notFound": "Glossary entry not found",
+      "notAllowedToManage": "Only an Administrator or the Master can manage the Glossary",
+      "termRequired": "A term is required",
+      "termTooLong": "A term can be at most {max} characters",
+      "tooManyAliases": "An entry can have at most {max} aliases",
+      "definitionTooLong": "A definition can be at most {max} characters",
+      "tooManyDocuments": "An entry can link at most {max} Documents",
+      "tooMany": "A Room can have at most {max} Glossary entries",
+      "duplicateTerm": "This word is already defined in the Glossary",
+      "invalidTagIds": "tag_ids must all be Tags of this room",
+      "invalidDocumentIds": "document_ids must all be Documents of this room that you can see",
+      "invalidSelectiveUsers": "selective_user_ids must all be members of this room"
     }
   },
   "pdf": {

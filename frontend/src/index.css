@@ -1861,3 +1861,18 @@ html body[data-scroll-locked] {
 .clock-history {
   list-style: none;
 }
+
+/* A Glossary term in a text (spec 79 Decision 10): its own color and a dotted
+   underline, so it doesn't rely on color alone. */
+.glossary-term {
+  color: var(--accent-glossary);
+  text-decoration: underline dotted;
+  text-underline-offset: 3px;
+  cursor: help;
+}
+
+.glossary-term:focus-visible {
+  outline: 2px solid var(--accent-glossary);
+  outline-offset: 2px;
+  border-radius: 2px;
+}

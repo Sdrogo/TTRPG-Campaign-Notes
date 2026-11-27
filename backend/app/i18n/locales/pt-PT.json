@@ -421,6 +421,20 @@
     },
     "rateLimit": {
       "tooMany": "Demasiados pedidos: aguarde um momento e tente novamente"
+    },
+    "glossary": {
+      "notFound": "Entrada do glossário não encontrada",
+      "notAllowedToManage": "Só um administrador ou o Mestre pode gerir o glossário",
+      "termRequired": "O termo é obrigatório",
+      "termTooLong": "Um termo pode ter no máximo {max} caracteres",
+      "tooManyAliases": "Uma entrada pode ter no máximo {max} alias",
+      "definitionTooLong": "Uma definição pode ter no máximo {max} caracteres",
+      "tooManyDocuments": "Uma entrada pode ligar no máximo {max} documentos",
+      "tooMany": "Uma sala pode ter no máximo {max} entradas de glossário",
+      "duplicateTerm": "Esta palavra já está definida no glossário",
+      "invalidTagIds": "tag_ids só pode conter etiquetas desta sala",
+      "invalidDocumentIds": "document_ids só pode conter documentos desta sala que pode ver",
+      "invalidSelectiveUsers": "selective_user_ids só pode conter membros desta sala"
     }
   },
   "pdf": {

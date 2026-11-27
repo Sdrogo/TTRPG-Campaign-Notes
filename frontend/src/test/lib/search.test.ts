@@ -19,6 +19,14 @@ function hit(overrides: Partial<SearchHit>): SearchHit {
   };
 }
 
+describe('searchHitHref for a Glossary entry', () => {
+  it('opens the Glossary on that entry', () => {
+    expect(searchHitHref('room-1', hit({ kind: 'glossary', id: 'g1' }))).toBe(
+      '/rooms/room-1/glossary?entry=g1',
+    );
+  });
+});
+
 describe('isSearchable', () => {
   // Spec 21 Decision 4: under 2 letters or digits finds nothing.
   it('needs two letters or digits, like the backend', () => {

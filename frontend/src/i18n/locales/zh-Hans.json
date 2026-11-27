@@ -62,6 +62,12 @@
       "master": "仅 Master（和你）",
       "private": "私密（你 + Master）",
       "selective": "指定成员（你、Master 和你选择的人）"
+    },
+    "glossaryOption": {
+      "room": "房间（所有成员）",
+      "master": "仅主持人",
+      "private": "私有（你 + 主持人）",
+      "selective": "选择性（你、主持人和你选的人）"
     }
   },
   "time": {
@@ -376,6 +382,11 @@
       "title": "Admin",
       "description": "应用的数据:用户、房间、流量和错误。只有你能看到。",
       "open": "打开 Admin 页面"
+    },
+    "glossary": {
+      "title": "术语表术语",
+      "description": "房间术语表中的术语在文本中的显示方式。保存在此设备上。",
+      "label": "在文本中高亮术语表术语"
     }
   },
   "rooms": {
@@ -833,7 +844,39 @@
     "allMaps": "所有地图",
     "mainTags": "主标签",
     "otherTags": "其他标签",
-    "empty": "此房间没有标签。"
+    "empty": "此房间没有标签。",
+    "page": {
+      "title": "术语表",
+      "signInRequired": "登录后才能阅读术语表。",
+      "loadError": "无法加载术语表。",
+      "empty": "这个房间还没有定义任何术语。",
+      "emptyManager": "还没有术语。添加第一个，定义你世界里的词语。",
+      "new": "新术语",
+      "edit": "编辑 {{term}}",
+      "delete": "删除 {{term}}",
+      "filter": "筛选术语",
+      "letters": "字母",
+      "openEntry": "在术语表中打开"
+    },
+    "form": {
+      "createTitle": "新术语",
+      "editTitle": "编辑术语",
+      "create": "添加术语",
+      "saveError": "无法保存术语。",
+      "term": "术语",
+      "aliases": "别名",
+      "aliasesHint": "同一术语的其他名称。每输入一个后按回车或逗号。",
+      "definition": "定义",
+      "tags": "标签",
+      "documents": "相关文档",
+      "highlight": "在文本中高亮",
+      "highlightHint": "在描述、笔记和评论中用专属颜色显示这个术语，悬停时显示其定义。"
+    },
+    "delete": {
+      "title": "删除这个术语？",
+      "body": "“{{term}}”将从术语表中移除。提到它的文本不会改变。",
+      "error": "无法删除术语。"
+    }
   },
   "search": {
     "open": "搜索",
@@ -854,7 +897,8 @@
       "document": "文档",
       "note": "笔记",
       "comment": "评论",
-      "tag": "标签"
+      "tag": "标签",
+      "glossary": "术语表"
     }
   },
   "friendLink": {

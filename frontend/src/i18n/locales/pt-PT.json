@@ -62,6 +62,12 @@
       "master": "Só Master (e tu)",
       "private": "Privado (tu + Master)",
       "selective": "Seletivo (tu, Master e quem escolheres)"
+    },
+    "glossaryOption": {
+      "room": "Sala (todos os membros)",
+      "master": "Só o Mestre",
+      "private": "Privado (você + Mestre)",
+      "selective": "Seletivo (você, o Mestre e quem escolher)"
     }
   },
   "time": {
@@ -376,6 +382,11 @@
       "title": "Admin",
       "description": "Os números da app: utilizadores, Salas, tráfego e erros. Só tu os podes ver.",
       "open": "Abrir a página Admin"
+    },
+    "glossary": {
+      "title": "Termos do glossário",
+      "description": "Como os termos do glossário de uma sala aparecem nos textos. Guardado neste dispositivo.",
+      "label": "Realçar os termos do glossário nos textos"
     }
   },
   "rooms": {
@@ -845,7 +856,39 @@
     "allMaps": "Todos os mapas",
     "mainTags": "Tags principais",
     "otherTags": "Outras Tags",
-    "empty": "Nenhuma Tag nesta Sala."
+    "empty": "Nenhuma Tag nesta Sala.",
+    "page": {
+      "title": "Glossário",
+      "signInRequired": "Inicie sessão para ler o glossário.",
+      "loadError": "Não foi possível carregar o glossário.",
+      "empty": "Esta sala ainda não tem termos definidos.",
+      "emptyManager": "Ainda sem termos. Adicione o primeiro para definir as palavras do seu mundo.",
+      "new": "Novo termo",
+      "edit": "Editar {{term}}",
+      "delete": "Eliminar {{term}}",
+      "filter": "Filtrar termos",
+      "letters": "Letras",
+      "openEntry": "Abrir no glossário"
+    },
+    "form": {
+      "createTitle": "Novo termo",
+      "editTitle": "Editar termo",
+      "create": "Adicionar termo",
+      "saveError": "Não foi possível guardar o termo.",
+      "term": "Termo",
+      "aliases": "Alias",
+      "aliasesHint": "Outros nomes do mesmo termo. Prima Enter ou vírgula após cada um.",
+      "definition": "Definição",
+      "tags": "Etiquetas",
+      "documents": "Documentos relacionados",
+      "highlight": "Realçar nos textos",
+      "highlightHint": "Mostra este termo com cor própria em descrições, notas e comentários, com a definição ao passar o rato."
+    },
+    "delete": {
+      "title": "Eliminar este termo?",
+      "body": "«{{term}}» será removido do glossário. Os textos que o mencionam não mudam.",
+      "error": "Não foi possível eliminar o termo."
+    }
   },
   "search": {
     "open": "Pesquisar",
@@ -866,7 +909,8 @@
       "document": "Documentos",
       "note": "Notas",
       "comment": "Comentários",
-      "tag": "Tags"
+      "tag": "Tags",
+      "glossary": "Glossário"
     }
   },
   "friendLink": {

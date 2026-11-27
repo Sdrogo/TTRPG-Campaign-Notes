@@ -62,6 +62,12 @@
       "master": "Master 전용 (및 나)",
       "private": "비공개 (나 + Master)",
       "selective": "선택 공개 (나, Master, 내가 고른 멤버)"
+    },
+    "glossaryOption": {
+      "room": "룸(모든 구성원)",
+      "master": "마스터만",
+      "private": "비공개(나 + 마스터)",
+      "selective": "선택(나, 마스터, 내가 고른 사람)"
     }
   },
   "time": {
@@ -376,6 +382,11 @@
       "title": "Admin",
       "description": "앱의 수치: 사용자, 룸, 트래픽, 오류. 나만 볼 수 있습니다.",
       "open": "Admin 페이지 열기"
+    },
+    "glossary": {
+      "title": "용어집 용어",
+      "description": "룸 용어집의 용어가 글에서 어떻게 보이는지 정합니다. 이 기기에 저장됩니다.",
+      "label": "글에서 용어집 용어 강조"
     }
   },
   "rooms": {
@@ -833,7 +844,39 @@
     "allMaps": "모든 지도",
     "mainTags": "주요 태그",
     "otherTags": "기타 태그",
-    "empty": "이 룸에는 태그가 없습니다."
+    "empty": "이 룸에는 태그가 없습니다.",
+    "page": {
+      "title": "용어집",
+      "signInRequired": "용어집을 읽으려면 로그인하세요.",
+      "loadError": "용어집을 불러오지 못했습니다.",
+      "empty": "이 룸에는 아직 정의된 용어가 없습니다.",
+      "emptyManager": "아직 용어가 없습니다. 첫 용어를 추가해 세계관의 단어를 정의해 보세요.",
+      "new": "새 용어",
+      "edit": "{{term}} 편집",
+      "delete": "{{term}} 삭제",
+      "filter": "용어 필터",
+      "letters": "글자",
+      "openEntry": "용어집에서 열기"
+    },
+    "form": {
+      "createTitle": "새 용어",
+      "editTitle": "용어 편집",
+      "create": "용어 추가",
+      "saveError": "용어를 저장하지 못했습니다.",
+      "term": "용어",
+      "aliases": "별칭",
+      "aliasesHint": "같은 용어의 다른 이름입니다. 각각 입력한 뒤 Enter 또는 쉼표를 누르세요.",
+      "definition": "정의",
+      "tags": "태그",
+      "documents": "관련 문서",
+      "highlight": "본문에서 강조",
+      "highlightHint": "설명, 노트, 댓글에서 이 용어를 고유한 색으로 보여 주고, 마우스를 올리면 정의를 보여 줍니다."
+    },
+    "delete": {
+      "title": "이 용어를 삭제할까요?",
+      "body": "“{{term}}”이(가) 용어집에서 제거됩니다. 이 용어를 언급한 글은 바뀌지 않습니다.",
+      "error": "용어를 삭제하지 못했습니다."
+    }
   },
   "search": {
     "open": "검색",
@@ -854,7 +897,8 @@
       "document": "문서",
       "note": "노트",
       "comment": "댓글",
-      "tag": "태그"
+      "tag": "태그",
+      "glossary": "용어집"
     }
   },
   "friendLink": {

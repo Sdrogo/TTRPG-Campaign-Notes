@@ -15,13 +15,13 @@ from app.domain.mentions import display_text
 
 
 class SearchKind(StrEnum):
-    """What a result is (spec 21 Decision 1). The Glossary joins once it
-    exists."""
+    """What a result is (spec 21 Decision 1, spec 79 for the Glossary)."""
 
     DOCUMENT = "document"
     NOTE = "note"
     COMMENT = "comment"
     TAG = "tag"
+    GLOSSARY = "glossary"
 
 
 # A query shorter than this, letters and digits only, finds nothing.
