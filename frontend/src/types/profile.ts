@@ -19,7 +19,7 @@ export interface AccountProfile extends UserIdentity {
   /** May open the Admin page (ticket 75); not the Room Administrator role. */
   appAdmin?: boolean;
   /** The map palette this user sees (spec 78); 'standard' when none was picked. */
-  colorPalette?: ColorPalette;
+  colorPalette: ColorPalette;
 }
 
 /** The Account page form's values. Blank strings stand for unset fields (see `toProfilePatch`). */

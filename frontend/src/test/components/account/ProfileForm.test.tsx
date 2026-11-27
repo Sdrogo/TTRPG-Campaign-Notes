@@ -14,6 +14,7 @@ function profile(overrides: Partial<AccountProfile> = {}): AccountProfile {
     pronouns: 'lei',
     bio: 'Due righe.',
     avatarUrl: null,
+    colorPalette: 'standard',
     ...overrides,
   };
 }

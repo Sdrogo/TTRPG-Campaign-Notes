@@ -139,7 +139,7 @@ function AccountContent({ profile }: { profile: AccountProfile }) {
 
       <SpeechSection />
 
-      <ColorPaletteSection value={profile.colorPalette ?? 'standard'} />
+      <ColorPaletteSection value={profile.colorPalette} />
 
       <AccountSection title={t('account.access.title')}>
         <Grid gap={{ base: 'md', md: 'xl' }} align="flex-end">
