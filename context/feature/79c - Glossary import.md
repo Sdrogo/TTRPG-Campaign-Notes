@@ -21,7 +21,7 @@
 - The Markdown export has a "## Glossary" section, but the Markdown import
   reads Documents only.
 
-## Decisions (proposed)
+## Decisions (confirmed by the product owner, 2026-11-27)
 
 1. **Who.** Only someone who manages the Glossary (Administrator or Master,
    79 Decision 3) imports entries. For anyone else the file's `glossary`
@@ -30,8 +30,8 @@
 2. **Preview.** A "Glossario" group in the import preview lists every entry
    of the file (term, aliases), all ticked. The importer can untick any.
    Same look as the custom Sections group (spec 56).
-3. **A word already defined in the Room (open question 1).** Words are
-   unique per Room (79 Decision 1). Proposal: when the file's **term**
+3. **A word already defined in the Room.** Words are
+   unique per Room (79 Decision 1). When the file's **term**
    matches an existing entry (same word ignoring case and accents), the
    preview shows "esiste già" with a choice between **Salta** (the default)
    and **Sostituisci** (the existing entry takes the file's term, aliases,
@@ -40,8 +40,8 @@
    already another entry's word is dropped from the imported entry, with a
    warning in the report.
 4. **Links.** The file's `tag_ids` map to Tags through the file's Tags, by
-   name, exactly as for Documents (matched, created when allowed, otherwise
-   dropped with the usual `tags_not_created` warning). `document_ids` point
+   name, exactly as for Documents (matched, or created: whoever manages the
+   Glossary may also create Tags, so none is dropped). `document_ids` point
    at the Documents of the same import (by their id in the file) or at a
    Room Document the importer sees with that id; any other is dropped.
    Mentions in the definition are resolved like those of a Document's
@@ -55,18 +55,17 @@
    are skipped and counted in the report. Field limits (term 120, 10
    aliases, definition 10,000, 20 Documents) are enforced; an entry that
    breaks one is skipped with a warning.
-7. **Markdown and Obsidian (open question 2).** Proposal: not in this
-   ticket. The Markdown export's Glossary section is for reading. An
+7. **Markdown and Obsidian.** Not in this ticket: the
+   import reads the JSON export only. The Markdown export's Glossary section is for reading. An
    Obsidian import of terms is a separate idea (79, "Left out for now").
 8. **Files from older exports** (schema 1 to 6) have no `glossary`: nothing
    changes for them. The import still accepts schema up to 7.
 
-## Open questions
+## Answers (2026-11-27)
 
-1. When a term is already in the Room: Salta / Sostituisci per entry, with
-   Salta by default (proposal, Decision 3)? Or always skip, or always
-   replace?
-2. Leave the Markdown and Obsidian import out (proposal, Decision 7)?
+1. A term already in the Room: Salta or Sostituisci per entry, Salta by
+   default (Decision 3).
+2. JSON only for now (Decision 7).
 
 ## Tests
 
@@ -80,3 +79,20 @@
 ## Estimate
 
 About 1.5 hours of Claude's build time, tests included. No migration.
+
+## Built (2026-11-27, PR #384)
+
+- Backend: `ImportFile.glossary` (`domain/import_files.py`), planned in
+  `plan_import` (`_plan_glossary`, keys `"{file}:glossary:{index}"`), shown
+  in the preview (`glossary`, `glossary_left_out`) and written by the job
+  under the Glossary lock (`_write_glossary`). The choices carry `glossary`
+  and `glossary_replace`; the result carries `glossary` and
+  `skipped_glossary`. Skip reasons: `exists` (a visible entry has the term),
+  `taken` (a word belongs to another entry, hidden ones included, so
+  nothing leaks), `invalid`, `limit`. Warnings: `aliases_dropped`,
+  `selective_to_private`.
+- Frontend: a Glossary group in the import review (ticks, Salta /
+  Sostituisci for `exists`, reasons and warnings, a line when the files
+  hold entries the importer may not bring), the written entries as links
+  to the Glossary page, the skipped ones with their reason; 12 languages.
+- No migration.

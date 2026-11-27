@@ -169,6 +169,8 @@ describe('ImportDocumentsModal (spec 27)', () => {
       maps: [],
       sections: [],
       page_cards: [],
+      glossary: [],
+      glossary_replace: [],
     });
   });
 
@@ -199,6 +201,8 @@ describe('ImportDocumentsModal (spec 27)', () => {
       maps: [],
       sections: [],
       page_cards: [],
+      glossary: [],
+      glossary_replace: [],
     });
   });
 
@@ -299,6 +303,8 @@ describe('ImportDocumentsModal (spec 27)', () => {
       maps: [],
       sections: [],
       page_cards: [],
+      glossary: [],
+      glossary_replace: [],
     });
   });
 
@@ -442,6 +448,8 @@ describe('ImportDocumentsModal (spec 27)', () => {
       maps: ['0:map:0'],
       sections: [],
       page_cards: [],
+      glossary: [],
+      glossary_replace: [],
     });
   });
 
@@ -513,6 +521,85 @@ describe('ImportDocumentsModal (spec 27)', () => {
       maps: [],
       sections: ['0:section:1'],
       page_cards: ['0:section:4'],
+      glossary: [],
+      glossary_replace: [],
+    });
+  });
+
+  it('lists the Glossary terms, Skip or Replace for one already in the Room (spec 79c)', async () => {
+    const entry = (overrides: Record<string, unknown> = {}) => ({
+      key: '0:glossary:0',
+      file_name: 'stanza.json',
+      term: 'Drago',
+      aliases: [],
+      existing_entry_id: null,
+      skipped: null,
+      warnings: [],
+      ...overrides,
+    });
+    api.preview = rawImportPreview({
+      glossary: [
+        entry({
+          aliases: ['Wyrm'],
+          warnings: [{ code: 'aliases_dropped', count: 1, names: ['Serpe'] }],
+        }),
+        entry({ key: '0:glossary:1', term: 'Elfo', existing_entry_id: 'entry-1', skipped: 'exists' }),
+        entry({
+          key: '0:glossary:2',
+          term: 'Nano',
+          skipped: 'taken',
+          warnings: [{ code: 'selective_to_private', count: 1, names: [] }],
+        }),
+      ],
+      glossary_left_out: 1,
+    });
+    api.job = doneJob({
+      glossary: [{ id: 'entry-new', term: 'Drago' }],
+      skipped_glossary: [{ term: 'Nano', reason: 'taken' }],
+    });
+    const { user } = render();
+    await pickAndPreview(user);
+
+    expect(await screen.findByText('Termini del Glossario')).toBeInTheDocument();
+    expect(screen.getByText('Anche: Wyrm')).toBeInTheDocument();
+    expect(screen.getByText('Alias tralasciati, già usati da altri termini: Serpe')).toBeInTheDocument();
+    expect(screen.getByText('Questo termine è già nel Glossario della Stanza')).toBeInTheDocument();
+    expect(
+      screen.getByText('Una sua parola appartiene già a un altro termine della Stanza'),
+    ).toBeInTheDocument();
+    expect(screen.getByText('Nel file è visibile a membri selezionati: arriva come Privato')).toBeInTheDocument();
+    expect(screen.getByText(/solo un Admin o il Master può importarli/)).toBeInTheDocument();
+    const dragon = screen.getByRole('checkbox', { name: 'Importa il termine Drago' });
+    expect(dragon).toBeChecked();
+    await user.click(dragon);
+    expect(dragon).not.toBeChecked();
+    await user.click(dragon);
+    const existing = screen.getByRole('checkbox', { name: 'Importa il termine Elfo' });
+    expect(existing).not.toBeChecked();
+    expect(screen.getByRole('checkbox', { name: 'Importa il termine Nano' })).toBeDisabled();
+
+    await user.click(screen.getByRole('radio', { name: 'Sostituisci' }));
+    expect(existing).toBeChecked();
+    await user.click(screen.getByRole('radio', { name: 'Salta' }));
+    expect(existing).not.toBeChecked();
+    await user.click(screen.getByRole('radio', { name: 'Sostituisci' }));
+    await user.click(screen.getByRole('button', { name: 'Importa' }));
+
+    expect(await screen.findByText('Termini del Glossario creati o sostituiti')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Drago' })).toHaveAttribute(
+      'href',
+      '/rooms/room-1/glossary?entry=entry-new',
+    );
+    expect(screen.getByText('Termini del Glossario non importati')).toBeInTheDocument();
+    expect(
+      screen.getByText('Nano: Una sua parola appartiene già a un altro termine della Stanza'),
+    ).toBeInTheDocument();
+    const call = fetchMock.mock.calls.find(
+      ([path, init]) => path === '/rooms/room-1/imports' && (init as { method?: string }).method === 'POST',
+    )!;
+    expect(JSON.parse((call[1] as { formData: FormData }).formData.get('choices') as string)).toMatchObject({
+      glossary: ['0:glossary:0', '0:glossary:1'],
+      glossary_replace: ['0:glossary:1'],
     });
   });
 

@@ -1145,7 +1145,28 @@
       "skippedTitle_other": "{{count}} Bereiche nicht vollständig importiert"
     },
     "failed": "Der Import ist fehlgeschlagen. Prüfe die Dokumentliste, bevor du es erneut versuchst.",
-    "another": "Weitere Dateien importieren"
+    "another": "Weitere Dateien importieren",
+    "glossary": {
+      "found": "Glossarbegriffe",
+      "leftOut": "Die Dateien enthalten auch Glossarbegriffe: Nur ein Admin oder der Master kann sie importieren.",
+      "select": "Begriff {{term}} importieren",
+      "aliases": "Auch: {{names}}",
+      "choice": "Was mit {{term}} geschehen soll",
+      "skip": "Überspringen",
+      "replace": "Ersetzen",
+      "skipReason": {
+        "exists": "Dieser Begriff ist bereits im Glossar des Raums",
+        "taken": "Eines seiner Wörter gehört bereits zu einem anderen Begriff des Raums",
+        "invalid": "Kann nicht importiert werden: nicht lesbar oder verstößt gegen eine Glossarregel",
+        "limit": "Das Glossar des Raums hat bereits die Höchstzahl an Begriffen"
+      },
+      "warning": {
+        "aliases_dropped": "Ausgelassene Aliase, bereits von anderen Begriffen verwendet: {{names}}",
+        "selective_to_private": "In der Datei für ausgewählte Mitglieder sichtbar: wird als Privat übernommen"
+      },
+      "written": "Erstellte oder ersetzte Glossarbegriffe",
+      "skippedTitle": "Nicht importierte Glossarbegriffe"
+    }
   },
   "imageSearch": {
     "action": "Suchen",

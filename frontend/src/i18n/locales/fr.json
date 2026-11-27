@@ -1147,7 +1147,28 @@
       "skippedTitle_other": "{{count}} sections pas entièrement importées"
     },
     "failed": "L'import a échoué. Vérifie la liste des Documents avant de réessayer.",
-    "another": "Importer d'autres fichiers"
+    "another": "Importer d'autres fichiers",
+    "glossary": {
+      "found": "Termes du Glossaire",
+      "leftOut": "Les fichiers contiennent aussi des termes du Glossaire : seul un Admin ou le Master peut les importer.",
+      "select": "Importer le terme {{term}}",
+      "aliases": "Aussi : {{names}}",
+      "choice": "Que faire de {{term}}",
+      "skip": "Ignorer",
+      "replace": "Remplacer",
+      "skipReason": {
+        "exists": "Ce terme est déjà dans le Glossaire de la Salle",
+        "taken": "Un de ses mots appartient déjà à un autre terme de la Salle",
+        "invalid": "Impossible à importer : illisible ou contraire à une règle du Glossaire",
+        "limit": "Le Glossaire de la Salle a déjà le nombre maximum de termes"
+      },
+      "warning": {
+        "aliases_dropped": "Alias laissés de côté, déjà utilisés par d'autres termes : {{names}}",
+        "selective_to_private": "Visible par des membres choisis dans le fichier : arrive en Privé"
+      },
+      "written": "Termes du Glossaire créés ou remplacés",
+      "skippedTitle": "Termes du Glossaire non importés"
+    }
   },
   "imageSearch": {
     "action": "Rechercher",

@@ -60,6 +60,8 @@ describe('useStartImport', () => {
       maps: ['0:map:0'],
       sections: ['0:section:1'],
       page_cards: ['0:section:0'],
+      glossary: [],
+      glossary_replace: [],
     });
     expect(job).toMatchObject({ id: 'import-1', status: 'queued' });
   });

@@ -12,6 +12,7 @@ import {
   type RawImportJob,
   type RawImportPreview,
 } from '../lib/documentImport';
+import { glossaryQueryKey } from './useGlossary';
 import { sectionsQueryKey } from './useLanding';
 
 /**
@@ -54,6 +55,8 @@ export interface StartImportRequest {
   maps: string[];
   sections: string[];
   pageCards: string[];
+  /** Spec 79c: the Glossary entries to import, and those replacing the Room's. */
+  glossary?: { selected: string[]; replace: string[] };
 }
 
 /**
@@ -71,11 +74,21 @@ export function useStartImport(roomId: string) {
       sections,
       pageCards,
       obsidian,
+      glossary,
     }: StartImportRequest) =>
       toImportJob(
         await apiFetch<RawImportJob>(`/rooms/${roomId}/imports`, {
           method: 'POST',
-          formData: importFormData(files, selected, replace, maps, sections, pageCards, obsidian),
+          formData: importFormData(
+            files,
+            selected,
+            replace,
+            maps,
+            sections,
+            pageCards,
+            obsidian,
+            glossary,
+          ),
         }),
       ),
   });
@@ -107,6 +120,7 @@ export function useImportJob(roomId: string, jobId: string | null) {
       void queryClient.invalidateQueries({ queryKey: ['rooms', roomId, 'tags'] });
       void queryClient.invalidateQueries({ queryKey: ['rooms', roomId, 'maps'] });
       void queryClient.invalidateQueries({ queryKey: sectionsQueryKey(roomId) });
+      void queryClient.invalidateQueries({ queryKey: glossaryQueryKey(roomId) });
     }
   }, [finished, queryClient, roomId]);
 
