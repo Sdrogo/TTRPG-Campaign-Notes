@@ -11,8 +11,9 @@
 - Today a Document is on a geographic map **at most once**, as one area or
   one pin (spec 38 Decisions 3-4). This ticket lifts the rule for **areas
   only**; everything else about areas, pins and links stays as it is.
-- Needs **one small migration** (drop a unique constraint). No new table,
-  no new column. `requirements.md` is not touched: D-32 and FR-M4 don't
+- Needs **one small migration** (drop a unique constraint, add one map
+  setting; ticket 77b adds a preset column in the same migration). No new
+  table. `requirements.md` is not touched: D-32 and FR-M4 don't
   state the "once per map" rule, so they stay true.
 
 ## Today (what the code does)
@@ -40,12 +41,15 @@
   select on the map the Document open in the split pane (spec 50); a click
   on an area selects that area only.
 
-## Decisions (proposed 2026-11-27, confirm in the PR)
+## Decisions
+
+*Proposed 2026-11-27; the product owner answered the open questions the
+same day (see Answered). Confirmed.*
 
 1. **Many areas, one pin.** A Document may have **any number of areas** on
    a geographic map (within the map's cap of 60 areas, Decision 11 of spec
    38, unchanged). A pin stays **at most one** per Document per map.
-2. **Areas or a pin, never both** (*proposed*, see Open question 1). A
+2. **Areas or a pin, never both** (product owner: "solo aree al momento"). A
    Document placed as a pin can't get an area on the same map and the
    reverse, as today. A faction's headquarters is usually a Document of its
    own (a place), which can be a pin next to the faction's areas.
@@ -54,16 +58,31 @@
    pins**, not two Documents). Name and subtitle follow the Document on
    every area, as today. Visibility is per area as today (Invariant 1): a
    hidden Document hides all its areas and every link touching them.
-4. **Creating.** The Document picker of the area dialog offers every
-   Document except those placed as a **pin** (a Document that already has
-   areas stays offered, with "(already on the map)" next to its name). When
-   an area bound to a Document is selected in editing mode, its card gets
-   an **"Add an area"** button ("Aggiungi un'area"): it starts drawing a new
-   area bound to the same Document, with the same color, dashed and filled
-   flags, which the editor can still change.
-5. **Names on every area** (*proposed*, see Open question 2). Each area
-   shows the Document's name (and subtitle) placed by `placeAreaLabels`, as
-   any area today, so every patch is readable on its own when zoomed in.
+4. **Creating, both ways** (product owner). (a) When an area bound to a
+   Document is selected in editing mode, its card gets an **"Add an area"**
+   button ("Aggiungi un'area"): it starts drawing a new area bound to the
+   same Document. (b) Any **existing** area (a plain one, or one bound to
+   another Document) can be bound in its dialog to a Document that already
+   has areas: the Document picker offers every Document except those placed
+   as a **pin**, with "(already on the map)" next to those with areas.
+4b. **One color per Document** (product owner): all the areas of a
+   Document on a map share **the same color**. A new or newly bound area
+   takes the color of the Document's **first** area (the oldest on the map);
+   changing the color of any of them recolors all of them, and the area
+   dialog says so ("Cambia il colore di tutte le 3 aree di questo
+   Documento"). Dashed and filled stay per area. The save refuses (422) a
+   Document whose areas have different colors; the JSON import takes the
+   first area's color for the others and the report says so.
+5. **Names: on every area or only on the largest, chosen per map**
+   (product owner: "vorrei che si potesse scegliere"). The "Map" dialog
+   (`GeoMapDialog`) gets **"Nomi delle aree con più parti"**: "Su ogni area"
+   (default) or "Solo sull'area più grande". With the second, a Document's
+   name and subtitle are drawn only on its largest area (by surface; ties go
+   to the oldest); the others are unnamed but still show the name as their
+   tooltip and accessible name. Plain areas and Documents with one area are
+   always named. Stored as `relationship_maps.area_labels` (`every` default
+   or `largest`, CHECK; null on free maps), saved through the map `PATCH`
+   like the plane, in the map JSON file as optional `area_labels`.
 6. **Selecting and highlighting.** A click on one of a Document's areas
    selects that area (for dragging, corners, Delete) and **highlights all
    the Document's other areas** with a softer outline, so the whole
@@ -87,7 +106,9 @@
 
 ### Backend
 
-- **Migration** (reversible): drop `uq_relationship_map_areas_document`.
+- **Migration** (reversible, one revision for 77 and 77b): drop
+  `uq_relationship_map_areas_document`; add `relationship_maps.area_labels`
+  (Decision 5); add `relationship_map_legend_presets.kind` (ticket 77b).
   The `document_id` index stays. Downgrade recreates the constraint and
   **fails with a clear message** if a map already has a Document twice as
   an area (it never deletes areas on its own). Applied through the
@@ -136,23 +157,21 @@
 - `architecture.md` (geographic maps rules), `progress-tracker.md` (Next
   Up, migration pending).
 
-## Open questions
+## Answered (product owner, 2026-11-27)
 
-1. **Pin and areas together?** Proposed: no (Decision 2). Alternative: a
-   Document may have one pin **and** any number of areas (for example a
-   faction's base plus its territory); then a click on the pin highlights
-   the areas too.
-2. **Name on every area?** Proposed: yes (Decision 5). Alternative: only on
-   the largest area, the others unnamed (cleaner when the patches are
-   small, but a lone patch zoomed in has no name).
-3. **"Add an area" button** (Decision 4): fine as proposed, or is the
-   Document picker in the dialog enough?
+1. **Pin and areas together?** "Solo aree al momento": no (Decision 2).
+2. **Name on every area?** "Vorrei che si potesse scegliere": a per-map
+   setting, every area or only the largest (Decision 5).
+3. **"Add an area" button?** "Entrambi i modi": the button and binding an
+   existing area; all areas of a Document share one color, by default the
+   first area's (Decisions 4, 4b).
 
 ## Effort
 
-About **3 hours of Claude's own build time**, one PR into `staging`:
-backend, migration and tests about 1 hour; frontend (picker, highlight,
-card, split pane) about 1.5 hours; strings in 12 languages, demo and docs
+About **3.5 hours of Claude's own build time**, one PR into `staging`:
+backend, migration and tests about 1 hour 15 minutes; frontend (picker,
+shared color, name setting, highlight, card, split pane) about 1 hour 45
+minutes; strings in 12 languages, demo and docs
 about 30 minutes. Plus a quick check on staging once deployed.
 
 ## Definition of Done
@@ -162,8 +181,10 @@ about 30 minutes. Plus a quick check on staging once deployed.
   reshaped, linked and deleted on its own.
 - Selecting one area, or opening its Document in the split pane,
   highlights all of the Document's areas.
-- Pins keep the one-per-Document rule; area + pin follows the answer to
-  Open question 1.
+- Pins keep the one-per-Document rule; a Document is never an area and a
+  pin on the same map.
+- A Document's areas always share one color; names follow the map's
+  "every area / largest only" setting.
 - Visibility unchanged: a Player never sees any area of a hidden Document
   (save, export, live updates).
 - Migration applied to staging through the label; listed as pending for

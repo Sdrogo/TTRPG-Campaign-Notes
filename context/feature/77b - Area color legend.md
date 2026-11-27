@@ -9,14 +9,18 @@
   Polizia", "Grigio: Zona neutrale") and show the legend on screen, the way
   spec 68 does for the relations of a free map.
 - Spec 68 Decision 15 left geographic maps out "for now" and put the
-  meanings on `relationship_maps`, so this needs **no migration**: the
-  columns `color_legend` and `legend_preset_id` and the presets table
-  already exist and are simply used for geographic maps too.
+  meanings on `relationship_maps`: the columns `color_legend` and
+  `legend_preset_id` and the presets table already exist and are used for
+  geographic maps too. The only schema change is a `kind` on presets
+  (Decision 8), in ticket 77's migration.
 - Goes with ticket 77 (several areas per Document): with patchwork
   territories, a color legend is what tells the reader which patches belong
   together. Built on the same branch and PR, after 77.
 
-## Decisions (proposed 2026-11-27, confirm in the PR)
+## Decisions
+
+*Proposed 2026-11-27; the product owner answered the open questions the
+same day (see Answered). Confirmed.*
 
 1. **Same model as spec 68**: one legend per geographic map, a meaning
    (1-40 characters) per palette color, at most 17; own meanings **or** a
@@ -24,14 +28,18 @@
    applying replaces with a warning; a linked map follows the preset live.
    Everything of spec 68 Decisions 2, 5, 6, 10, 13, 19-25 applies as
    written, with "relation" read as "area".
-2. **Areas only** (*proposed*, see Open question 1). The legend describes
+2. **Areas only** (product owner). The legend describes
    the color of the **areas**. Pins and links of a geographic map are not
    covered.
-3. **Only colors in use are shown** (spec 68 Decision 4): a row shows when
-   at least one area **the viewer sees** has that color and the map has a
-   meaning for it. A color used only by Master-only areas, or only by areas
-   of a Document hidden from a Player, never shows to that Player, so the
-   legend reveals nothing hidden (Invariant 1).
+3. **Only colors in use are shown, and nothing hidden** (spec 68 Decision 4;
+   product owner: "se un'info è nascosta sulla mappa sarà nascosta pure
+   nella leggenda"). A row shows when at least one area **the viewer sees**
+   has that color and the map has a meaning for it. For a viewer who can't
+   edit the map, the **server** leaves out of the map detail, the live
+   updates and the export the meanings of colors that no area they see
+   uses, so a Player can't read the meaning of a color used only by
+   Master-only areas or by a Document hidden from them (Invariant 1).
+   Editors get every meaning, to edit them.
 4. **The row sample** is a small filled square with the area's outline (16
    px), not the relation's line, so it reads as "a zone of this color". The
    color's name is the tooltip and accessible name, as in spec 68.
@@ -49,11 +57,18 @@
    (opacity 0.2) with their names; pins and links stay as they are. The Tag
    filter (spec 38 Decision 8) and the highlight can be on together: an area
    is faded if either fades it.
-8. **Presets are shared** (*proposed*, see Open question 2): the Room has
-   one list of presets, used by free maps for relations and by geographic
-   maps for areas. A preset is only colors and meanings, so nothing stops
-   applying the same one to both kinds; the "Gestisci preset" list shows how
-   many maps of each kind use it.
+8. **Two separate legends, one place to manage them** (product owner: "sì
+   se nettamente divise nella UI, in modo che sia chiaro che sono due
+   leggende separate"). Every preset has a **kind**, `relations` (all the
+   existing ones) or `areas` (`relationship_map_legend_presets.kind`,
+   default `relations`, CHECK). "Gestisci preset" shows two clearly
+   separate sections, **"Leggende delle relazioni"** and **"Leggende delle
+   aree"**, each with its own "Nuovo preset"; a free map offers only
+   relation presets, a geographic map only area presets (linking one of
+   the other kind: 409). "Salva come preset" makes one of the map's kind.
+   The legend panel's title says which legend it is: "Legenda aree" on a
+   geographic map ("Legenda" stays on free maps). The preset name stays
+   unique per Room and kind.
 9. **Export, import, duplicate**: the geographic map's JSON file (spec 38_3,
    still `schema_version` 1) gains an optional top-level `color_legend`
    (`{"red": "Yakuza", ...}`, the meanings it shows, unused ones included;
@@ -73,10 +88,13 @@
   every map, so geographic maps get them with no new field. Lift the "free
   map only" check of the legend paths. `map_import.py` reads and writes
   `color_legend` (`clean_meanings`); `map_transfer.py` writes it for
-  geographic maps too. Tests: a Player's map detail and export of a map
-  with a color used only by hidden areas (the meaning is still in
-  `color_legend`, Decision 3 filters on the client, as spec 68; see Open
-  question 3), legend saved through `/geo`, import/export round trip.
+  geographic maps too. Map detail, live push and export filter
+  `color_legend` for non-editors of a geographic map (Decision 3); presets
+  get `kind` in the API (list, create) and the link checks it (Decision 8).
+  Tests: a Player's map detail, live update and export of a map with a
+  color used only by hidden areas carry no meaning for it; an editor's do;
+  a relation preset can't be linked to a geographic map and the reverse;
+  legend saved through `/geo`; import/export round trip.
 - **Frontend**: `MapLegend` takes the colors in use and a `sample` kind
   (line for relations, swatch for areas) instead of the free board's
   arrows; `GeographicBoard` mounts it and the highlight; `AreaDialog` gets
@@ -88,32 +106,28 @@
   those approved for spec 68, only the sample changes. Screenshots in the
   project files after the build.
 
-## Open questions
+## Answered (product owner, 2026-11-27)
 
-1. **Areas only, or pins too?** Proposed: areas only (Decision 2). With pins
-   too, one meaning per color would cover both, so a red pin and a red area
-   would share "Yakuza".
-2. **One list of presets for both kinds of map?** Proposed: yes (Decision 8,
-   no migration). Alternative: presets marked "relations" or "areas", each
-   offered only on its kind of map (one small migration, a `kind` column).
-3. **Meanings of colors a Player can't see**: spec 68 sends all the map's
-   meanings and the client shows only the colors in use. On a free map that
-   reveals at most a word; on a geographic map a meaning like "Covo segreto
-   della Setta" could hint at a hidden area. Proposed: the server leaves out
-   of a Player's response (and export) the meanings of colors no visible
-   area uses, for geographic maps only; editors still get them all.
+1. **Areas only, or pins too?** Areas only (Decision 2).
+2. **One list of presets?** One place to manage them, but two clearly
+   separate legends: presets get a kind (Decision 8).
+3. **Meanings of colors a Player can't see?** Hidden on the map means
+   hidden in the legend: the server filters them (Decision 3).
 
 ## Effort
 
-About **2 hours of Claude's own build time** on top of ticket 77 (mostly
-reuse: backend about 45 minutes with tests, frontend about 1 hour, strings,
-demo and docs about 15 minutes). No migration.
+About **2.5 hours of Claude's own build time** on top of ticket 77 (mostly
+reuse: backend about 1 hour with tests, frontend about 1 hour 15 minutes,
+strings, demo and docs about 15 minutes). The preset `kind` column rides in
+ticket 77's migration.
 
 ## Definition of Done
 
 - An editor sets meanings for area colors on a geographic map, by hand or
   from a Room preset; every viewer sees the legend of the colors in use,
   can highlight a color, and a Player never sees a meaning that points at a
-  hidden area (per Open question 3).
+  hidden area.
+- Relation and area presets are managed in one place, in two clearly
+  separate sections, and each map offers only its own kind.
 - The legend travels in the map's JSON export/import, the Room export and
   Room duplication.
