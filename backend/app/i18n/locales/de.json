@@ -421,6 +421,20 @@
     },
     "rateLimit": {
       "tooMany": "Zu viele Anfragen: Warte einen Moment und versuche es erneut"
+    },
+    "glossary": {
+      "notFound": "Glossareintrag nicht gefunden",
+      "notAllowedToManage": "Nur ein Administrator oder der Spielleiter kann das Glossar verwalten",
+      "termRequired": "Ein Begriff ist erforderlich",
+      "termTooLong": "Ein Begriff darf höchstens {max} Zeichen haben",
+      "tooManyAliases": "Ein Eintrag darf höchstens {max} Aliasse haben",
+      "definitionTooLong": "Eine Definition darf höchstens {max} Zeichen haben",
+      "tooManyDocuments": "Ein Eintrag darf höchstens {max} Dokumente verknüpfen",
+      "tooMany": "Ein Raum darf höchstens {max} Glossareinträge haben",
+      "duplicateTerm": "Dieses Wort ist im Glossar bereits definiert",
+      "invalidTagIds": "tag_ids darf nur Tags dieses Raums enthalten",
+      "invalidDocumentIds": "document_ids darf nur Dokumente dieses Raums enthalten, die du sehen kannst",
+      "invalidSelectiveUsers": "selective_user_ids darf nur Mitglieder dieses Raums enthalten"
     }
   },
   "pdf": {

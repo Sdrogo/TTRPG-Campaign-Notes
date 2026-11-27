@@ -421,6 +421,20 @@
     },
     "rateLimit": {
       "tooMany": "요청이 너무 많습니다. 잠시 후 다시 시도하세요"
+    },
+    "glossary": {
+      "notFound": "용어집 항목을 찾을 수 없습니다",
+      "notAllowedToManage": "관리자 또는 마스터만 용어집을 관리할 수 있습니다",
+      "termRequired": "용어가 필요합니다",
+      "termTooLong": "용어는 최대 {max}자까지 가능합니다",
+      "tooManyAliases": "항목에는 별칭을 최대 {max}개까지 둘 수 있습니다",
+      "definitionTooLong": "정의는 최대 {max}자까지 가능합니다",
+      "tooManyDocuments": "항목은 문서를 최대 {max}개까지 연결할 수 있습니다",
+      "tooMany": "룸에는 용어집 항목을 최대 {max}개까지 둘 수 있습니다",
+      "duplicateTerm": "이 단어는 이미 용어집에 정의되어 있습니다",
+      "invalidTagIds": "tag_ids에는 이 룸의 태그만 넣을 수 있습니다",
+      "invalidDocumentIds": "document_ids에는 이 룸에서 볼 수 있는 문서만 넣을 수 있습니다",
+      "invalidSelectiveUsers": "selective_user_ids에는 이 룸의 구성원만 넣을 수 있습니다"
     }
   },
   "pdf": {

@@ -421,6 +421,20 @@
     },
     "rateLimit": {
       "tooMany": "リクエストが多すぎます。しばらく待ってからもう一度お試しください"
+    },
+    "glossary": {
+      "notFound": "用語集の項目が見つかりません",
+      "notAllowedToManage": "用語集を管理できるのは管理者またはマスターだけです",
+      "termRequired": "用語は必須です",
+      "termTooLong": "用語は最大{max}文字までです",
+      "tooManyAliases": "項目の別名は最大{max}個までです",
+      "definitionTooLong": "定義は最大{max}文字までです",
+      "tooManyDocuments": "項目にリンクできるドキュメントは最大{max}件までです",
+      "tooMany": "ルームの用語集項目は最大{max}件までです",
+      "duplicateTerm": "この言葉は用語集ですでに定義されています",
+      "invalidTagIds": "tag_idsにはこのルームのタグのみ指定できます",
+      "invalidDocumentIds": "document_idsにはこのルームの閲覧可能なドキュメントのみ指定できます",
+      "invalidSelectiveUsers": "selective_user_idsにはこのルームのメンバーのみ指定できます"
     }
   },
   "pdf": {

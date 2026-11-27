@@ -421,6 +421,20 @@
     },
     "rateLimit": {
       "tooMany": "Zbyt wiele żądań: odczekaj chwilę i spróbuj ponownie"
+    },
+    "glossary": {
+      "notFound": "Nie znaleziono hasła słownika",
+      "notAllowedToManage": "Tylko administrator lub Mistrz Gry może zarządzać słownikiem",
+      "termRequired": "Hasło jest wymagane",
+      "termTooLong": "Hasło może mieć najwyżej {max} znaków",
+      "tooManyAliases": "Wpis może mieć najwyżej {max} aliasów",
+      "definitionTooLong": "Definicja może mieć najwyżej {max} znaków",
+      "tooManyDocuments": "Wpis może łączyć najwyżej {max} dokumentów",
+      "tooMany": "Pokój może mieć najwyżej {max} wpisów słownika",
+      "duplicateTerm": "To słowo jest już zdefiniowane w słowniku",
+      "invalidTagIds": "tag_ids może zawierać tylko tagi tego pokoju",
+      "invalidDocumentIds": "document_ids może zawierać tylko dokumenty tego pokoju, które widzisz",
+      "invalidSelectiveUsers": "selective_user_ids może zawierać tylko członków tego pokoju"
     }
   },
   "pdf": {

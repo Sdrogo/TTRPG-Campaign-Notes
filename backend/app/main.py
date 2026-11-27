@@ -27,6 +27,7 @@ from app.api.export import router as export_router
 from app.api.export_pdf import router as export_pdf_router
 from app.api.friends import router as friends_router
 from app.api.geographic_maps import router as geographic_maps_router
+from app.api.glossary import router as glossary_router
 from app.api.history import router as history_router
 from app.api.image_search import router as image_search_router
 from app.api.import_job import resume_import_jobs
@@ -136,6 +137,7 @@ app.include_router(main_items_router)
 app.include_router(documents_router)
 app.include_router(comments_router)
 app.include_router(notes_router)
+app.include_router(glossary_router)
 app.include_router(reveals_router)
 app.include_router(history_router)
 app.include_router(document_files_router)

@@ -170,3 +170,17 @@ def visible_document_images(
                 continue
         visible.append(image)
     return visible
+
+
+def is_glossary_entry_visible(
+    visibility: DocumentVisibility,
+    created_by: uuid.UUID,
+    viewer_user_id: uuid.UUID,
+    viewer_role: RoomRole,
+    selective_user_ids: Collection[uuid.UUID],
+) -> bool:
+    """VR-03 and VR-10 for a Glossary entry (spec 79): "Private" means its
+    author (and the Master), the entry's only owner."""
+    return is_content_visible(
+        visibility, viewer_user_id, viewer_role, [created_by], selective_user_ids
+    )
