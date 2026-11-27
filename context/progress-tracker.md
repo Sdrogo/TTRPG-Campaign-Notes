@@ -247,7 +247,8 @@ image search, read aloud, GDPR (10-01 → 10-10). See the older archives.
   owner's answers**, no code yet): the FR-N3/N4/N5/VR-10 entity of
   `requirements.md` (terms with definition, Tags, visibility, related
   Documents), Glossary page, search kind, import/export, Room copy; 79b
-  adds `#` mentions of terms and recognition (FR-N6). One migration.
+  highlights terms in text with a hover preview (FR-N6, product owner's
+  core ask). One migration.
 - **77, Several areas for one Document** (ticket confirmed 2026-11-27,
   **built 2026-11-27**, PR #377 into staging, migration pending): a
   Document may have several areas on a geographic map (patchwork faction

@@ -17,10 +17,15 @@
   definitions. `requirements.md` is **not** edited here (protected); at the
   end §14 changes from "not built" to "built" only if the product owner
   asks.
-- Needs **one migration** (new tables). Split in two slices so the first is
-  usable on its own: **79** (entries, page, Tags, visibility, search,
-  Documents links, import/export, Room duplication) and **79b** (terms in
-  text: `#` mentions of an entry and recognition, FR-N6).
+- **Product owner's clarification (2026-11-27)**: the Glossary is "a sort
+  of dictionary where terms are defined; the terms are **highlighted in
+  the text like Tags and links (maybe a different color)**, and **hovering
+  one opens a preview**". So the core of the feature is **recognition of
+  terms in text with a hover preview** (FR-N6, moved from Could to the
+  center), on top of the entries and their page.
+- Needs **one migration** (new tables). One ticket, two build steps:
+  **79a** entries, page, Tags, visibility, search, import/export, copy;
+  **79b** highlighting and hover preview in text.
 
 ## Today (what the code does)
 
@@ -87,15 +92,32 @@ questions).*
    links, remapped to the copy.
 9. **History and audit**: creation, edit, deletion and reveal go to the
    Room's visibility history (spec 22) like Notes.
-10. **Slice 79b, terms in text** (FR-N6, Could): (a) a new mention kind
-    `#[Term](term:id)` picked from the same `#` autocomplete, shown as a
-    chip that opens the entry in the split pane; (b) optional
-    **recognition**: in Document descriptions and Notes, a whole-word match
-    of a visible term or alias gets a dotted underline and a tooltip with
-    the first line of the definition, switchable per user in the Account
-    page. Recognition is display-only: nothing is stored in the text.
-    Needs the mention grammar and backend span builder extended (`kind:
-    term`), so it is its own slice.
+10. **Highlighting and preview (79b, the heart of the feature).** In
+    Document descriptions, Notes and Comments, **every whole-word match** of
+    a visible entry's term or alias (case ignored, accents not, longest
+    match wins) is drawn highlighted, like a mention but in **its own
+    color** (a new token `--glossary` in light and dark themes, plus a
+    dotted underline so it doesn't rely on color alone, NFR/accessibility).
+    The match is found **at render time** from the entries the viewer
+    already receives (nothing stored in the text, so renaming a term or
+    hiding an entry updates every text at once, and a hidden entry is never
+    highlighted: VR-10). Precedence: an explicit `#Document` or `#Tag`
+    mention beats a term; Document names are still not touched.
+11. **The preview** reuses the hover card of spec 32 (opens after 400 ms,
+    only on devices that can hover): term and aliases, the definition
+    (Markdown, clamped), Tag chips, related Documents as links and an "Open
+    in Glossary" link. On phone (no hover) **a tap on the term opens the
+    same card** as a small popover. Keyboard: the term is focusable and the
+    card opens on focus.
+12. **Not every word should light up** (spec 39 decided Tags are never
+    auto-linked because many are ordinary words): each entry has a
+    **"Highlight in text"** switch (on by default) and the page offers a
+    per-user switch in the Account page ("Highlight Glossary terms", on by
+    default). Within one text only the **first occurrence** of a term in
+    each description or Note is highlighted (repeats stay plain), to avoid
+    a sea of color. A term may also be picked explicitly with the `#`
+    autocomplete (`#[Term](term:id)`), which highlights that occurrence
+    even when the switch is off.
 
 ## Open questions (with proposals)
 
@@ -109,9 +131,12 @@ questions).*
    Document".
 3. **Aliases** (Decision 1): keep, or leave them out of the first version?
    Proposal: keep, they make search and 79b recognition useful.
-4. **Slice 79b** right after 79, or only 79 for now? Proposal: build 79
-   first, ask again.
-5. **Languages**: the 12 UI languages get the new strings (as always); the
+4. **Highlighting scope**: texts where terms light up. Proposal:
+   descriptions, Notes and Comments; first occurrence only; per-entry
+   switch; per-user switch. Too many or too few of these?
+5. **Color**: proposal a teal/green distinct from Document and Tag
+   mentions, with a dotted underline. Preferences?
+6. **Languages**: the 12 UI languages get the new strings (as always); the
    entries' own text is whatever the Room writes. No translation of entries.
 
 ## Tests
@@ -127,7 +152,7 @@ questions).*
 
 ## Estimate (Claude's own build time)
 
-Slice 79: one long session, about 3 hours of work (migration, API, domain,
-page, search, import/export, copy, 12 languages, tests). Slice 79b: about
-1 to 1.5 hours. The product owner then needs to apply one migration to
+79a: one long session, about 3 hours of work (migration, API, domain,
+page, search, import/export, copy, 12 languages, tests). 79b (highlighting
+and preview): about 1.5 to 2 hours, frontend mostly. The product owner then needs to apply one migration to
 staging and later to production.
