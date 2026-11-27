@@ -243,6 +243,11 @@ image search, read aloud, GDPR (10-01 → 10-10). See the older archives.
 
 ## Next Up
 
+- **79, Glossary** (ticket written 2026-11-27, **awaiting the product
+  owner's answers**, no code yet): the FR-N3/N4/N5/VR-10 entity of
+  `requirements.md` (terms with definition, Tags, visibility, related
+  Documents), Glossary page, search kind, import/export, Room copy; 79b
+  adds `#` mentions of terms and recognition (FR-N6). One migration.
 - **77, Several areas for one Document** (ticket confirmed 2026-11-27,
   **built 2026-11-27**, PR #377 into staging, migration pending): a
   Document may have several areas on a geographic map (patchwork faction
