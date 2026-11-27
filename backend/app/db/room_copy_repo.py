@@ -10,7 +10,7 @@ from datetime import datetime
 from sqlalchemy import insert, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.db import clocks_repo, map_legends_repo, room_sections_repo
+from app.db import clocks_repo, glossary_repo, map_legends_repo, room_sections_repo
 from app.db.map_transfer_repo import insert_maps, load_room_maps
 from app.db.models import (
     DocumentImageRow,
@@ -19,6 +19,10 @@ from app.db.models import (
     DocumentRow,
     DocumentTagRow,
     DocumentVersionRow,
+    GlossaryEntryDocumentRow,
+    GlossaryEntryKeyRow,
+    GlossaryEntryRow,
+    GlossaryEntryTagRow,
     NoteRow,
     TagCombinationRow,
     TagCombinationTagRow,
@@ -26,12 +30,14 @@ from app.db.models import (
 )
 from app.db.rooms_repo import get_room, insert_new_room_rows
 from app.db.versions_repo import notes_to_json
+from app.domain.glossary import GlossaryEntry, entry_keys
 from app.domain.models import DocumentVisibility, MentionSourceKind, Tag
 from app.domain.room_copy import (
     RoomCopyPlan,
     RoomSource,
     SourceCombination,
     SourceDocument,
+    SourceGlossaryEntry,
     SourceImage,
     SourceNote,
 )
@@ -146,7 +152,56 @@ async def load_source(session: AsyncSession, room_id: uuid.UUID) -> RoomSource |
         sections=tuple(await room_sections_repo.list_sections_with_blocks(session, room_id)),
         clock_setup=await clocks_repo.load_setup(session, room_id),
         legend_presets=tuple(await map_legends_repo.list_presets(session, room_id)),
+        glossary=await _load_glossary(session, room_id),
     )
+
+
+async def _load_glossary(
+    session: AsyncSession, room_id: uuid.UUID
+) -> tuple[SourceGlossaryEntry, ...]:
+    """Every Glossary entry of the Room with its Tags and linked Documents
+    (spec 79), unfiltered: the caller is the Master."""
+    entries = await glossary_repo.list_entries(session, room_id)
+    ids = [entry.id for entry in entries]
+    tags = await glossary_repo.list_tag_ids(session, ids)
+    documents = await glossary_repo.list_document_ids(session, ids)
+    return tuple(
+        SourceGlossaryEntry(entry, tuple(tags[entry.id]), tuple(documents[entry.id]))
+        for entry in entries
+    )
+
+
+async def _insert_glossary(session: AsyncSession, plan: RoomCopyPlan, now: datetime) -> None:
+    """Writes the copy's Glossary: the entries first, then their keys, Tags
+    and linked Documents."""
+    session.add_all(
+        GlossaryEntryRow(
+            id=item.entry.id,
+            room_id=item.entry.room_id,
+            term=item.entry.term,
+            aliases=list(item.entry.aliases),
+            alias_text=" ".join(item.entry.aliases),
+            definition=item.entry.definition,
+            visibility=item.entry.visibility.value,
+            highlight=item.entry.highlight,
+            created_by=item.entry.created_by,
+            created_at=now,
+            updated_at=now,
+        )
+        for item in plan.glossary
+    )
+    await session.flush()
+    for item in plan.glossary:
+        entry: GlossaryEntry = item.entry
+        session.add_all(
+            GlossaryEntryKeyRow(entry_id=entry.id, key=key, room_id=entry.room_id)
+            for key in entry_keys(entry.term, entry.aliases)
+        )
+        session.add_all(GlossaryEntryTagRow(entry_id=entry.id, tag_id=t) for t in item.tag_ids)
+        session.add_all(
+            GlossaryEntryDocumentRow(entry_id=entry.id, document_id=d, position=position)
+            for position, d in enumerate(item.document_ids)
+        )
 
 
 async def insert_copy(session: AsyncSession, plan: RoomCopyPlan, now: datetime) -> None:
@@ -258,3 +313,5 @@ async def insert_copy(session: AsyncSession, plan: RoomCopyPlan, now: datetime) 
     await room_sections_repo.insert_sections(session, plan.sections)
     if plan.clock_setup is not None:
         await clocks_repo.insert_setup(session, plan.clock_setup, now)
+    await _insert_glossary(session, plan, now)
+    await session.flush()

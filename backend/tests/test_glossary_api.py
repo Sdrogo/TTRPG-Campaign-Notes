@@ -6,11 +6,19 @@ from collections.abc import AsyncIterator, Callable
 from dataclasses import dataclass
 from typing import Any
 
+import pytest
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.domain.glossary import MAX_ALIASES, MAX_TERM_LENGTH, term_key
 from app.main import app
+
+
+@pytest.fixture(autouse=True)
+def _rolled_back(db_session: AsyncSession) -> None:
+    """Every test runs in the savepoint `db_session` rolls back, so the Rooms
+    they create never reach the shared database."""
 
 
 @pytest_asyncio.fixture
@@ -257,3 +265,52 @@ async def test_search_finds_visible_entries_only(
     assert [h["title"]["text"] for h in by_master["glossary"]["items"]] == ["Mystery"]
     by_player = await search(room.player, "my")
     assert by_player["glossary"]["items"] == []
+
+
+async def test_duplicating_a_room_copies_the_glossary_onto_the_copy(
+    client: AsyncClient, make_token: Callable[..., str]
+) -> None:
+    """Spec 79 Decision 8: entries follow the copy's Tags and Documents, the
+    Master is their author, Selective turns Private, mentions point inside."""
+    room = await _room(client, make_token)
+    tag = (
+        await client.post(
+            f"/rooms/{room.id}/tags", json={"name": "Rule"}, headers=room.master.headers
+        )
+    ).json()
+    castle = (
+        await client.post(
+            f"/rooms/{room.id}/documents", json={"name": "Castle"}, headers=room.master.headers
+        )
+    ).json()
+    await _define(
+        client,
+        room,
+        "Mist",
+        aliases=["Fog"],
+        definition=f"See #[Castle](doc:{castle['id']}).",
+        tag_ids=[tag["id"]],
+        document_ids=[castle["id"]],
+        visibility="selective",
+        selective_user_ids=[room.player.id],
+    )
+
+    response = await client.post(
+        f"/rooms/{room.id}/duplicate", json={}, headers=room.master.headers
+    )
+    assert response.status_code == 201, response.text
+    copy_id = response.json()["room"]["id"]
+
+    copied = (await client.get(f"/rooms/{copy_id}/glossary", headers=room.master.headers)).json()
+    assert [(e["term"], e["aliases"], e["visibility"]) for e in copied] == [
+        ("Mist", ["Fog"], "private")
+    ]
+    copy_docs = (
+        await client.get(f"/rooms/{copy_id}/documents", headers=room.master.headers)
+    ).json()
+    copy_tags = (await client.get(f"/rooms/{copy_id}/tags", headers=room.master.headers)).json()
+    assert copied[0]["documents"] == [{"id": copy_docs[0]["id"], "name": "Castle"}]
+    assert copy_docs[0]["id"] != castle["id"]
+    assert copied[0]["tag_ids"] == [next(t["id"] for t in copy_tags if t["name"] == "Rule")]
+    assert copy_docs[0]["id"] in copied[0]["definition"]
+    assert castle["id"] not in copied[0]["definition"]

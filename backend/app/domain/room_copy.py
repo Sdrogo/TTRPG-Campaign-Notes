@@ -14,6 +14,7 @@ from datetime import datetime
 from app.domain.clocks import ClockSetup, copy_setup
 from app.domain.errors import DomainError
 from app.domain.geographic_maps import Area, GeoBoard, Link, LinkEnd, Pin
+from app.domain.glossary import GlossaryEntry
 from app.domain.map_legends import LegendPreset
 from app.domain.mention_maps import mention_card_id
 from app.domain.mentions import (
@@ -90,6 +91,16 @@ class SourceDocument:
 
 
 @dataclass(frozen=True)
+class SourceGlossaryEntry:
+    """A Glossary entry of the Room being copied (spec 79), with its Tags and
+    linked Documents. Hidden ones are in: the Master sees everything."""
+
+    entry: GlossaryEntry
+    tag_ids: tuple[uuid.UUID, ...]
+    document_ids: tuple[uuid.UUID, ...]
+
+
+@dataclass(frozen=True)
 class SourceCombination:
     """A combination of Tags the Room groups Documents by (spec 11_2)."""
 
@@ -122,6 +133,7 @@ class RoomSource:
     sections: tuple[Section, ...] = ()
     clock_setup: ClockSetup | None = None
     legend_presets: tuple[LegendPreset, ...] = ()
+    glossary: tuple[SourceGlossaryEntry, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -184,6 +196,7 @@ class RoomCopyPlan:
     sections: tuple[Section, ...] = ()
     clock_setup: ClockSetup | None = None
     legend_presets: tuple[LegendPreset, ...] = ()
+    glossary: tuple[SourceGlossaryEntry, ...] = ()
 
 
 def ensure_can_duplicate(requester: Membership) -> None:
@@ -342,6 +355,23 @@ def plan_room_copy(source: RoomSource, requester: Membership, suffix: str) -> Ro
         legend_presets=tuple(
             replace(preset, id=preset_ids[preset.id], room_id=new_room_id)
             for preset in source.legend_presets
+        ),
+        # Spec 79 Decision 8: the Glossary on the copy's Tags and Documents,
+        # the Master as author, Selective turned Private.
+        glossary=tuple(
+            SourceGlossaryEntry(
+                entry=replace(
+                    item.entry,
+                    id=uuid.uuid4(),
+                    room_id=new_room_id,
+                    definition=remap_mentions(item.entry.definition, document_ids, tag_ids),
+                    visibility=_copy_level(item.entry.visibility),
+                    created_by=requester.user_id,
+                ),
+                tag_ids=tuple(tag_ids[t] for t in item.tag_ids if t in tag_ids),
+                document_ids=tuple(document_ids[d] for d in item.document_ids if d in document_ids),
+            )
+            for item in source.glossary
         ),
     )
 
