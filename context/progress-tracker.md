@@ -75,7 +75,9 @@ pending here and remind the product owner to label the release PR.
   deploy started, and the deploy migrated). Before: `b5e2c8f1a4d7`,
   2026-11-17 (release PR #338, 31 identities copied); `d4a8f2c6b9e1` then
   `e7b3d9a1c5f2` on 2026-11-09 by hand, before release PR #316.
-- **Pending**: `f2a7c4e9b1d3` (ticket 78, merged in #378) for production;
+- **Pending**: `a1b4d7e2c9f6` (ticket 79, Glossary tables, PR #380):
+  staging when it merges with the `db-migration` label, production with
+  the next release; `f2a7c4e9b1d3` (ticket 78, merged in #378) for production;
   `f3a7c1e9b5d2` (tickets 77/77b, PR #377): staging when #377
   merges with the `db-migration` label, production with the next release
   PR (label it). Additive; its downgrade refuses while a Document has
@@ -243,12 +245,16 @@ image search, read aloud, GDPR (10-01 → 10-10). See the older archives.
 
 ## Next Up
 
-- **79, Glossary** (ticket written 2026-11-27, **awaiting the product
-  owner's answers**, no code yet): the FR-N3/N4/N5/VR-10 entity of
-  `requirements.md` (terms with definition, Tags, visibility, related
-  Documents), Glossary page, search kind, import/export, Room copy; 79b
-  highlights terms in text with a hover preview (FR-N6, product owner's
-  core ask). One migration.
+- **79, Glossary** (ticket confirmed 2026-11-27 with the proposals,
+  **built 2026-11-27**, PR #380 into staging, migration `a1b4d7e2c9f6`
+  pending): terms with aliases, definition, Tags, linked Documents and a
+  visibility (FR-N3/N4/N5/VR-10); the Glossary page; terms highlighted in
+  texts in their own color with a hover card (FR-N6, the product owner's
+  core ask); search kind; Room copy; JSON and Markdown export (schema 7).
+  **Not built yet**: reading the `glossary` list on import (the import
+  ignores it), a Glossary card on the landing page, a Glossary section in
+  the PDF, a server-side Account switch (the highlight switch is per
+  device), Reveal for entries.
 - **77, Several areas for one Document** (ticket confirmed 2026-11-27,
   **built 2026-11-27**, PR #377 into staging, migration pending): a
   Document may have several areas on a geographic map (patchwork faction
@@ -296,8 +302,7 @@ image search, read aloud, GDPR (10-01 → 10-10). See the older archives.
   migration), a Tag picking an area's color.
 - **43, Real-time maps, not built**: presence, editing from a phone.
 - **34, More UI languages, round two**: tr and zh-Hant, later.
-- **Requirements not built** (`requirements.md` §14): Glossary entries
-  (FR-N3/N4, VR-10), draft/published (FR-D6), notifications (FR-T9),
+- **Requirements not built** (`requirements.md` §14): draft/published (FR-D6), notifications (FR-T9),
   sealed content (VR-09). The product owner decides whether they stay.
 - **Parked**: Thread pagination (FR-T3), until Threads get long in practice.
 - **Decisions taken while building, still to confirm**: "choices beyond

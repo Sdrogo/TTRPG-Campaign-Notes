@@ -44,8 +44,11 @@
 
 ## Decisions
 
-*Proposed 2026-11-27, to confirm with the product owner (see Open
-questions).*
+*Proposed 2026-11-27 and **confirmed by the product owner the same day**
+("ok per le tue proposte"): Master and Administrator write entries, the
+Glossary is for short reusable terms (characters and places stay Documents),
+aliases are kept, highlighting is first occurrence only with a per-entry and
+a per-user switch, teal color with a dotted underline.*
 
 1. **An entry** belongs to a Room and has: **term** (required, ≤120
    characters, unique in the Room ignoring case and accents), optional
@@ -119,7 +122,7 @@ questions).*
     autocomplete (`#[Term](term:id)`), which highlights that occurrence
     even when the switch is off.
 
-## Open questions (with proposals)
+## Open questions (answered 2026-11-27)
 
 1. **Who writes entries?** Proposal: Master and Administrator only (matrix).
    Alternative: Players can add entries visible to themselves and the
@@ -156,3 +159,21 @@ questions).*
 page, search, import/export, copy, 12 languages, tests). 79b (highlighting
 and preview): about 1.5 to 2 hours, frontend mostly. The product owner then needs to apply one migration to
 staging and later to production.
+
+## Built (2026-11-27, PR #380)
+
+Everything above, in one PR, except what is listed here as left out:
+
+- Left out for now: **reading the `glossary` list on import** (the export
+  writes it, schema 7; the import accepts version 7 and ignores the list),
+  the **Obsidian** import, a **Glossary card on the landing page** (the page
+  is linked from the Room Index), the **Terms chapter of the PDF**, the
+  **Account switch stored on the server** (it is kept per device in
+  `localStorage`, so no second migration), **Reveal** of one entry and the
+  history page showing `glossary_visibility_changed`.
+- The explicit `#[Term](term:id)` mention of Decision 12 is not built: a
+  term is found in the text by its words.
+- Tests: backend `tests/test_glossary_api.py` (permissions, hidden entries,
+  unique words, caps, Tags and Documents, search, Room copy, export), the
+  schema-version tests moved to 7; frontend `lib/glossary.test.ts`,
+  `components/glossary/GlossaryTerms.test.tsx`, `pages/RoomGlossaryPage.test.tsx`.
