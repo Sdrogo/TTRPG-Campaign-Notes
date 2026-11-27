@@ -447,7 +447,7 @@ function BoardCanvas({
         )}
         {legend && (
           <Panel position="bottom-right">
-            <MapLegend {...legend} arrows={board.arrows} highlight={shownHighlight} onHighlight={setHighlight} />
+            <MapLegend {...legend} colored={board.arrows} highlight={shownHighlight} onHighlight={setHighlight} />
           </Panel>
         )}
         {boxSelect && !bendingArrow && (

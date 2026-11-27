@@ -1422,7 +1422,16 @@
       "newPreset": "Nuevo preajuste",
       "addColor": "Añadir un color",
       "colorMeans": "En este mapa: {{meaning}}",
-      "colorMeansNothing": "Este color aún no tiene significado en la leyenda."
+      "colorMeansNothing": "Este color aún no tiene significado en la leyenda.",
+      "areasTitle": "Leyenda de zonas",
+      "areasChip": "Leyenda de zonas · {{number}}",
+      "areasDialogTitle": "Leyenda de colores de las zonas",
+      "areasTapHint": "Toca un significado para resaltar sus zonas.",
+      "areasHighlightHint": "Vuelve a pulsar la fila o pulsa Esc para ver todas las zonas.",
+      "noAreas": "Este mapa aún no tiene zonas.",
+      "areasVisibleHint": "La leyenda muestra solo los colores que usan las zonas, y cada uno ve solo los de las zonas que puede ver.",
+      "relationsSection": "Leyendas de relaciones",
+      "areasSection": "Leyendas de zonas"
     }
   },
   "sessionZero": {

@@ -123,9 +123,10 @@ same day (see Answered). Confirmed.*
   Document that is a pin (and the reverse); `geo_document_count` counts
   distinct Documents. `RelationshipMapAreaRow` loses its `UniqueConstraint`.
 - **Import** (`map_import.py`): several areas may name the same `document`;
-  a Document named by an area **and** a pin, or by two pins, is refused
-  with its own message (`errors.mapImport.documentTwice`, naming the second
-  key) instead of the generic 422. The format stays `schema_version` 1 (a
+  a Document named by an area **and** a pin, or by two pins, keeps the
+  later one as a plain label and the report lists it under "repeated"
+  (*as built*: like a name not found, so no file is refused for it; the
+  first draft had a `documentTwice` error). The format stays `schema_version` 1 (a
   file with one area per Document still imports the same way). The export
   writes each area with the same `document` and keys `name`, `name-2`, ...
   (already the case).
@@ -180,6 +181,14 @@ compatible with it:
   several areas, or one pin") and the prompt for Claude in another chat.
 - `architecture.md` (geographic maps rules), `progress-tracker.md` (Next
   Up, migration pending).
+
+## As built (2026-11-27)
+
+- Binding an existing area to another Document (Decision 4b) is now
+  allowed by the save: the old rule "an area keeps its Document" refused
+  it although the dialog offered it.
+- The demo map's Odaiba has a second area, and the demo's maps list counts
+  distinct Documents.
 
 ## Answered (product owner, 2026-11-27)
 

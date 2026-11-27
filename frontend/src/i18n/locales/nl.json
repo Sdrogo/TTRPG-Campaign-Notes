@@ -1422,7 +1422,16 @@
       "newPreset": "Nieuwe voorinstelling",
       "addColor": "Kleur toevoegen",
       "colorMeans": "Op deze kaart: {{meaning}}",
-      "colorMeansNothing": "Deze kleur heeft nog geen betekenis in de legenda."
+      "colorMeansNothing": "Deze kleur heeft nog geen betekenis in de legenda.",
+      "areasTitle": "Gebiedenlegenda",
+      "areasChip": "Gebiedenlegenda · {{number}}",
+      "areasDialogTitle": "Kleurenlegenda van de gebieden",
+      "areasTapHint": "Tik op een betekenis om de gebieden ervan te markeren.",
+      "areasHighlightHint": "Klik nogmaals op de rij of druk op Esc om alle gebieden te zien.",
+      "noAreas": "Deze kaart heeft nog geen gebieden.",
+      "areasVisibleHint": "De legenda toont alleen kleuren die gebieden gebruiken, en iedereen ziet alleen die van de gebieden die hij kan zien.",
+      "relationsSection": "Relatielegenda’s",
+      "areasSection": "Gebiedenlegenda’s"
     }
   },
   "sessionZero": {

@@ -266,8 +266,10 @@ function placeDocument(doc: DemoDocument) {
  * on it the viewer sees, and edit rights for the Master only.
  */
 function mapSummary(map: Record<string, unknown>, viewer: Viewer) {
-  const { groups: _groups, cards, arrows: _arrows, areas: _areas, pins, links: _links, background_url: _bg, ...summary } = map;
-  const ids = [...((cards as { document_id: string | null }[] | undefined) ?? []), ...((pins as { document_id: string | null }[] | undefined) ?? [])]
+  const { groups: _groups, cards, arrows: _arrows, areas, pins, links: _links, background_url: _bg, ...summary } = map;
+  type Placed = { document_id: string | null }[] | undefined;
+  // Distinct Documents: one with several areas counts once (spec 77 Decision 8).
+  const ids = [...((cards as Placed) ?? []), ...((areas as Placed) ?? []), ...((pins as Placed) ?? [])]
     .map((item) => item.document_id)
     .filter((id): id is string => Boolean(id && viewer.document(id)));
   return { ...summary, document_count: new Set(ids).size, can_edit: viewer.isMaster, can_manage: viewer.isMaster };
@@ -302,7 +304,22 @@ function geoMapDetail(map: Record<string, unknown>, viewer: Viewer) {
     const ends = [link.from_end, link.to_end] as { area_id: string | null; pin_id: string | null }[];
     return (viewer.isMaster || !link.master_only) && ends.every((end) => ids.has((end.area_id ?? end.pin_id) as string));
   });
-  return { ...mapSummary(map, viewer), background_url: map.background_url, areas, pins, links };
+  // Spec 77b Decision 3: no meaning for a color only hidden areas use.
+  const colorOf = (item: Record<string, unknown>) => item.color as string;
+  const shownColors = new Set(areas.map(colorOf));
+  const hidden = new Set((map.areas as Record<string, unknown>[]).map(colorOf).filter((color) => !shownColors.has(color)));
+  const legend = Object.fromEntries(
+    Object.entries(map.color_legend as Record<string, string>).filter(([color]) => !hidden.has(color)),
+  );
+  return {
+    ...mapSummary(map, viewer),
+    background_url: map.background_url,
+    areas,
+    pins,
+    links,
+    color_legend: legend,
+    legend_preset: map.legend_preset ?? null,
+  };
 }
 
 const MENTION = /#\[(?:\\.|[^\]\\])*\]\(doc:([0-9a-fA-F-]{36})\)/g;

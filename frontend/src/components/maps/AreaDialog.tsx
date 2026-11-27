@@ -5,13 +5,15 @@ import { MAX_NOTE_LENGTH, MAX_PLACE_NAME_LENGTH } from '../../lib/geoMaps';
 import { toMapDocument } from '../../lib/maps';
 import type { Document } from '../../types/document';
 import type { GeoArea } from '../../types/geoMap';
-import type { MapColor } from '../../types/map';
+import type { ColorMeanings, MapColor } from '../../types/map';
 import { MapColorPicker } from './MapColorPicker';
 import { PlaceDocumentSelect } from './PlaceDocumentSelect';
 
 const NO_SIBLINGS = () => ({ count: 0, color: null });
 
 interface AreaDialogProps {
+  /** What the map's area colors mean (spec 77b Decision 6): the chosen one's meaning shows under the colors. */
+  meanings?: ColorMeanings;
   area: GeoArea;
   /** Just drawn: cancelling drops it, and there is nothing to delete yet. */
   isNew: boolean;
@@ -47,6 +49,7 @@ export function AreaDialog({
   onMapDocumentIds,
   siblingsOf = NO_SIBLINGS,
   isMaster,
+  meanings,
   onSave,
   onDelete,
   onClose,
@@ -126,7 +129,14 @@ export function AreaDialog({
               />
             </>
           )}
-          <MapColorPicker value={color} onChange={setColor} />
+          <MapColorPicker value={color} onChange={setColor} meanings={meanings} />
+          {meanings && (
+            <Text size="sm" c="dimmed" mt={-4}>
+              {meanings[color]
+                ? t('maps.legend.colorMeans', { meaning: meanings[color] })
+                : t('maps.legend.colorMeansNothing')}
+            </Text>
+          )}
           {siblings.count > 0 && (
             <Text size="xs" c="dimmed">
               {t('maps.geo.sharedColor', { number: siblings.count + 1 })}

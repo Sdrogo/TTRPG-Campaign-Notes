@@ -170,7 +170,7 @@ function MapEditor({
           mapId={map.id}
           meanings={map.colorLegend}
           preset={map.legendPreset}
-          arrows={autosave.value.arrows}
+          colored={autosave.value.arrows}
           isMaster={access.isMaster}
           onClose={() => setLegendOpened(false)}
         />
@@ -202,6 +202,7 @@ function GeoMapEditor({
     (saved) => ({ areas: saved.areas, pins: saved.pins, links: saved.links }),
   );
   const [planeOpened, setPlaneOpened] = useState(false);
+  const [legendOpened, setLegendOpened] = useState(false);
   const exportMap = useExportMap(roomId, map.id, map.name);
   const { split } = access;
   const board = autosave.value;
@@ -263,8 +264,26 @@ function GeoMapEditor({
         paneItem={paneItem}
         // On a phone the board takes the plane's shape, so the map fills it.
         fitToPlane={!access.wide}
+        legend={{
+          ...legendOf(map),
+          // Edited where the map is edited (spec 77b Decision 5: read-only on a phone).
+          onEdit: access.editable ? () => setLegendOpened(true) : undefined,
+          compact: !access.wide,
+        }}
       />
       {planeOpened && <GeoMapDialog roomId={roomId} map={map} onClose={() => setPlaneOpened(false)} />}
+      {legendOpened && (
+        <MapLegendDialog
+          roomId={roomId}
+          mapId={map.id}
+          meanings={map.colorLegend}
+          preset={map.legendPreset}
+          colored={board.areas}
+          kind="areas"
+          isMaster={access.isMaster}
+          onClose={() => setLegendOpened(false)}
+        />
+      )}
     </MapChrome>
   );
 }

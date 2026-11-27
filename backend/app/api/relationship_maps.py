@@ -580,12 +580,16 @@ async def insert_map(
     kind: MapKind = MapKind.FREE,
     plane_width: int | None = None,
     plane_height: int | None = None,
+    area_labels: AreaLabels | None = None,
+    color_legend: Mapping[MapColor, str] | None = None,
 ) -> tuple[RelationshipMap, list[uuid.UUID]]:
     """Decision 2: a new, empty map and its Selective grants, a Player's only
     while the Room lets Players create Documents (403 otherwise); at most 100
     per Room (409, Decision 11). Without `visibility` it starts at the Room's
     default (VR-05). A `geographic` map (spec 38) gets its plane, 422 when the
-    size is out of range; a free map takes none (422)."""
+    size is out of range; a free map takes none (422). An imported map
+    (spec 38_3) starts with its file's `area_labels` and `color_legend`
+    (already cleaned)."""
     room = await rooms_repo.get_room(session, room_id)
     if room is None:  # pragma: no cover - only a concurrent Room deletion
         raise http_error(status.HTTP_404_NOT_FOUND, "errors.room.notFound", locale)
@@ -626,6 +630,8 @@ async def insert_map(
         kind=kind,
         plane_width=plane[0] if plane else None,
         plane_height=plane[1] if plane else None,
+        area_labels=area_labels,
+        color_legend=dict(color_legend or {}),
     )
     await relationship_maps_repo.insert_map(session, relationship_map, grants)
     return relationship_map, grants

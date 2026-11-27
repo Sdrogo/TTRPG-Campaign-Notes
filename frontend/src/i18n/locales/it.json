@@ -1422,7 +1422,16 @@
       "newPreset": "Nuovo preset",
       "addColor": "Aggiungi un colore",
       "colorMeans": "In questa mappa: {{meaning}}",
-      "colorMeansNothing": "Questo colore non ha ancora un significato nella legenda."
+      "colorMeansNothing": "Questo colore non ha ancora un significato nella legenda.",
+      "areasTitle": "Legenda aree",
+      "areasChip": "Legenda aree · {{number}}",
+      "areasDialogTitle": "Legenda dei colori delle aree",
+      "areasTapHint": "Tocca un significato per evidenziare le sue aree.",
+      "areasHighlightHint": "Clicca di nuovo la riga o premi Esc per vedere tutte le aree.",
+      "noAreas": "Questa mappa non ha ancora aree.",
+      "areasVisibleHint": "La legenda mostra solo i colori usati dalle aree, e ognuno vede solo quelli delle aree che vede.",
+      "relationsSection": "Leggende delle relazioni",
+      "areasSection": "Leggende delle aree"
     }
   },
   "sessionZero": {

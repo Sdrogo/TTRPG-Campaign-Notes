@@ -1424,7 +1424,16 @@
       "newPreset": "Nouveau préréglage",
       "addColor": "Ajouter une couleur",
       "colorMeans": "Sur cette carte : {{meaning}}",
-      "colorMeansNothing": "Cette couleur n’a pas encore de sens dans la légende."
+      "colorMeansNothing": "Cette couleur n’a pas encore de sens dans la légende.",
+      "areasTitle": "Légende des zones",
+      "areasChip": "Légende des zones · {{number}}",
+      "areasDialogTitle": "Légende des couleurs des zones",
+      "areasTapHint": "Touchez une signification pour mettre en évidence ses zones.",
+      "areasHighlightHint": "Cliquez à nouveau sur la ligne ou appuyez sur Échap pour voir toutes les zones.",
+      "noAreas": "Cette carte n'a pas encore de zones.",
+      "areasVisibleHint": "La légende ne montre que les couleurs utilisées par les zones, et chacun ne voit que celles des zones qu'il peut voir.",
+      "relationsSection": "Légendes des relations",
+      "areasSection": "Légendes des zones"
     }
   },
   "sessionZero": {

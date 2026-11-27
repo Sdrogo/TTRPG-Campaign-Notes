@@ -1383,7 +1383,16 @@
       "newPreset": "새 프리셋",
       "addColor": "색상 추가",
       "colorMeans": "이 지도에서: {{meaning}}",
-      "colorMeansNothing": "이 색상은 아직 범례에 의미가 없습니다."
+      "colorMeansNothing": "이 색상은 아직 범례에 의미가 없습니다.",
+      "areasTitle": "구역 범례",
+      "areasChip": "구역 범례 · {{number}}",
+      "areasDialogTitle": "구역 색상 범례",
+      "areasTapHint": "의미를 탭하면 해당 구역이 강조됩니다.",
+      "areasHighlightHint": "행을 다시 클릭하거나 Esc를 누르면 모든 구역이 보입니다.",
+      "noAreas": "이 지도에는 아직 구역이 없습니다.",
+      "areasVisibleHint": "범례에는 구역에 쓰인 색만 표시되며, 각자 볼 수 있는 구역의 색만 보입니다.",
+      "relationsSection": "관계 범례",
+      "areasSection": "구역 범례"
     }
   },
   "sessionZero": {

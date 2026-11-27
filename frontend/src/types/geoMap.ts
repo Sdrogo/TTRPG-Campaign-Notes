@@ -1,4 +1,11 @@
-import type { ArrowDirection, MapColor, MapDocument, RelationshipMap } from './map';
+import type {
+  ArrowDirection,
+  ColorMeanings,
+  LegendPresetRef,
+  MapColor,
+  MapDocument,
+  RelationshipMap,
+} from './map';
 
 /** Where a Document with several areas has its name (spec 77 Decision 5). */
 export type AreaLabels = 'every' | 'largest';
@@ -89,4 +96,11 @@ export interface GeoMapDetail extends RelationshipMap, GeoBoard {
   planeHeight: number;
   /** A short-lived signed link to the background image, if it has one. */
   backgroundUrl: string | null;
+  /**
+   * What its area colors mean now (spec 77b): the linked preset's meanings,
+   * else its own; never a color only areas hidden from the viewer use.
+   */
+  colorLegend: ColorMeanings;
+  /** The area preset it is linked to, if any. */
+  legendPreset: LegendPresetRef | null;
 }

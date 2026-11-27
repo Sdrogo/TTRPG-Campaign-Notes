@@ -321,6 +321,13 @@ def test_a_new_place_for_a_document_already_placed_is_dropped() -> None:
     assert merged.pins == [stored_pin, plain]
 
 
+def test_a_new_pin_claims_its_document_once() -> None:
+    fresh = uuid.uuid4()
+    first, again = _pin(fresh), _pin(fresh)
+    merged = _merge_geo(GeoBoard(), GeoBoard(pins=[first, again]), created=(first, again))
+    assert merged.pins == [first]
+
+
 def test_a_link_whose_end_is_gone_is_dropped_and_the_same_id_twice_refused() -> None:
     start, end = _pin(), _area()
     link = _link(start, end)

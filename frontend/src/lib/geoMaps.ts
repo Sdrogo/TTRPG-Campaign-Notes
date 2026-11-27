@@ -10,7 +10,7 @@ import type {
   GeoPin,
   LabelSide,
 } from '../types/geoMap';
-import type { ArrowDirection, MapColor, MapDocument } from '../types/map';
+import type { ArrowDirection, ColorMeanings, LegendPresetRef, MapColor, MapDocument } from '../types/map';
 import { toStoredImage } from './images';
 import {
   DEFAULT_BEND_RATIO,
@@ -110,6 +110,8 @@ export interface RawGeoLink {
 
 export interface RawGeoMapDetail extends RawMap {
   background_url: string | null;
+  color_legend?: ColorMeanings;
+  legend_preset?: LegendPresetRef | null;
   areas: RawGeoArea[];
   pins: RawGeoPin[];
   links: RawGeoLink[];
@@ -138,6 +140,8 @@ export function toGeoMapDetail(raw: RawGeoMapDetail): GeoMapDetail {
     planeWidth: raw.plane_width!,
     planeHeight: raw.plane_height!,
     backgroundUrl: raw.background_url,
+    colorLegend: raw.color_legend ?? {},
+    legendPreset: raw.legend_preset ?? null,
     areas: raw.areas.map((area) => ({
       id: area.id,
       documentId: area.document_id,

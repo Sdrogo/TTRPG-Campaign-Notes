@@ -40,7 +40,13 @@ same day (see Answered). Confirmed.*
    updates and the export the meanings of colors that no area they see
    uses, so a Player can't read the meaning of a color used only by
    Master-only areas or by a Document hidden from them (Invariant 1).
-   Editors get every meaning, to edit them.
+   *As built*: the rule is per viewer, editors included (a Player editing
+   an unlocked map sees only what they see), and a save keeps the meanings
+   of the colors hidden from the editor, as the board keeps the areas they
+   can't see. A meaning for a color no area uses is shown (it points at
+   nothing). Presets stay readable by every member (spec 68 Decision 25),
+   so a meaning written in a **preset** is not secret: write secrets in the
+   map's own legend.
 4. **The row sample** is a small filled square with the area's outline (16
    px), not the relation's line, so it reads as "a zone of this color". The
    color's name is the tooltip and accessible name, as in spec 68.
@@ -66,7 +72,7 @@ same day (see Answered). Confirmed.*
    separate sections, **"Leggende delle relazioni"** and **"Leggende delle
    aree"**, each with its own "Nuovo preset"; a free map offers only
    relation presets, a geographic map only area presets (linking one of
-   the other kind: 409). "Salva come preset" makes one of the map's kind.
+   the other kind: 404 "preset not found", *as built*). "Salva come preset" makes one of the map's kind.
    The legend panel's title says which legend it is: "Legenda aree" on a
    geographic map ("Legenda" stays on free maps). The preset name stays
    unique per Room and kind.

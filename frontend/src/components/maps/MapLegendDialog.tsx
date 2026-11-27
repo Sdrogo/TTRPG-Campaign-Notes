@@ -37,7 +37,7 @@ import {
   useUpdatePreset,
 } from '../../hooks/useMapLegend';
 import { MAP_COLORS, cleanMeanings, colorValue, replacedMeanings, usedColors } from '../../lib/maps';
-import type { ColorMeanings, LegendPreset, LegendPresetRef, MapArrow, MapColor } from '../../types/map';
+import type { ColorMeanings, LegendKind, LegendPreset, LegendPresetRef, MapColor } from '../../types/map';
 import { LegendSample } from './MapLegend';
 
 /** The longest meaning and preset name the API takes (spec 68 Decisions 2, 19). */
@@ -50,8 +50,10 @@ interface MapLegendDialogProps {
   /** What the colors mean now (the preset's when linked). */
   meanings: ColorMeanings;
   preset: LegendPresetRef | null;
-  /** The relations the editor sees, for the colors in use. */
-  arrows: MapArrow[];
+  /** The relations (or areas, spec 77b) the editor sees, for the colors in use. */
+  colored: readonly { color: MapColor }[];
+  /** The map's legend: `relations` on a free map, `areas` on a geographic one (spec 77b Decision 8). */
+  kind?: LegendKind;
   isMaster: boolean;
   onClose: () => void;
 }
@@ -61,21 +63,34 @@ type View =
   | { kind: 'apply' }
   | { kind: 'saveAs' }
   | { kind: 'manage' }
-  | { kind: 'preset'; preset: LegendPreset | null };
+  | { kind: 'preset'; preset: LegendPreset | null; presetKind: LegendKind };
 
 /**
  * "Legenda dei colori" (spec 68 Decisions 10, 20-23): the meanings of the
- * colors the map's relations use, then, folded, those of unused colors. On a
- * map linked to a preset the Master's save edits the preset for every linked
- * map, anyone else reads them and may unlink the map, keeping a copy. It also
- * applies a Room preset, saves one (the Master), and manages them.
+ * colors the map's relations (a geographic map's areas, spec 77b) use, then,
+ * folded, those of unused colors. On a map linked to a preset the Master's
+ * save edits the preset for every linked map, anyone else reads them and may
+ * unlink the map, keeping a copy. It also applies a Room preset of the map's
+ * kind, saves one (the Master), and manages them all, relation and area
+ * presets in two separate sections (spec 77b Decision 8).
  */
-export function MapLegendDialog({ roomId, mapId, meanings, preset, arrows, isMaster, onClose }: MapLegendDialogProps) {
+export function MapLegendDialog({
+  roomId,
+  mapId,
+  meanings,
+  preset,
+  colored,
+  kind = 'relations',
+  isMaster,
+  onClose,
+}: MapLegendDialogProps) {
   const { t } = useTranslation();
   const [view, setView] = useState<View>({ kind: 'edit' });
-  const saveLegend = useSaveLegend(roomId, mapId);
+  const saveLegend = useSaveLegend(roomId, mapId, kind);
   const presets = useLegendPresets(roomId, true);
-  const roomPresets = presets.data ?? [];
+  const allPresets = presets.data ?? [];
+  // A map links only to presets of its own kind.
+  const roomPresets = allPresets.filter((item) => item.kind === kind);
   const createPreset = useCreatePreset(roomId);
   const updatePreset = useUpdatePreset(roomId);
   const deletePreset = useDeletePreset(roomId);
@@ -93,7 +108,7 @@ export function MapLegendDialog({ roomId, mapId, meanings, preset, arrows, isMas
   };
 
   const titles: Record<View['kind'], string> = {
-    edit: t('maps.legend.dialogTitle'),
+    edit: kind === 'areas' ? t('maps.legend.areasDialogTitle') : t('maps.legend.dialogTitle'),
     apply: t('maps.legend.applyTitle'),
     saveAs: t('maps.legend.saveAsTitle'),
     manage: t('maps.legend.manageTitle'),
@@ -106,7 +121,8 @@ export function MapLegendDialog({ roomId, mapId, meanings, preset, arrows, isMas
       <EditView
         meanings={meanings}
         preset={preset}
-        arrows={arrows}
+        colored={colored}
+        kind={kind}
         isMaster={isMaster}
         mapCount={presets.data?.find((p) => p.id === preset?.id)?.mapCount}
         busy={busy}
@@ -141,7 +157,7 @@ export function MapLegendDialog({ roomId, mapId, meanings, preset, arrows, isMas
         onBack={() => go({ kind: 'edit' })}
         onSave={(name) =>
           createPreset.mutate(
-            { name, entries: cleanMeanings(meanings) },
+            { name, kind, entries: cleanMeanings(meanings) },
             // The map follows the preset it was saved as (Decision 23).
             { onSuccess: (created) => saveLegend.mutate({ presetId: created.id }, { onSuccess: onClose }) },
           )
@@ -151,11 +167,11 @@ export function MapLegendDialog({ roomId, mapId, meanings, preset, arrows, isMas
   } else if (view.kind === 'manage') {
     body = (
       <ManageView
-        presets={roomPresets}
+        presets={allPresets}
         busy={busy}
         onBack={() => go({ kind: 'edit' })}
-        onNew={() => go({ kind: 'preset', preset: null })}
-        onEdit={(item) => go({ kind: 'preset', preset: item })}
+        onNew={(presetKind) => go({ kind: 'preset', preset: null, presetKind })}
+        onEdit={(item) => go({ kind: 'preset', preset: item, presetKind: item.kind })}
         onDelete={(id) => deletePreset.mutate(id)}
       />
     );
@@ -163,14 +179,18 @@ export function MapLegendDialog({ roomId, mapId, meanings, preset, arrows, isMas
     const edited = view.preset;
     body = (
       <PresetView
-        key={edited?.id ?? 'new'}
+        key={edited?.id ?? `new-${view.presetKind}`}
         preset={edited}
+        kind={view.presetKind}
         busy={busy}
         onBack={() => go({ kind: 'manage' })}
         onSave={(name, entries) =>
           edited
             ? updatePreset.mutate({ id: edited.id, name, entries }, { onSuccess: () => go({ kind: 'manage' }) })
-            : createPreset.mutate({ name, entries }, { onSuccess: () => go({ kind: 'manage' }) })
+            : createPreset.mutate(
+                { name, kind: view.presetKind, entries },
+                { onSuccess: () => go({ kind: 'manage' }) },
+              )
         }
       />
     );
@@ -190,11 +210,11 @@ export function MapLegendDialog({ roomId, mapId, meanings, preset, arrows, isMas
   );
 }
 
-function ColorName({ color }: { color: MapColor }) {
+function ColorName({ color, kind }: { color: MapColor; kind: LegendKind }) {
   const { t } = useTranslation();
   return (
     <Group gap={8} wrap="nowrap" w={130} style={{ flex: 'none' }}>
-      <LegendSample color={color} />
+      <LegendSample color={color} kind={kind} />
       <Text size="sm" c="dimmed">
         {t(`maps.colors.${color}`)}
       </Text>
@@ -205,12 +225,14 @@ function ColorName({ color }: { color: MapColor }) {
 /** One color's meaning: an input, or read-only text. */
 function MeaningRow({
   color,
+  kind,
   value,
   readOnly,
   onChange,
   onRemove,
 }: {
   color: MapColor;
+  kind: LegendKind;
   value: string;
   readOnly: boolean;
   onChange: (value: string) => void;
@@ -220,7 +242,7 @@ function MeaningRow({
   const name = t(`maps.colors.${color}`);
   return (
     <Group gap="sm" wrap="nowrap">
-      <ColorName color={color} />
+      <ColorName color={color} kind={kind} />
       {readOnly ? (
         <Text size="sm" style={{ flex: 1 }}>
           {value || '—'}
@@ -252,7 +274,8 @@ function MeaningRow({
 function EditView({
   meanings,
   preset,
-  arrows,
+  colored,
+  kind,
   isMaster,
   mapCount,
   busy,
@@ -265,7 +288,8 @@ function EditView({
 }: {
   meanings: ColorMeanings;
   preset: LegendPresetRef | null;
-  arrows: MapArrow[];
+  colored: readonly { color: MapColor }[];
+  kind: LegendKind;
   isMaster: boolean;
   mapCount: number | undefined;
   busy: boolean;
@@ -280,13 +304,15 @@ function EditView({
   const [draft, setDraft] = useState<ColorMeanings>(meanings);
   const [unusedOpen, setUnusedOpen] = useState(false);
   const readOnly = !!preset && !isMaster;
-  const used = usedColors(arrows);
+  const used = usedColors(colored);
+  const areas = kind === 'areas';
   const unused = MAP_COLORS.filter((color) => !used.includes(color) && meanings[color]);
   const set = (color: MapColor, value: string) => setDraft((current) => ({ ...current, [color]: value }));
   const row = (color: MapColor) => (
     <MeaningRow
       key={color}
       color={color}
+      kind={kind}
       value={draft[color] ?? ''}
       readOnly={readOnly}
       onChange={(value) => set(color, value)}
@@ -310,7 +336,7 @@ function EditView({
         <Stack gap={6}>{used.map(row)}</Stack>
       ) : (
         <Text size="sm" c="dimmed">
-          {t('maps.legend.noRelations')}
+          {areas ? t('maps.legend.noAreas') : t('maps.legend.noRelations')}
         </Text>
       )}
       {unused.length > 0 && (
@@ -335,7 +361,7 @@ function EditView({
       <Group gap={6} wrap="nowrap" align="flex-start">
         <InfoIcon size={16} color="var(--text-muted)" style={{ flex: 'none', marginTop: 2 }} />
         <Text size="xs" c="dimmed">
-          {t('maps.legend.visibleHint')}
+          {areas ? t('maps.legend.areasVisibleHint') : t('maps.legend.visibleHint')}
         </Text>
       </Group>
       <Group gap="xs" justify="space-between">
@@ -500,64 +526,84 @@ function ManageView({
   presets: LegendPreset[];
   busy: boolean;
   onBack: () => void;
-  onNew: () => void;
+  onNew: (kind: LegendKind) => void;
   onEdit: (preset: LegendPreset) => void;
   onDelete: (id: string) => void;
 }) {
   const { t } = useTranslation();
   const [confirming, setConfirming] = useState<string | null>(null);
+  // Two clearly separate legends, managed in one place (spec 77b Decision 8).
+  const sections: [LegendKind, string][] = [
+    ['relations', t('maps.legend.relationsSection')],
+    ['areas', t('maps.legend.areasSection')],
+  ];
   return (
     <>
-      {presets.length === 0 && <Text size="sm">{t('maps.legend.noPresets')}</Text>}
-      <Stack gap="xs">
-        {presets.map((preset) => (
-          <Group
-            key={preset.id}
-            wrap="nowrap"
-            align="flex-start"
-            p="sm"
-            style={{ border: '1px solid var(--border-default)', borderRadius: 'var(--mantine-radius-md)' }}
-          >
-            <PresetSummary preset={preset} />
-            {confirming === preset.id ? (
-              <Group gap={4} wrap="nowrap">
-                <Button size="xs" color="danger" loading={busy} onClick={() => onDelete(preset.id)}>
-                  {t('common.delete')}
-                </Button>
-                <Button size="xs" variant="default" onClick={() => setConfirming(null)}>
-                  {t('common.cancel')}
-                </Button>
+      {sections.map(([kind, title]) => {
+        const ofKind = presets.filter((preset) => preset.kind === kind);
+        return (
+          <Stack key={kind} gap="xs" component="section" aria-label={title}>
+            <Group justify="space-between" gap="xs">
+              <Group gap={8} wrap="nowrap">
+                <LegendSample color="red" kind={kind} />
+                <Text fw={600}>{title}</Text>
               </Group>
-            ) : (
-              <Group gap={2} wrap="nowrap">
-                <ActionIcon
-                  variant="subtle"
-                  color="gray"
-                  aria-label={t('maps.legend.editPreset', { name: preset.name })}
-                  onClick={() => onEdit(preset)}
-                >
-                  <PencilSimpleIcon size={16} />
-                </ActionIcon>
-                <ActionIcon
-                  variant="subtle"
-                  color="gray"
-                  aria-label={t('maps.legend.deletePreset', { name: preset.name })}
-                  onClick={() => setConfirming(preset.id)}
-                >
-                  <TrashIcon size={16} />
-                </ActionIcon>
-              </Group>
+              <Button variant="subtle" color="gray" size="xs" leftSection={<PlusIcon size={14} />} onClick={() => onNew(kind)}>
+                {t('maps.legend.newPreset')}
+              </Button>
+            </Group>
+            {ofKind.length === 0 && (
+              <Text size="sm" c="dimmed">
+                {t('maps.legend.noPresets')}
+              </Text>
             )}
-          </Group>
-        ))}
-      </Stack>
+            {ofKind.map((preset) => (
+              <Group
+                key={preset.id}
+                wrap="nowrap"
+                align="flex-start"
+                p="sm"
+                style={{ border: '1px solid var(--border-default)', borderRadius: 'var(--mantine-radius-md)' }}
+              >
+                <PresetSummary preset={preset} />
+                {confirming === preset.id ? (
+                  <Group gap={4} wrap="nowrap">
+                    <Button size="xs" color="danger" loading={busy} onClick={() => onDelete(preset.id)}>
+                      {t('common.delete')}
+                    </Button>
+                    <Button size="xs" variant="default" onClick={() => setConfirming(null)}>
+                      {t('common.cancel')}
+                    </Button>
+                  </Group>
+                ) : (
+                  <Group gap={2} wrap="nowrap">
+                    <ActionIcon
+                      variant="subtle"
+                      color="gray"
+                      aria-label={t('maps.legend.editPreset', { name: preset.name })}
+                      onClick={() => onEdit(preset)}
+                    >
+                      <PencilSimpleIcon size={16} />
+                    </ActionIcon>
+                    <ActionIcon
+                      variant="subtle"
+                      color="gray"
+                      aria-label={t('maps.legend.deletePreset', { name: preset.name })}
+                      onClick={() => setConfirming(preset.id)}
+                    >
+                      <TrashIcon size={16} />
+                    </ActionIcon>
+                  </Group>
+                )}
+              </Group>
+            ))}
+          </Stack>
+        );
+      })}
       <Text size="xs" c="dimmed">
         {t('maps.legend.deleteHint')}
       </Text>
-      <Group justify="space-between" gap="xs">
-        <Button variant="subtle" color="gray" leftSection={<PlusIcon size={16} />} onClick={onNew}>
-          {t('maps.legend.newPreset')}
-        </Button>
+      <Group justify="flex-end" gap="xs">
         <Button variant="default" onClick={onBack}>
           {t('common.back')}
         </Button>
@@ -568,11 +614,13 @@ function ManageView({
 
 function PresetView({
   preset,
+  kind,
   busy,
   onBack,
   onSave,
 }: {
   preset: LegendPreset | null;
+  kind: LegendKind;
   busy: boolean;
   onBack: () => void;
   onSave: (name: string, entries: ColorMeanings) => void;
@@ -585,6 +633,12 @@ function PresetView({
   const entries = cleanMeanings(draft);
   return (
     <>
+      <Group gap={8} wrap="nowrap">
+        <LegendSample color="red" kind={kind} />
+        <Text size="sm" c="dimmed">
+          {kind === 'areas' ? t('maps.legend.areasSection') : t('maps.legend.relationsSection')}
+        </Text>
+      </Group>
       <TextInput
         label={t('maps.legend.presetName')}
         value={name}
@@ -596,6 +650,7 @@ function PresetView({
           <MeaningRow
             key={color}
             color={color}
+            kind={kind}
             value={draft[color] ?? ''}
             readOnly={false}
             onChange={(value) => setDraft((current) => ({ ...current, [color]: value }))}

@@ -1500,7 +1500,16 @@
       "newPreset": "Nowy szablon",
       "addColor": "Dodaj kolor",
       "colorMeans": "Na tej mapie: {{meaning}}",
-      "colorMeansNothing": "Ten kolor nie ma jeszcze znaczenia w legendzie."
+      "colorMeansNothing": "Ten kolor nie ma jeszcze znaczenia w legendzie.",
+      "areasTitle": "Legenda obszarów",
+      "areasChip": "Legenda obszarów · {{number}}",
+      "areasDialogTitle": "Legenda kolorów obszarów",
+      "areasTapHint": "Dotknij znaczenia, aby wyróżnić jego obszary.",
+      "areasHighlightHint": "Kliknij ponownie wiersz lub naciśnij Esc, aby zobaczyć wszystkie obszary.",
+      "noAreas": "Ta mapa nie ma jeszcze obszarów.",
+      "areasVisibleHint": "Legenda pokazuje tylko kolory używane przez obszary, a każdy widzi tylko te z obszarów, które może zobaczyć.",
+      "relationsSection": "Legendy relacji",
+      "areasSection": "Legendy obszarów"
     }
   },
   "sessionZero": {

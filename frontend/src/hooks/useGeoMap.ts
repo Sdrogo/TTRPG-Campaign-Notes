@@ -14,7 +14,7 @@ function mapPath(roomId: string, mapId: string) {
 }
 
 /** Under the map's own key, so deleting the map drops it too. */
-function geoQueryKey(roomId: string, mapId: string) {
+export function geoQueryKey(roomId: string, mapId: string) {
   return ['rooms', roomId, 'maps', mapId, 'geo'] as const;
 }
 

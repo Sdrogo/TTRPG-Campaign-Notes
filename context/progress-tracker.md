@@ -64,7 +64,8 @@ demand (`architecture.md` → Environments). Before any release, list what is
 pending here and remind the product owner to label the release PR.
 
 - **Head in the repository**: `c6f1a9d3e7b2` (request statistics and error
-  events, ticket 75).
+  events, ticket 75); on branch PR #377 (not merged yet): `f3a7c1e9b5d2`
+  (several areas per Document and area legends, tickets 77/77b).
 - **Staging database**: `c6f1a9d3e7b2 (head)`, 2026-11-17 from Actions (PR
   #339). Before: `b5e2c8f1a4d7`, 2026-11-17 (PR #337); `e7b3d9a1c5f2` and
   `d4a8f2c6b9e1` on 2026-11-09 by hand.
@@ -73,7 +74,11 @@ pending here and remind the product owner to label the release PR.
   deploy started, and the deploy migrated). Before: `b5e2c8f1a4d7`,
   2026-11-17 (release PR #338, 31 identities copied); `d4a8f2c6b9e1` then
   `e7b3d9a1c5f2` on 2026-11-09 by hand, before release PR #316.
-- **Pending**: none. Releases #333, #335, #341, #343, #345 and #351 had no
+- **Pending**: `f3a7c1e9b5d2` (tickets 77/77b, PR #377): staging when #377
+  merges with the `db-migration` label, production with the next release
+  PR (label it). Additive; its downgrade refuses while a Document has
+  several areas or two presets of different kinds share a name. Before:
+  none. Releases #333, #335, #341, #343, #345 and #351 had no
   migration; ticket 73 step 5 moved each database as it was with
   `deploy/db-setup.sh` (dump, restore, row-count check).
 
@@ -82,6 +87,7 @@ top of the chain below. Per-migration apply history up to 2026-11-04 is in
 the 2026-11-04 archive.
 
 Chain, newest first (where each came from):
+`f3a7c1e9b5d2` several areas + area legends (77/77b, PR #377) ←
 `c6f1a9d3e7b2` request stats (75) ← `b5e2c8f1a4d7` own sign-in (73 step 3) ← `e7b3d9a1c5f2` color legend and presets (68) ← `d4a8f2c6b9e1` arrow bend (67)
 ← `c1d7e3a9f5b2` Clocks (61) ← `e9c4a2f7b1d8` import job progress (59) ←
 `e8c4a2f6b1d9` Section tools + block `collapsed`, drops
@@ -234,13 +240,14 @@ image search, read aloud, GDPR (10-01 → 10-10). See the older archives.
 
 ## Next Up
 
-- **77, Several areas for one Document** (ticket confirmed 2026-11-27, PR
-  #377 into staging, build next): a
+- **77, Several areas for one Document** (ticket confirmed 2026-11-27,
+  **built 2026-11-27**, PR #377 into staging, migration pending): a
   Document may have several areas on a geographic map (patchwork faction
   territory); pins stay one per Document. One migration (drop
   `uq_relationship_map_areas_document`, add `relationship_maps.area_labels`
   and the presets' `kind` for 77b). One color per Document's areas.
-- **77b, Area color legend** (ticket confirmed 2026-11-27, same PR as 77):
+- **77b, Area color legend** (ticket confirmed 2026-11-27, **built
+  2026-11-27**, same PR as 77):
   spec 68's legend and presets on geographic maps, for area colors. Reuses
   `color_legend`/`legend_preset_id`; presets split by kind (relations,
   areas); Players never get meanings of colors they can't see.

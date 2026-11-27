@@ -472,11 +472,10 @@ def plan_geo_board_edit(
     or made plain (spec 77 Decision 4).
 
     Refused: an id of something hidden from the editor or of another map
-    (422, so a hidden item can't be overwritten by guessing its id); an area
-    a Document on two pins, or on a pin and an
-    area, or on areas of different colors (spec 77); a Document the editor
-    doesn't see or of another Room (404); a
-    corner or point outside the plane, an area with fewer than 3 or more than
+    (422, so a hidden item can't be overwritten by guessing its id); a
+    Document on two pins, on a pin and an area, or on areas of different
+    colors (spec 77, 422); a Document the editor doesn't see or of another
+    Room (404); a corner or point outside the plane, an area with fewer than 3 or more than
     60 corners or no surface, a plain area or pin with no name, a link end
     not on the resulting map or a link from an end to itself (422);
     Master-only content from anyone but a Master (403); more than the caps,

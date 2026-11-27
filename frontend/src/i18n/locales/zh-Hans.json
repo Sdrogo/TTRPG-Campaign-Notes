@@ -1383,7 +1383,16 @@
       "newPreset": "新建预设",
       "addColor": "添加颜色",
       "colorMeans": "在此地图上：{{meaning}}",
-      "colorMeansNothing": "此颜色在图例中还没有含义。"
+      "colorMeansNothing": "此颜色在图例中还没有含义。",
+      "areasTitle": "区域图例",
+      "areasChip": "区域图例 · {{number}}",
+      "areasDialogTitle": "区域颜色图例",
+      "areasTapHint": "点按某个含义以突出显示其区域。",
+      "areasHighlightHint": "再次点击该行或按 Esc 以显示所有区域。",
+      "noAreas": "此地图还没有区域。",
+      "areasVisibleHint": "图例只显示区域使用的颜色，每位查看者只能看到自己可见区域的颜色。",
+      "relationsSection": "关系图例",
+      "areasSection": "区域图例"
     }
   },
   "sessionZero": {

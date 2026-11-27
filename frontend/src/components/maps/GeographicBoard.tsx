@@ -66,9 +66,11 @@ import {
 import { colorValue, type Point } from '../../lib/maps';
 import type { Document } from '../../types/document';
 import type { AreaLabels, GeoArea, GeoBoard, GeoLink, GeoPin, LabelSide } from '../../types/geoMap';
+import type { MapColor } from '../../types/map';
 import type { Tag } from '../../types/tag';
 import { ArrowDialog } from './ArrowDialog';
 import { AreaDialog } from './AreaDialog';
+import { MapLegend, type LegendSetup } from './MapLegend';
 import { PinDialog } from './PinDialog';
 
 /** What the board measures before it is laid out (and in tests, where nothing is). */
@@ -142,6 +144,8 @@ export interface GeographicBoardProps {
   fitToPlane?: boolean;
   /** Where a Document with several areas has its name (spec 77 Decision 5); every area by default. */
   areaLabels?: AreaLabels | null;
+  /** The map's area color legend (spec 77b), shown in a corner of the board. */
+  legend?: LegendSetup;
 }
 
 /** The point halfway between two others. */
@@ -199,6 +203,7 @@ export function GeographicBoard({
   height: heightProp,
   fitToPlane = false,
   areaLabels = null,
+  legend,
 }: GeographicBoardProps) {
   const { t } = useTranslation();
   const backState = useBackState();
@@ -230,6 +235,18 @@ export function GeographicBoard({
   }
   const [editing, setEditing] = useState<Editing>(null);
   const [tagId, setTagId] = useState<string | null>(null);
+  // The color a legend row highlights: the other areas step back (spec 77b Decision 7).
+  const [highlight, setHighlight] = useState<MapColor | null>(null);
+  useEffect(() => {
+    if (!highlight) return;
+    const clear = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setHighlight(null);
+    };
+    window.addEventListener('keydown', clear);
+    return () => window.removeEventListener('keydown', clear);
+  }, [highlight]);
+  // A highlighted color no area has any more highlights nothing.
+  const shownHighlight = board.areas.some((area) => area.color === highlight) ? highlight : null;
   // What a drag shows until it is dropped, when it becomes a change.
   const [preview, setPreview] = useState<GeoBoard | null>(null);
   const drag = useRef<Drag | null>(null);
@@ -464,7 +481,13 @@ export function GeographicBoard({
 
   // --- Drawing --------------------------------------------------------------
 
-  const itemOpacity = (item: GeoArea | GeoPin) => (isDimmed(item, tagId) ? 0.2 : item.masterOnly ? 0.65 : 1);
+  // An area is faded by the Tag filter or, while a legend row is on, for another color (spec 77b Decision 7).
+  const itemOpacity = (item: GeoArea | GeoPin) =>
+    isDimmed(item, tagId) || (shownHighlight && 'points' in item && item.color !== shownHighlight)
+      ? 0.2
+      : item.masterOnly
+        ? 0.65
+        : 1;
   const isSelected = (kind: string, id: string) =>
     (selected?.kind === kind && selected.id === id) || (linkStart?.kind === kind && linkStart.id === id);
   const halo = { stroke: 'var(--bg-base)', strokeWidth: 3 * s, paintOrder: 'stroke' as const };
@@ -967,6 +990,18 @@ export function GeographicBoard({
         </Paper>
       )}
 
+      {legend && (
+        <Box pos="absolute" bottom={8} right={52} style={{ zIndex: 2 }}>
+          <MapLegend
+            {...legend}
+            kind="areas"
+            colored={board.areas}
+            highlight={shownHighlight}
+            onHighlight={setHighlight}
+          />
+        </Box>
+      )}
+
       <Stack gap={4} pos="absolute" bottom={8} right={8}>
         <Tooltip label={t('maps.geo.zoomIn')} position="left" withArrow>
           <ActionIcon
@@ -1006,6 +1041,7 @@ export function GeographicBoard({
             color: documentAreaColor(board, documentId, editing.area.id),
           })}
           isMaster={isMaster}
+          meanings={legend?.meanings}
           onClose={close}
           onSave={(area) => {
             onChange(saveArea(board, area));

@@ -500,7 +500,15 @@ function build(lang: Lang): DemoData {
     areas: [
       { id: uid(531), document_id: null, name: 'Shibuya', subtitle: t('A thousand phones', 'Mille telefoni'), note: null, points: [[250, 700], [1000, 650], [1100, 1250], [300, 1300]], color: 'violet', dashed: false, filled: true, master_only: false },
       { id: uid(532), document_id: place('odaiba'), name: null, subtitle: null, note: null, points: [[900, 1500], [1450, 1450], [1500, 1950], [950, 2000]], color: 'blue', dashed: true, filled: false, master_only: false },
+      // Spec 77: the same Document on a second, separate area (a patchwork territory).
+      { id: uid(533), document_id: place('odaiba'), name: null, subtitle: null, note: null, points: [[100, 1500], [450, 1480], [480, 1850], [120, 1900]], color: 'blue', dashed: true, filled: false, master_only: false },
     ],
+    // What the area colors mean (spec 77b): the legend shows the ones in use.
+    color_legend: {
+      violet: t('Neutral ground', 'Zona neutrale'),
+      blue: t('Under the Court', 'Sotto la Corte'),
+    },
+    legend_preset: null,
     pins: [
       { id: uid(541), document_id: place('reddoor'), name: null, note: null, x: 700, y: 900, label_side: 'right', color: 'gold', master_only: false },
       { id: uid(542), document_id: place('park'), name: null, note: null, x: 400, y: 300, label_side: 'right', color: 'default', master_only: false },

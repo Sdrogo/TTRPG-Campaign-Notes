@@ -1383,7 +1383,16 @@
       "newPreset": "新しいプリセット",
       "addColor": "色を追加",
       "colorMeans": "このマップでは: {{meaning}}",
-      "colorMeansNothing": "この色にはまだ凡例の意味がありません。"
+      "colorMeansNothing": "この色にはまだ凡例の意味がありません。",
+      "areasTitle": "エリアの凡例",
+      "areasChip": "エリアの凡例 · {{number}}",
+      "areasDialogTitle": "エリアの色の凡例",
+      "areasTapHint": "意味をタップすると、そのエリアが強調表示されます。",
+      "areasHighlightHint": "もう一度行をクリックするか、Escですべてのエリアを表示します。",
+      "noAreas": "このマップにはまだエリアがありません。",
+      "areasVisibleHint": "凡例にはエリアで使われている色だけが表示され、各閲覧者には自分が見られるエリアの色だけが表示されます。",
+      "relationsSection": "関係の凡例",
+      "areasSection": "エリアの凡例"
     }
   },
   "sessionZero": {

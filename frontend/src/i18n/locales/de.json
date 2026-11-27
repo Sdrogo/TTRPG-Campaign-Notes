@@ -1422,7 +1422,16 @@
       "newPreset": "Neue Vorlage",
       "addColor": "Farbe hinzufügen",
       "colorMeans": "Auf dieser Karte: {{meaning}}",
-      "colorMeansNothing": "Diese Farbe hat noch keine Bedeutung in der Legende."
+      "colorMeansNothing": "Diese Farbe hat noch keine Bedeutung in der Legende.",
+      "areasTitle": "Gebietslegende",
+      "areasChip": "Gebietslegende · {{number}}",
+      "areasDialogTitle": "Farblegende der Gebiete",
+      "areasTapHint": "Tippe auf eine Bedeutung, um ihre Gebiete hervorzuheben.",
+      "areasHighlightHint": "Klicke erneut auf die Zeile oder drücke Esc, um alle Gebiete zu sehen.",
+      "noAreas": "Diese Karte hat noch keine Gebiete.",
+      "areasVisibleHint": "Die Legende zeigt nur Farben, die Gebiete verwenden, und jeder sieht nur die der Gebiete, die er sehen kann.",
+      "relationsSection": "Beziehungslegenden",
+      "areasSection": "Gebietslegenden"
     }
   },
   "sessionZero": {

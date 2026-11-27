@@ -6,7 +6,6 @@ matched among those the requester sees, and the export holds only what they
 see; both follow `X-View-As` like any read."""
 
 import uuid
-from dataclasses import replace
 from typing import Any, Literal
 
 from fastapi import APIRouter, status
@@ -20,7 +19,7 @@ from app.api.rate_limits import Group, limit
 from app.api.relationship_maps import get_visible_map, insert_map, legend_for_viewer
 from app.api.validation import UniqueIds
 from app.auth.dependencies import CurrentUserDep
-from app.db import documents_repo, geographic_maps_repo, relationship_maps_repo, rooms_repo
+from app.db import documents_repo, geographic_maps_repo, rooms_repo
 from app.db.session import SessionDep
 from app.domain.errors import DomainError
 from app.domain.geographic_maps import (
@@ -302,16 +301,9 @@ async def import_map(
         kind=MapKind.GEOGRAPHIC,
         plane_width=planned.plane_width,
         plane_height=planned.plane_height,
+        area_labels=map_file.area_labels,
+        color_legend=planned.color_legend,
     )
-    if map_file.area_labels is not None or planned.color_legend:
-        relationship_map = await relationship_maps_repo.update_map(
-            session,
-            replace(
-                relationship_map,
-                area_labels=map_file.area_labels or relationship_map.area_labels,
-                color_legend=planned.color_legend,
-            ),
-        )
     await geographic_maps_repo.save_geo_board(session, relationship_map.id, planned.plan)
     return await geo_detail(session, relationship_map, grants, membership)
 
