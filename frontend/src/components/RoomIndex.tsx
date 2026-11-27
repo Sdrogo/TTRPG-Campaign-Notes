@@ -73,6 +73,16 @@ export function RoomIndex({ roomId, current, detail }: RoomIndexProps) {
           <Anchor component={Link} to={landingHref(roomId)} onClick={close} size="sm" fw={600}>
             {t('roomLanding.home')}
           </Anchor>
+          <Anchor
+            component={Link}
+            to={`/rooms/${roomId}/glossary`}
+            onClick={close}
+            size="sm"
+            fw={current === 'glossary' ? 700 : 600}
+            aria-current={current === 'glossary' ? 'page' : undefined}
+          >
+            {t('glossary.page.title')}
+          </Anchor>
           <Stack gap={4}>
             <Title order={6} c="dimmed" tt="uppercase">
               {t('roomLanding.sections')}

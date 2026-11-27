@@ -421,6 +421,20 @@
     },
     "rateLimit": {
       "tooMany": "请求过多：请稍候再试"
+    },
+    "glossary": {
+      "notFound": "找不到术语表条目",
+      "notAllowedToManage": "只有管理员或主持人可以管理术语表",
+      "termRequired": "术语为必填项",
+      "termTooLong": "术语最多 {max} 个字符",
+      "tooManyAliases": "一个条目最多有 {max} 个别名",
+      "definitionTooLong": "定义最多 {max} 个字符",
+      "tooManyDocuments": "一个条目最多可链接 {max} 个文档",
+      "tooMany": "一个房间最多有 {max} 个术语表条目",
+      "duplicateTerm": "这个词已在术语表中定义",
+      "invalidTagIds": "tag_ids 只能包含此房间的标签",
+      "invalidDocumentIds": "document_ids 只能包含此房间中你能看到的文档",
+      "invalidSelectiveUsers": "selective_user_ids 只能包含此房间的成员"
     }
   },
   "pdf": {

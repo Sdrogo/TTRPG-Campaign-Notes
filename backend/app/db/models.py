@@ -395,6 +395,104 @@ class NoteVisibilityGrantRow(Base):
     user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
 
 
+class GlossaryEntryRow(Base):
+    """A Room's Glossary entry (spec 79): a term with aliases, a definition,
+    its own visibility and Tags. `aliases` is the list as typed; the
+    normalized term and aliases live in `glossary_entry_keys`, where a unique
+    key keeps a Room from defining a word twice."""
+
+    __tablename__ = "glossary_entries"
+    __table_args__ = (_search_index("glossary_entries"),)
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
+    room_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("rooms.id", ondelete="CASCADE"), index=True
+    )
+    term: Mapped[str] = mapped_column(String(120))
+    aliases: Mapped[list[str]] = mapped_column(
+        ARRAY(String(120)), server_default=text("'{}'::varchar[]"), default=list
+    )
+    # The aliases joined by spaces, for the search vector (`array_to_string`
+    # isn't immutable, so it can't feed a generated column).
+    alias_text: Mapped[str] = mapped_column(Text, server_default="", default="")
+    definition: Mapped[str] = mapped_column(Text, default="")
+    visibility: Mapped[str] = mapped_column(String(20), default="room")
+    # Whether the term is highlighted in texts (spec 79 Decision 12).
+    highlight: Mapped[bool] = mapped_column(Boolean, server_default=text("true"), default=True)
+    created_by: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    # Spec 21: the term and its aliases weigh more than the definition.
+    search_vector: Mapped[str | None] = mapped_column(
+        TSVECTOR,
+        Computed(
+            f"{_search_vector('term', 'A')} || "
+            f"{_search_vector('alias_text', 'A')} || "
+            f"{_search_vector('definition', 'B')}",
+            persisted=True,
+        ),
+        deferred=True,
+    )
+
+
+class GlossaryEntryKeyRow(Base):
+    """A normalized term or alias of an entry (lower case, no accents): unique
+    in a Room, so a word has one definition."""
+
+    __tablename__ = "glossary_entry_keys"
+    __table_args__ = (UniqueConstraint("room_id", "key", name="uq_glossary_entry_keys_room_key"),)
+
+    entry_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("glossary_entries.id", ondelete="CASCADE"), primary_key=True
+    )
+    key: Mapped[str] = mapped_column(String(120), primary_key=True)
+    room_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("rooms.id", ondelete="CASCADE")
+    )
+
+
+class GlossaryEntryTagRow(Base):
+    """A Tag on a Glossary entry."""
+
+    __tablename__ = "glossary_entry_tags"
+
+    entry_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("glossary_entries.id", ondelete="CASCADE"), primary_key=True
+    )
+    tag_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("tags.id", ondelete="CASCADE"), primary_key=True
+    )
+
+
+class GlossaryEntryDocumentRow(Base):
+    """A Document an entry links to (spec 79 Decision 1), in display order."""
+
+    __tablename__ = "glossary_entry_documents"
+
+    entry_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("glossary_entries.id", ondelete="CASCADE"), primary_key=True
+    )
+    document_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("documents.id", ondelete="CASCADE"),
+        primary_key=True,
+        index=True,
+    )
+    position: Mapped[int] = mapped_column(Integer)
+
+
+class GlossaryEntryGrantRow(Base):
+    """A user who may see a Selective entry besides its author and the
+    Master."""
+
+    __tablename__ = "glossary_entry_visibility_grants"
+
+    entry_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("glossary_entries.id", ondelete="CASCADE"), primary_key=True
+    )
+    user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
+
+
 class PostRow(Base):
     """A Post in a Document's main Thread (requirements.md's data model).
     There is no separate `threads` table: a Document has exactly one Thread

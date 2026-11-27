@@ -13,6 +13,7 @@ export const SEARCH_GROUPS: ReadonlyArray<{ kind: SearchKind; key: keyof SearchR
   { kind: 'note', key: 'notes' },
   { kind: 'comment', key: 'comments' },
   { kind: 'tag', key: 'tags' },
+  { kind: 'glossary', key: 'glossary' },
 ];
 
 /**
@@ -54,6 +55,9 @@ export function highlightSegments({ text, highlights }: Highlighted): TextSegmen
  * list filtered by the Tag.
  */
 export function searchHitHref(roomId: string, hit: SearchHit): string {
+  if (hit.kind === 'glossary') {
+    return `/rooms/${roomId}/glossary?entry=${hit.id}`;
+  }
   if (hit.kind === 'tag') {
     return `/rooms/${roomId}/documents?tag=${hit.id}`;
   }

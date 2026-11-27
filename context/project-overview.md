@@ -174,9 +174,10 @@ them for day‑to‑day implementation use; IDs like `D-01`, `FR-D1`,
   Room's maps (FR-N7).
 - Full‑text search across Documents, Notes, Comments and Tags, always
   visibility‑filtered, also from `Ctrl+K` (FR-N5, spec 21).
-- **Not built**: the Glossary as its own entity of terms and
-  definitions (FR-N3, FR-N4, FR-N6); the Room Index is the navigation
-  that exists.
+- Glossary (FR-N3, FR-N4, FR-N6, spec 79): a Room's terms with a
+  definition, highlighted in texts with a hover card, filtered by Tag,
+  searched, exported and copied with the Room. The Room Index stays the
+  navigation over sections.
 
 ### Threads
 - Every Document has one main thread of Comments with nested replies,
@@ -273,7 +274,7 @@ them for day‑to‑day implementation use; IDs like `D-01`, `FR-D1`,
 - Changing the login email from inside the app.
 - Direct API access for Agents (FR-G2, dropped).
 - Translating user content (Documents, Notes, Comments, Tag names).
-- Not built, still in the spec: Glossary entries (FR-N3/N4), draft
+- Not built, still in the spec: draft
   status (FR-D6), notifications (FR-T9), sealed content (VR-09); see
   `requirements.md` §14.
 

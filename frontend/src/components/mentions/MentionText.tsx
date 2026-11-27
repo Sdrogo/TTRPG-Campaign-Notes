@@ -3,7 +3,8 @@ import { Link } from 'react-router-dom';
 import { DocumentMentionPreview } from './DocumentMentionPreview';
 import { DocumentOpenMenu } from '../documents/DocumentOpenMenu';
 import { useDocumentMentions } from '../../hooks/useDocumentMentions';
-import { useMentionSegments } from '../../hooks/useMentionSegments';
+import { useMentionSegments, type GlossarySegment } from '../../hooks/useMentionSegments';
+import { GlossaryTermPreview } from '../glossary/GlossaryTermPreview';
 import { mentionHref, type MentionSegment } from '../../lib/documentMentions';
 import { resolveUserMention, type UserMention } from '../../lib/mentionTokens';
 import type { Member } from '../../types/member';
@@ -26,7 +27,7 @@ interface MentionTextProps extends TextProps {
 }
 
 interface MentionSegmentViewProps {
-  segment: Exclude<MentionSegment, { kind: 'text' }> | UserMention;
+  segment: Exclude<MentionSegment, { kind: 'text' }> | UserMention | GlossarySegment;
   linked?: MentionTextProps['linked'];
   members?: Member[];
 }
@@ -34,6 +35,17 @@ interface MentionSegmentViewProps {
 /** One mention of `MentionText` (or of `MarkdownText`, spec 48). */
 export function MentionSegmentView({ segment, linked = true, members }: MentionSegmentViewProps) {
   const mentions = useDocumentMentions();
+  if (segment.kind === 'glossary') {
+    // Inside a link a card can't open (links can't nest): the term stays plain.
+    // (A glossary segment only exists under a mentions context.)
+    return linked === true ? (
+      <GlossaryTermPreview roomId={mentions!.roomId} entry={segment.entry} tags={mentions!.tags}>
+        {segment.text}
+      </GlossaryTermPreview>
+    ) : (
+      <>{segment.text}</>
+    );
+  }
   if (segment.kind === 'user') {
     const resolved = resolveUserMention(segment, members!);
     return resolved.member ? (

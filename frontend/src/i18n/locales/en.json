@@ -62,6 +62,12 @@
       "master": "Master only (and you)",
       "private": "Private (you + Master)",
       "selective": "Selective (you, Master and whoever you pick)"
+    },
+    "glossaryOption": {
+      "room": "Room (all members)",
+      "master": "Master only",
+      "private": "Private (you + Master)",
+      "selective": "Selective (you, Master and whoever you pick)"
     }
   },
   "time": {
@@ -376,6 +382,11 @@
       "title": "Admin",
       "description": "The app's numbers: users, Rooms, traffic and errors. Only you can see this.",
       "open": "Open the Admin page"
+    },
+    "glossary": {
+      "title": "Glossary terms",
+      "description": "How the terms of a Room's Glossary appear in texts. Kept on this device.",
+      "label": "Highlight Glossary terms in texts"
     }
   },
   "rooms": {
@@ -843,7 +854,39 @@
     "allMaps": "All maps",
     "mainTags": "Main Tags",
     "otherTags": "Other Tags",
-    "empty": "No Tags in this Room."
+    "empty": "No Tags in this Room.",
+    "page": {
+      "title": "Glossary",
+      "signInRequired": "Sign in to read the Glossary.",
+      "loadError": "The Glossary could not be loaded.",
+      "empty": "No terms are defined in this Room yet.",
+      "emptyManager": "No terms yet. Add the first one to define the words of your world.",
+      "new": "New term",
+      "edit": "Edit {{term}}",
+      "delete": "Delete {{term}}",
+      "filter": "Filter terms",
+      "letters": "Letters",
+      "openEntry": "Open in the Glossary"
+    },
+    "form": {
+      "createTitle": "New term",
+      "editTitle": "Edit term",
+      "create": "Add term",
+      "saveError": "The term could not be saved.",
+      "term": "Term",
+      "aliases": "Aliases",
+      "aliasesHint": "Other names for the same term. Press Enter or comma after each.",
+      "definition": "Definition",
+      "tags": "Tags",
+      "documents": "Related Documents",
+      "highlight": "Highlight in texts",
+      "highlightHint": "Show this term in its own color in descriptions, Notes and Comments, with its definition on hover."
+    },
+    "delete": {
+      "title": "Delete this term?",
+      "body": "“{{term}}” will be removed from the Glossary. Texts that mention it are not changed.",
+      "error": "The term could not be deleted."
+    }
   },
   "search": {
     "open": "Search",
@@ -864,7 +907,8 @@
       "document": "Documents",
       "note": "Notes",
       "comment": "Comments",
-      "tag": "Tags"
+      "tag": "Tags",
+      "glossary": "Glossary"
     }
   },
   "friendLink": {

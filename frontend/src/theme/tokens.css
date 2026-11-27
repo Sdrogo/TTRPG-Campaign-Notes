@@ -15,3 +15,9 @@
   --font-sans: 'Inter', sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
 }
+
+/* A Glossary term highlighted in a text (spec 79): its own color, apart from
+   the accent of Document and Tag mentions. */
+:root {
+  --accent-glossary: #4fb3a9;
+}

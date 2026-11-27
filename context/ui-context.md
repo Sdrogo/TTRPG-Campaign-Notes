@@ -667,6 +667,11 @@ exception is a Badge's left/right section, at 14px. Icon color always follows `-
 rest and `--accent-primary` on hover/active — never a hardcoded
 color per icon.
 
+## Glossary (spec 79)
+
+- **Page** `/rooms/:roomId/glossary` (`RoomGlossaryPage`): heading, a filter box and the Tag filter (`TagFilter`), a letter bar, then entries grouped under a letter heading (`#` first). An entry is a `Card` with the term in `--font-display` and `--accent-glossary`, aliases in dimmed small text, the definition as `MarkdownText`, Tag badges and linked Documents as links; the Administrator and Master see edit and delete buttons, "New term" in the heading opens a Modal with `GlossaryEntryForm`. `?entry=<id>` scrolls to an entry and outlines it. Linked from the Room Index card, right under "Room home".
+- **Highlighted term** (`GlossaryTermPreview`, via `MentionSegmentView`): own color token `--accent-glossary` (#4fb3a9) plus a dotted underline (not color alone), `cursor: help`, focusable. A mouse opens a `HoverCard` (400 ms, 380 px) with the term, aliases, definition (its own terms are not highlighted again), Tags, linked Documents and "Open in the Glossary"; a touch screen opens the same card in a `Popover` on tap. Only the first occurrence of each entry in a text is highlighted. The device switch is on the Account page ("Glossary terms", kept in `localStorage`).
+
 ## Markdown text and editor (spec 48)
 
 - **Reading**: `MarkdownText` shows a description or Note text formatted on

@@ -62,6 +62,12 @@
       "master": "Nur Master (und du)",
       "private": "Privat (du + Master)",
       "selective": "Ausgewählt (du, Master und wen du wählst)"
+    },
+    "glossaryOption": {
+      "room": "Raum (alle Mitglieder)",
+      "master": "Nur Spielleiter",
+      "private": "Privat (du + Spielleiter)",
+      "selective": "Selektiv (du, der Spielleiter und wen du wählst)"
     }
   },
   "time": {
@@ -376,6 +382,11 @@
       "title": "Admin",
       "description": "Die Zahlen der App: Nutzer, Räume, Zugriffe und Fehler. Nur du siehst sie.",
       "open": "Admin-Seite öffnen"
+    },
+    "glossary": {
+      "title": "Glossarbegriffe",
+      "description": "Wie die Begriffe des Glossars eines Raums in Texten erscheinen. Auf diesem Gerät gespeichert.",
+      "label": "Glossarbegriffe in Texten hervorheben"
     }
   },
   "rooms": {
@@ -843,7 +854,39 @@
     "allMaps": "Alle Karten",
     "mainTags": "Haupt-Tags",
     "otherTags": "Weitere Tags",
-    "empty": "Keine Tags in diesem Raum."
+    "empty": "Keine Tags in diesem Raum.",
+    "page": {
+      "title": "Glossar",
+      "signInRequired": "Melde dich an, um das Glossar zu lesen.",
+      "loadError": "Das Glossar konnte nicht geladen werden.",
+      "empty": "In diesem Raum ist noch kein Begriff definiert.",
+      "emptyManager": "Noch keine Begriffe. Füge den ersten hinzu, um die Wörter deiner Welt zu definieren.",
+      "new": "Neuer Begriff",
+      "edit": "{{term}} bearbeiten",
+      "delete": "{{term}} löschen",
+      "filter": "Begriffe filtern",
+      "letters": "Buchstaben",
+      "openEntry": "Im Glossar öffnen"
+    },
+    "form": {
+      "createTitle": "Neuer Begriff",
+      "editTitle": "Begriff bearbeiten",
+      "create": "Begriff hinzufügen",
+      "saveError": "Der Begriff konnte nicht gespeichert werden.",
+      "term": "Begriff",
+      "aliases": "Aliasse",
+      "aliasesHint": "Andere Namen für denselben Begriff. Nach jedem Enter oder Komma drücken.",
+      "definition": "Definition",
+      "tags": "Tags",
+      "documents": "Verknüpfte Dokumente",
+      "highlight": "In Texten hervorheben",
+      "highlightHint": "Zeigt diesen Begriff in Beschreibungen, Notizen und Kommentaren in einer eigenen Farbe, mit der Definition beim Darüberfahren."
+    },
+    "delete": {
+      "title": "Diesen Begriff löschen?",
+      "body": "„{{term}}“ wird aus dem Glossar entfernt. Texte, die ihn erwähnen, bleiben unverändert.",
+      "error": "Der Begriff konnte nicht gelöscht werden."
+    }
   },
   "search": {
     "open": "Suchen",
@@ -864,7 +907,8 @@
       "document": "Dokumente",
       "note": "Notizen",
       "comment": "Kommentare",
-      "tag": "Tags"
+      "tag": "Tags",
+      "glossary": "Glossar"
     }
   },
   "friendLink": {

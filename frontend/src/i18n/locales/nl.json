@@ -62,6 +62,12 @@
       "master": "Alleen Master (en jij)",
       "private": "Privé (jij + Master)",
       "selective": "Selectief (jij, Master en wie je kiest)"
+    },
+    "glossaryOption": {
+      "room": "Room (alle leden)",
+      "master": "Alleen Spelleider",
+      "private": "Privé (jij + Spelleider)",
+      "selective": "Selectief (jij, de Spelleider en wie je kiest)"
     }
   },
   "time": {
@@ -376,6 +382,11 @@
       "title": "Admin",
       "description": "De cijfers van de app: gebruikers, Kamers, verkeer en fouten. Alleen jij ziet ze.",
       "open": "Admin-pagina openen"
+    },
+    "glossary": {
+      "title": "Woordenlijsttermen",
+      "description": "Hoe de termen van de woordenlijst van een room in teksten verschijnen. Bewaard op dit apparaat.",
+      "label": "Woordenlijsttermen in teksten markeren"
     }
   },
   "rooms": {
@@ -843,7 +854,39 @@
     "allMaps": "Alle kaarten",
     "mainTags": "Hoofdtags",
     "otherTags": "Andere Tags",
-    "empty": "Geen Tags in deze Kamer."
+    "empty": "Geen Tags in deze Kamer.",
+    "page": {
+      "title": "Woordenlijst",
+      "signInRequired": "Meld je aan om de woordenlijst te lezen.",
+      "loadError": "De woordenlijst kon niet worden geladen.",
+      "empty": "In deze room zijn nog geen termen gedefinieerd.",
+      "emptyManager": "Nog geen termen. Voeg de eerste toe om de woorden van je wereld te definiëren.",
+      "new": "Nieuwe term",
+      "edit": "{{term}} bewerken",
+      "delete": "{{term}} verwijderen",
+      "filter": "Termen filteren",
+      "letters": "Letters",
+      "openEntry": "Openen in de woordenlijst"
+    },
+    "form": {
+      "createTitle": "Nieuwe term",
+      "editTitle": "Term bewerken",
+      "create": "Term toevoegen",
+      "saveError": "De term kon niet worden opgeslagen.",
+      "term": "Term",
+      "aliases": "Aliassen",
+      "aliasesHint": "Andere namen voor dezelfde term. Druk na elk op Enter of komma.",
+      "definition": "Definitie",
+      "tags": "Tags",
+      "documents": "Gekoppelde documenten",
+      "highlight": "Markeren in teksten",
+      "highlightHint": "Toont deze term in een eigen kleur in beschrijvingen, notities en reacties, met de definitie bij aanwijzen."
+    },
+    "delete": {
+      "title": "Deze term verwijderen?",
+      "body": "“{{term}}” wordt uit de woordenlijst verwijderd. Teksten die ernaar verwijzen blijven ongewijzigd.",
+      "error": "De term kon niet worden verwijderd."
+    }
   },
   "search": {
     "open": "Zoeken",
@@ -864,7 +907,8 @@
       "document": "Documenten",
       "note": "Notities",
       "comment": "Opmerkingen",
-      "tag": "Tags"
+      "tag": "Tags",
+      "glossary": "Woordenlijst"
     }
   },
   "friendLink": {

@@ -570,7 +570,7 @@ async def test_a_file_that_is_refused_writes_nothing(
         "too big": (("big.json", b"{" + b" " * (5 * 1024 * 1024)), 413),
         "not json": (("bad.json", b"{oops"), 422),
         "not utf-8": (("bad.md", b"\xff\xfe\x00"), 422),
-        "newer schema": (_json_file({"name": "A"}, schema_version=7), 422),
+        "newer schema": (_json_file({"name": "A"}, schema_version=8), 422),
         "no document": (("empty.json", b'{"documents": []}'), 422),
         "too many documents": (_json_file(*many), 422),
         "too many images": (_json_file(images), 422),
@@ -1548,7 +1548,7 @@ async def test_a_room_export_carries_its_maps_into_another_room(
     target = await _second_room(client, room)
     exported = await _export(client, room, room.master, "json")
     data = json.loads(exported)
-    assert data["schema_version"] == 6
+    assert data["schema_version"] == 7
     maps = {m["name"]: m for m in data["maps"]}
     assert set(maps) == {"Court", "Valley"}
     assert maps["Court"]["linked_document_ids"] == [seeded["castle"]["id"]]
@@ -2076,7 +2076,7 @@ async def test_a_room_export_carries_its_home_into_another_room(
 
     exported = await _export(client, room, room.master, "json")
     data = json.loads(exported)
-    assert data["schema_version"] == 6
+    assert data["schema_version"] == 7
     assert [(s["kind"], s["title"]) for s in data["sections"]] == [
         ("page_documents", "Archive"),
         ("page_maps", None),
@@ -2818,7 +2818,7 @@ async def test_the_relational_link_flag_travels_through_export_copy_and_replace(
 
     exported = await _export(client, room, room.master, "json", f"/documents/{castle_id}")
     data = json.loads(exported)
-    assert data["schema_version"] == 6
+    assert data["schema_version"] == 7
     assert {n["title"]: n["relational_link"] for n in data["documents"][0]["notes"]} == {
         n["title"]: n["id"] == flagged["id"] for n in before["notes"]
     }

@@ -62,6 +62,12 @@
       "master": "Tylko Master (i ty)",
       "private": "Prywatna (ty + Master)",
       "selective": "Selektywna (ty, Master i wybrane osoby)"
+    },
+    "glossaryOption": {
+      "room": "Pokój (wszyscy członkowie)",
+      "master": "Tylko Mistrz Gry",
+      "private": "Prywatne (ty + Mistrz Gry)",
+      "selective": "Wybrane (ty, Mistrz Gry i wskazane osoby)"
     }
   },
   "time": {
@@ -376,6 +382,11 @@
       "title": "Admin",
       "description": "Liczby aplikacji: użytkownicy, pokoje, ruch i błędy. Widzisz je tylko ty.",
       "open": "Otwórz stronę Admin"
+    },
+    "glossary": {
+      "title": "Hasła słownika",
+      "description": "Jak hasła słownika pokoju wyglądają w tekstach. Zapisane na tym urządzeniu.",
+      "label": "Wyróżniaj hasła słownika w tekstach"
     }
   },
   "rooms": {
@@ -863,7 +874,39 @@
     "allMaps": "Wszystkie mapy",
     "mainTags": "Tagi główne",
     "otherTags": "Pozostałe tagi",
-    "empty": "Ten pokój nie ma tagów."
+    "empty": "Ten pokój nie ma tagów.",
+    "page": {
+      "title": "Słownik",
+      "signInRequired": "Zaloguj się, aby czytać słownik.",
+      "loadError": "Nie udało się wczytać słownika.",
+      "empty": "W tym pokoju nie zdefiniowano jeszcze żadnych haseł.",
+      "emptyManager": "Brak haseł. Dodaj pierwsze, aby zdefiniować słowa swojego świata.",
+      "new": "Nowe hasło",
+      "edit": "Edytuj {{term}}",
+      "delete": "Usuń {{term}}",
+      "filter": "Filtruj hasła",
+      "letters": "Litery",
+      "openEntry": "Otwórz w słowniku"
+    },
+    "form": {
+      "createTitle": "Nowe hasło",
+      "editTitle": "Edytuj hasło",
+      "create": "Dodaj hasło",
+      "saveError": "Nie udało się zapisać hasła.",
+      "term": "Hasło",
+      "aliases": "Aliasy",
+      "aliasesHint": "Inne nazwy tego samego hasła. Po każdej naciśnij Enter lub przecinek.",
+      "definition": "Definicja",
+      "tags": "Tagi",
+      "documents": "Powiązane dokumenty",
+      "highlight": "Wyróżniaj w tekstach",
+      "highlightHint": "Pokazuje to hasło własnym kolorem w opisach, notatkach i komentarzach, z definicją po najechaniu."
+    },
+    "delete": {
+      "title": "Usunąć to hasło?",
+      "body": "„{{term}}” zostanie usunięte ze słownika. Teksty, które o nim wspominają, się nie zmienią.",
+      "error": "Nie udało się usunąć hasła."
+    }
   },
   "search": {
     "open": "Szukaj",
@@ -884,7 +927,8 @@
       "document": "Dokumenty",
       "note": "Notatki",
       "comment": "Komentarze",
-      "tag": "Tagi"
+      "tag": "Tagi",
+      "glossary": "Słownik"
     }
   },
   "friendLink": {

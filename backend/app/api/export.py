@@ -38,6 +38,7 @@ from app.db import (
     documents_repo,
     files_repo,
     geographic_maps_repo,
+    glossary_repo,
     map_legends_repo,
     notes_repo,
     relationship_maps_repo,
@@ -53,13 +54,16 @@ from app.domain.export import (
     DocumentSource,
     Export,
     ExportFormat,
+    ExportGlossaryEntry,
     ExportInput,
+    MentionDirectory,
     build_export,
     document_export_filename,
     export_filename,
     render_json,
     render_markdown,
     restrict_to_document,
+    text_spans,
 )
 from app.domain.geographic_maps import GeoBoard, placed_document_ids, visible_geo_board
 from app.domain.landing_transfer import section_to_json
@@ -74,7 +78,7 @@ from app.domain.relationship_maps import (
 )
 from app.domain.room_sections import BlockKind, BlockMapKind, SectionKind, SessionZeroFeature
 from app.domain.tags import ordered_main_items
-from app.domain.visibility import is_document_visible
+from app.domain.visibility import is_document_visible, is_glossary_entry_visible
 from app.i18n.dependencies import LocaleDep
 
 router = APIRouter(tags=["export"])
@@ -245,8 +249,8 @@ class SectionJson(BaseModel):
 
 
 class ExportJson(BaseModel):
-    """The JSON export (`schema_version` 5; 1 had no Document `subtitle`, 2 no
-    `maps`, 3 no `sections`, 4 no clocks).
+    """The JSON export (`schema_version` 7; 1 had no Document `subtitle`, 2 no
+    `maps`, 3 no `sections`, 4 no clocks, 6 no `glossary`).
     Every object carries its UUID and refers to others by id. `main_items` is
     the Room's grouping in order, each a list of Tag ids (one Tag, or a
     combination a Document belongs to when it carries all of them).
@@ -272,6 +276,10 @@ class ExportJson(BaseModel):
     clock_templates: list[dict[str, Any]]
     clocks: list[dict[str, Any]]
     clock_groups: list[dict[str, Any]]
+    # Spec 79 (schema 7): the Glossary entries the requester sees, their
+    # definition as spans, Tags and Documents by id; empty in a single
+    # Document's file.
+    glossary: list[dict[str, Any]]
 
 
 EXPORT_MEDIA_TYPES = {
@@ -464,6 +472,48 @@ async def export_clocks(
     )
 
 
+async def export_glossary(
+    session: AsyncSession,
+    room_id: uuid.UUID,
+    viewer: Membership,
+    export: Export,
+    tag_ids: list[uuid.UUID],
+) -> list[ExportGlossaryEntry]:
+    """The Glossary entries `viewer` sees (spec 79; VR-10), carrying every Tag
+    of a Tag filter, a linked Document named only when the viewer sees it."""
+    entries = await glossary_repo.list_entries(session, room_id)
+    ids = [entry.id for entry in entries]
+    grants = await glossary_repo.list_grants(session, ids)
+    seen = [
+        entry
+        for entry in entries
+        if is_glossary_entry_visible(
+            entry.visibility, entry.created_by, viewer.user_id, viewer.role, grants[entry.id]
+        )
+    ]
+    tags = await glossary_repo.list_tag_ids(session, [entry.id for entry in seen])
+    documents = await glossary_repo.list_document_ids(session, [entry.id for entry in seen])
+    directory = MentionDirectory(
+        documents=export.visible_documents,
+        tags={tag.id: tag.name for tag in export.tags},
+        users={member.id: member.name for member in export.members},
+    )
+    return [
+        ExportGlossaryEntry(
+            id=entry.id,
+            term=entry.term,
+            aliases=entry.aliases,
+            definition=text_spans(entry.definition, directory),
+            visibility=entry.visibility,
+            highlight=entry.highlight,
+            tag_ids=sorted(tags[entry.id]),
+            document_ids=[d for d in documents[entry.id] if d in export.visible_documents],
+        )
+        for entry in seen
+        if set(tag_ids) <= set(tags[entry.id])
+    ]
+
+
 async def export_sections(session: AsyncSession, room_id: uuid.UUID) -> list[dict[str, Any]]:
     """The Room's landing page, every Section in order with its blocks (spec
     56 Decision 2): every member sees all of it, and a block holds rules,
@@ -515,6 +565,9 @@ async def export_room(
         raise http_error(status.HTTP_404_NOT_FOUND, "errors.room.notFound", locale)
 
     export = await load_export(session, room, viewer, tag_ids)
+    export = replace(
+        export, glossary=await export_glossary(session, room_id, viewer, export, tag_ids)
+    )
     if export_format is ExportFormat.JSON:
         export = replace(
             export,

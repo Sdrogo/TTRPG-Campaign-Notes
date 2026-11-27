@@ -421,6 +421,20 @@
     },
     "rateLimit": {
       "tooMany": "Te veel verzoeken: wacht even en probeer het opnieuw"
+    },
+    "glossary": {
+      "notFound": "Woordenlijstitem niet gevonden",
+      "notAllowedToManage": "Alleen een beheerder of de Spelleider kan de woordenlijst beheren",
+      "termRequired": "Een term is verplicht",
+      "termTooLong": "Een term mag maximaal {max} tekens hebben",
+      "tooManyAliases": "Een item mag maximaal {max} aliassen hebben",
+      "definitionTooLong": "Een definitie mag maximaal {max} tekens hebben",
+      "tooManyDocuments": "Een item mag maximaal {max} documenten koppelen",
+      "tooMany": "Een room mag maximaal {max} woordenlijstitems hebben",
+      "duplicateTerm": "Dit woord is al gedefinieerd in de woordenlijst",
+      "invalidTagIds": "tag_ids mag alleen tags van deze room bevatten",
+      "invalidDocumentIds": "document_ids mag alleen documenten van deze room bevatten die je kunt zien",
+      "invalidSelectiveUsers": "selective_user_ids mag alleen leden van deze room bevatten"
     }
   },
   "pdf": {

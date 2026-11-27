@@ -44,9 +44,10 @@ from app.domain.visibility import (
 # 2 since spec 28_0 added a Document's `subtitle`; 3 since spec 40 added the
 # Room's `maps`; 4 since spec 56 added the landing page's `sections`; 5 since
 # spec 61 added the clocks (`clock_rules`, `clock_templates`, `clocks`,
-# `clock_groups`); 6 since spec 71 added each Note's `relational_link`.
-# The import reads 1 to 6.
-SCHEMA_VERSION = 6
+# `clock_groups`); 6 since spec 71 added each Note's `relational_link`; 7 since
+# spec 79 added the Room's `glossary`.
+# The import reads 1 to 7 (it does not read the `glossary` list yet).
+SCHEMA_VERSION = 7
 
 # Shown for a member with no display name: emails are never exported
 # (NFR-03).
@@ -195,6 +196,21 @@ class ExportComment:
 
 
 @dataclass(frozen=True)
+class ExportGlossaryEntry:
+    """A Glossary entry the requester sees (spec 79), its definition as spans
+    and its linked Documents only when the file holds them."""
+
+    id: uuid.UUID
+    term: str
+    aliases: Sequence[str]
+    definition: Sequence[Span]
+    visibility: DocumentVisibility
+    highlight: bool
+    tag_ids: Sequence[uuid.UUID]
+    document_ids: Sequence[uuid.UUID]
+
+
+@dataclass(frozen=True)
 class ExportDocument:
     """A Document the requester sees, with everything on it they see.
     `selective_user_ids` is None unless they may manage it."""
@@ -240,6 +256,9 @@ class Export:
     # The four clock keys (spec 61, `clock_transfer.clocks_to_json`): only the
     # Room's JSON export holds them; empty otherwise.
     clocks: Mapping[str, Any] = field(default_factory=dict)
+    # The Glossary entries the requester sees (spec 79), in the Room's JSON
+    # and Markdown exports; empty otherwise.
+    glossary: Sequence[ExportGlossaryEntry] = ()
 
 
 @dataclass(frozen=True)
@@ -559,6 +578,21 @@ def render_json(export: Export) -> dict[str, Any]:
         "clock_templates": list(export.clocks.get("clock_templates", ())),
         "clocks": list(export.clocks.get("clocks", ())),
         "clock_groups": list(export.clocks.get("clock_groups", ())),
+        "glossary": [_json_glossary_entry(entry) for entry in export.glossary],
+    }
+
+
+def _json_glossary_entry(entry: ExportGlossaryEntry) -> dict[str, Any]:
+    """A Glossary entry object (spec 79)."""
+    return {
+        "id": str(entry.id),
+        "term": entry.term,
+        "aliases": list(entry.aliases),
+        "definition": _json_spans(entry.definition),
+        "visibility": entry.visibility.value,
+        "highlight": entry.highlight,
+        "tag_ids": [str(tag_id) for tag_id in entry.tag_ids],
+        "document_ids": [str(document_id) for document_id in entry.document_ids],
     }
 
 
@@ -742,6 +776,9 @@ def render_markdown(export: Export) -> str:
             lines.append(f'- <a id="tag-{tag.id}"></a>{_md(tag.name)}{category}')
         lines.append("")
 
+    if export.glossary:
+        lines += _markdown_glossary(export, exported)
+
     written: set[uuid.UUID] = set()
     for title, documents in _group_documents(export):
         lines += [f"## {title}", ""]
@@ -752,6 +789,34 @@ def render_markdown(export: Export) -> str:
             written.add(document.id)
             lines += _markdown_document(document, export, names, exported, doc_names)
     return _BLANK_RUN.sub("\n\n", "\n".join(lines)).rstrip() + "\n"
+
+
+def _markdown_glossary(export: Export, exported: Collection[uuid.UUID]) -> list[str]:
+    """The Glossary section (spec 79): each term in bold with its aliases, its
+    definition and its Tags, the linked Documents that are in the file as
+    links."""
+    tag_names = {t.id: t.name for t in export.tags}
+    lines = ["## Glossary", ""]
+    for entry in export.glossary:
+        title = f'<a id="glossary-{entry.id}"></a>**{_md(entry.term)}**'
+        if entry.aliases:
+            title += " (" + ", ".join(_md(alias) for alias in entry.aliases) + ")"
+        lines += [f"### {title}", ""]
+        definition = _plain(entry.definition, exported).strip()
+        if definition:
+            lines += [definition, ""]
+        facts = []
+        if entry.tag_ids:
+            facts.append("Tags: " + ", ".join(_md(tag_names.get(t, str(t))) for t in entry.tag_ids))
+        links = [
+            f"[{_md(export.visible_documents[d])}](#doc-{d})"
+            for d in entry.document_ids
+            if d in exported and d in export.visible_documents
+        ]
+        if links:
+            facts.append("See: " + ", ".join(links))
+        lines += [f"- {fact}" for fact in facts] + ([""] if facts else [])
+    return lines
 
 
 def _markdown_document(
