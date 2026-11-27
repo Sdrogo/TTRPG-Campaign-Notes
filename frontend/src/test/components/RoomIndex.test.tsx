@@ -50,7 +50,8 @@ describe('RoomIndex', () => {
     await renderOpened();
 
     expect(await screen.findByRole('link', { name: 'Home della Stanza' })).toHaveAttribute('href', '/rooms/room-1');
-    const links = screen.getAllByRole('link').slice(1);
+    // The Glossary (spec 79) is linked right under the Room home.
+    const links = screen.getAllByRole('link').slice(2);
     expect(links.map((link) => link.textContent)).toEqual(['Documenti', 'Tokyo', 'Atlante', 'Sessione 0']);
     expect(links.map((link) => link.getAttribute('href'))).toEqual([
       '/rooms/room-1/documents',
@@ -58,6 +59,7 @@ describe('RoomIndex', () => {
       '/rooms/room-1/maps',
       '/rooms/room-1/session-zero',
     ]);
+    expect(screen.getByRole('link', { name: 'Glossario' })).toHaveAttribute('href', '/rooms/room-1/glossary');
     expect(fetchMock).toHaveBeenCalledWith('/rooms/room-1/sections');
   });
 
@@ -100,6 +102,6 @@ describe('RoomIndex', () => {
 
     expect(await screen.findByRole('link', { name: 'Home della Stanza' })).toBeInTheDocument();
     await waitFor(() => expect(screen.queryByRole('link', { name: 'Documenti' })).not.toBeInTheDocument());
-    expect(screen.getAllByRole('link')).toHaveLength(1);
+    expect(screen.getAllByRole('link')).toHaveLength(2);
   });
 });

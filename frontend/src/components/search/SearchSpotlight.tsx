@@ -17,6 +17,7 @@ import {
   MagnifyingGlassIcon,
   NoteIcon,
   TagIcon,
+  BookBookmarkIcon,
 } from '@phosphor-icons/react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -41,6 +42,7 @@ const ICONS = {
   note: NoteIcon,
   comment: ChatCircleTextIcon,
   tag: TagIcon,
+  glossary: BookBookmarkIcon,
 } as const;
 
 interface SearchSpotlightProps {

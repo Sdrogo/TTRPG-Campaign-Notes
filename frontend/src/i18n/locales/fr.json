@@ -62,6 +62,12 @@
       "master": "Master seul (et toi)",
       "private": "Privé (toi + Master)",
       "selective": "Sélectif (toi, le Master et ceux que tu choisis)"
+    },
+    "glossaryOption": {
+      "room": "Salle (tous les membres)",
+      "master": "Maître uniquement",
+      "private": "Privé (vous + Maître)",
+      "selective": "Sélectif (vous, le Maître et qui vous choisissez)"
     }
   },
   "time": {
@@ -376,6 +382,11 @@
       "title": "Admin",
       "description": "Les chiffres de l'app : utilisateurs, Salles, trafic et erreurs. Toi seul peux les voir.",
       "open": "Ouvrir la page Admin"
+    },
+    "glossary": {
+      "title": "Termes du glossaire",
+      "description": "Comment les termes du glossaire d'une salle apparaissent dans les textes. Conservé sur cet appareil.",
+      "label": "Surligner les termes du glossaire dans les textes"
     }
   },
   "rooms": {
@@ -845,7 +856,39 @@
     "allMaps": "Toutes les cartes",
     "mainTags": "Tags principaux",
     "otherTags": "Autres Tags",
-    "empty": "Aucun Tag dans cette Salle."
+    "empty": "Aucun Tag dans cette Salle.",
+    "page": {
+      "title": "Glossaire",
+      "signInRequired": "Connectez-vous pour lire le glossaire.",
+      "loadError": "Impossible de charger le glossaire.",
+      "empty": "Aucun terme n'est encore défini dans cette salle.",
+      "emptyManager": "Aucun terme pour l'instant. Ajoutez le premier pour définir les mots de votre monde.",
+      "new": "Nouveau terme",
+      "edit": "Modifier {{term}}",
+      "delete": "Supprimer {{term}}",
+      "filter": "Filtrer les termes",
+      "letters": "Lettres",
+      "openEntry": "Ouvrir dans le glossaire"
+    },
+    "form": {
+      "createTitle": "Nouveau terme",
+      "editTitle": "Modifier le terme",
+      "create": "Ajouter le terme",
+      "saveError": "Impossible d'enregistrer le terme.",
+      "term": "Terme",
+      "aliases": "Alias",
+      "aliasesHint": "Autres noms du même terme. Appuyez sur Entrée ou virgule après chacun.",
+      "definition": "Définition",
+      "tags": "Tags",
+      "documents": "Documents liés",
+      "highlight": "Surligner dans les textes",
+      "highlightHint": "Affiche ce terme dans sa propre couleur dans les descriptions, notes et commentaires, avec sa définition au survol."
+    },
+    "delete": {
+      "title": "Supprimer ce terme ?",
+      "body": "« {{term}} » sera retiré du glossaire. Les textes qui le mentionnent ne changent pas.",
+      "error": "Impossible de supprimer le terme."
+    }
   },
   "search": {
     "open": "Rechercher",
@@ -866,7 +909,8 @@
       "document": "Documents",
       "note": "Notes",
       "comment": "Commentaires",
-      "tag": "Tags"
+      "tag": "Tags",
+      "glossary": "Glossaire"
     }
   },
   "friendLink": {

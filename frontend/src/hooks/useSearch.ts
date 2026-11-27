@@ -29,6 +29,8 @@ interface RawSearchResults {
   notes: RawSearchGroup;
   comments: RawSearchGroup;
   tags: RawSearchGroup;
+  // Absent from the demo's canned answers.
+  glossary?: RawSearchGroup;
 }
 
 function toHit(raw: RawSearchHit): SearchHit {
@@ -77,6 +79,7 @@ export function useSearch(roomId: string, query: string, filters: SearchFilters,
         notes: toGroup(raw.notes),
         comments: toGroup(raw.comments),
         tags: toGroup(raw.tags),
+        glossary: toGroup(raw.glossary ?? { items: [], has_more: false }),
       };
     },
     enabled: isSearchable(trimmed),

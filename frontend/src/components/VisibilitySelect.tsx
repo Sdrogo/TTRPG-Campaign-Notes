@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 const LEVELS: DocumentVisibility[] = ['room', 'master', 'private', 'selective'];
 
 interface VisibilitySelectProps extends Omit<SelectProps, 'data' | 'value' | 'onChange'> {
-  subject: 'document' | 'comment';
+  subject: 'document' | 'comment' | 'glossary';
   value: DocumentVisibility;
   onChange: (value: DocumentVisibility) => void;
   /** The levels offered, in their usual order; all of them by default. */
@@ -14,7 +14,8 @@ interface VisibilitySelectProps extends Omit<SelectProps, 'data' | 'value' | 'on
 
 /**
  * Picks a visibility level. The labels depend on `subject`: a Document's level
- * is described in terms of its Owners, a Comment's in terms of its author.
+ * is described in terms of its Owners, a Comment's or a Glossary entry's in
+ * terms of its author.
  */
 export function VisibilitySelect({
   subject,
@@ -31,7 +32,9 @@ export function VisibilitySelect({
     label:
       subject === 'document'
         ? t(`visibility.documentOption.${level}`)
-        : t(`visibility.commentOption.${level}`),
+        : subject === 'glossary'
+          ? t(`visibility.glossaryOption.${level}`)
+          : t(`visibility.commentOption.${level}`),
   }));
 
   return (

@@ -1,5 +1,6 @@
 import { createContext, useContext } from 'react';
 import type { Document } from '../types/document';
+import type { GlossaryEntry } from '../types/glossary';
 import type { Tag } from '../types/tag';
 import type { MentionKind, MentionTarget } from '../lib/documentMentions';
 
@@ -9,6 +10,11 @@ export interface DocumentMentionsValue {
   /** Only the Documents the viewer can see (the backend filters the list). */
   documents: Document[];
   tags: Tag[];
+  /**
+   * The Glossary entries to highlight in texts (spec 79): those the viewer sees and the
+   * device's switch allows. Absent or empty outside a Room page.
+   */
+  glossary?: GlossaryEntry[];
   /** What the viewer may create from the popup when nothing matches. */
   canCreateDocument: boolean;
   canCreateTag: boolean;

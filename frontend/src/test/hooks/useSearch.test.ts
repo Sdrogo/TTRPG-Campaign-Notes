@@ -57,6 +57,7 @@ describe('useSearch', () => {
       },
       comments: { items: [], hasMore: false },
       tags: { items: [], hasMore: false },
+      glossary: { items: [], hasMore: false },
     });
   });
 

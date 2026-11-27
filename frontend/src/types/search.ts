@@ -1,5 +1,5 @@
 /** What a search result is (spec 21 Decision 1). */
-export type SearchKind = 'document' | 'note' | 'comment' | 'tag';
+export type SearchKind = 'document' | 'note' | 'comment' | 'tag' | 'glossary';
 
 /**
  * Text with the matched words marked as `[start, end)` offsets, in the same
@@ -37,6 +37,8 @@ export interface SearchResults {
   notes: SearchGroup;
   comments: SearchGroup;
   tags: SearchGroup;
+  /** Spec 79: Glossary terms; `title` is the term, `excerpt` the definition. */
+  glossary: SearchGroup;
 }
 
 /** What narrows a search: one kind, and Tags its results' Documents carry. */

@@ -62,6 +62,12 @@
       "master": "Masterのみ(とあなた)",
       "private": "非公開(あなた + Master)",
       "selective": "選択式(あなた、Master、選んだメンバー)"
+    },
+    "glossaryOption": {
+      "room": "ルーム（全メンバー）",
+      "master": "マスターのみ",
+      "private": "非公開（自分＋マスター）",
+      "selective": "選択式（自分、マスター、選んだ人）"
     }
   },
   "time": {
@@ -376,6 +382,11 @@
       "title": "Admin",
       "description": "アプリの数値:ユーザー、ルーム、トラフィック、エラー。あなただけが見られます。",
       "open": "Adminページを開く"
+    },
+    "glossary": {
+      "title": "用語集の用語",
+      "description": "ルームの用語集の用語が文章中でどう表示されるか。この端末に保存されます。",
+      "label": "用語集の用語を文章中で強調する"
     }
   },
   "rooms": {
@@ -833,7 +844,39 @@
     "allMaps": "すべてのマップ",
     "mainTags": "メインタグ",
     "otherTags": "その他のタグ",
-    "empty": "このルームにはタグがありません。"
+    "empty": "このルームにはタグがありません。",
+    "page": {
+      "title": "用語集",
+      "signInRequired": "用語集を読むにはサインインしてください。",
+      "loadError": "用語集を読み込めませんでした。",
+      "empty": "このルームにはまだ用語が定義されていません。",
+      "emptyManager": "まだ用語がありません。最初の用語を追加して、世界の言葉を定義しましょう。",
+      "new": "新しい用語",
+      "edit": "{{term}}を編集",
+      "delete": "{{term}}を削除",
+      "filter": "用語を絞り込む",
+      "letters": "文字",
+      "openEntry": "用語集で開く"
+    },
+    "form": {
+      "createTitle": "新しい用語",
+      "editTitle": "用語を編集",
+      "create": "用語を追加",
+      "saveError": "用語を保存できませんでした。",
+      "term": "用語",
+      "aliases": "別名",
+      "aliasesHint": "同じ用語の別の呼び方。入力ごとに Enter かカンマを押してください。",
+      "definition": "定義",
+      "tags": "タグ",
+      "documents": "関連ドキュメント",
+      "highlight": "文章中で強調する",
+      "highlightHint": "説明、ノート、コメントの中でこの用語を専用の色で表示し、ポイントすると定義を表示します。"
+    },
+    "delete": {
+      "title": "この用語を削除しますか？",
+      "body": "「{{term}}」が用語集から削除されます。この用語に触れている文章は変わりません。",
+      "error": "用語を削除できませんでした。"
+    }
   },
   "search": {
     "open": "検索",
@@ -854,7 +897,8 @@
       "document": "ドキュメント",
       "note": "ノート",
       "comment": "コメント",
-      "tag": "タグ"
+      "tag": "タグ",
+      "glossary": "用語集"
     }
   },
   "friendLink": {
