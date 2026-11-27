@@ -234,6 +234,11 @@ image search, read aloud, GDPR (10-01 → 10-10). See the older archives.
 
 ## Next Up
 
+- **78, Color-blind palettes** (ticket 2026-11-27, PR into staging, no
+  code yet): palette check for protan/deutan/tritan (closest pairs today
+  1.3 / 2.1 / 5.1 ΔE00) and a per-user palette on the Account page, same
+  17 color names, one column `users.color_palette`. Waiting for the product
+  owner's answers to 4 open questions.
 - **76, Security hardening 2** (built 2026-11-18, PR #355 into staging):
   pinned builds from `uv.lock` + digests + `dependabot.yml`, Caddy access
   log with masked IPs, backup vault on staging (`backup-vault.sh`). After
