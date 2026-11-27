@@ -239,6 +239,9 @@ image search, read aloud, GDPR (10-01 → 10-10). See the older archives.
   Document may have several areas on a geographic map (patchwork faction
   territory); pins stay one per Document. One migration (drop
   `uq_relationship_map_areas_document`). Three open questions in the ticket.
+- **77b, Area color legend** (ticket written 2026-11-27, same PR as 77):
+  spec 68's legend and presets on geographic maps, for area colors. No
+  migration (reuses `color_legend`/`legend_preset_id`). Three open questions.
 - **76, Security hardening 2** (built 2026-11-18, PR #355 into staging):
   pinned builds from `uv.lock` + digests + `dependabot.yml`, Caddy access
   log with masked IPs, backup vault on staging (`backup-vault.sh`). After

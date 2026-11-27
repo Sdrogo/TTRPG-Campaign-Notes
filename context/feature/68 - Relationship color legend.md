@@ -110,7 +110,7 @@ open questions the same day (see Answered).*
 15. **Other map kinds**: mention maps (spec 36) draw every relation in one
     color and are not edited, so they get no legend. Geographic maps
     (spec 38) are left out for now (product owner); the column lives on
-    `relationship_maps`, so adding them later needs no new migration.
+    `relationship_maps`, so adding them later needs no new migration. (Ticket 77b, proposed 2026-11-27, adds the legend for **area** colors on geographic maps.)
 16. **Small boards on a Document page** (the linked map of spec 36
     Decision 15) show the legend as the folded chip only, read-only.
 17. **Languages**: every new string in the 12 UI languages (`en`, `it`,
