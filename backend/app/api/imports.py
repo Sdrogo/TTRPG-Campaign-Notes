@@ -44,12 +44,14 @@ from app.domain.imports import (
     MAX_DOCUMENTS,
     MAX_FILES,
     MAX_VAULT_DOCUMENTS,
+    GlossarySkipReason,
     ImportAlreadyRunningError,
     ImportChoices,
     ImportJob,
     ImportPlan,
     ImportStatus,
     PlannedDocument,
+    PlannedGlossaryEntry,
     document_key,
     images_done,
     plan_import,
@@ -130,6 +132,23 @@ class PreviewSectionResponse(BaseModel):
     skipped: SectionSkipReason | None
 
 
+class PreviewGlossaryEntryResponse(BaseModel):
+    """A Glossary entry found in the files (spec 79c), listed for a Glossary
+    manager only. `key` names it in `glossary`, and in `glossary_replace` to
+    write it onto the Room's entry with the same term (`existing_entry_id`).
+    `skipped`: `exists` (that entry stays as it is unless replaced), `taken`,
+    `invalid`, `limit`, else null. Its warnings: `aliases_dropped` (with the
+    names) and `selective_to_private`."""
+
+    key: str
+    file_name: str
+    term: str
+    aliases: list[str]
+    existing_entry_id: uuid.UUID | None
+    skipped: GlossarySkipReason | None
+    warnings: list[ImportWarningResponse]
+
+
 class PreviewTagResponse(BaseModel):
     """A Tag the import would create."""
 
@@ -149,6 +168,10 @@ class ImportPreviewResponse(BaseModel):
     unavailable_tags: list[str]
     maps: list[PreviewMapResponse]
     sections: list[PreviewSectionResponse] = []
+    # Spec 79c: the files' Glossary entries, and how many of them the
+    # importer may not bring (not an Administrator or the Master).
+    glossary: list[PreviewGlossaryEntryResponse] = []
+    glossary_left_out: int = 0
 
 
 class ImportChoicesRequest(BaseModel):
@@ -164,6 +187,10 @@ class ImportChoicesRequest(BaseModel):
     maps: list[str] | None = None
     sections: list[str] | None = None
     page_cards: list[str] = []
+    # Spec 79c: the Glossary entries to import (all when absent) and those
+    # replacing the Room's entry with the same term.
+    glossary: list[str] | None = None
+    glossary_replace: list[str] = []
 
 
 class SkippedResponse(BaseModel):
@@ -211,6 +238,21 @@ class SkippedSectionResponse(BaseModel):
     reason: str
 
 
+class ImportedGlossaryEntryResponse(BaseModel):
+    """A Glossary entry the import created or replaced (spec 79c)."""
+
+    id: uuid.UUID
+    term: str
+
+
+class SkippedGlossaryEntryResponse(BaseModel):
+    """A Glossary entry the import did not write, and why (`exists`,
+    `taken`, `invalid`, `limit`)."""
+
+    term: str
+    reason: str
+
+
 class ImageCountResponse(BaseModel):
     """Images of an import: `total` in its work list, `stored` so far (in
     `progress`) or in the end (in `result`). `done` counts the stored and
@@ -233,6 +275,8 @@ class ImportResultResponse(BaseModel):
     skipped_maps: list[SkippedMapResponse] = []
     sections: list[ImportedSectionResponse] = []
     skipped_sections: list[SkippedSectionResponse] = []
+    glossary: list[ImportedGlossaryEntryResponse] = []
+    skipped_glossary: list[SkippedGlossaryEntryResponse] = []
     # Spec 59: how many images (map backgrounds and Section images included)
     # the files brought and how many were stored. None for older jobs.
     images: ImageCountResponse | None = None
@@ -402,6 +446,21 @@ async def preview_import(
         unavailable_tags=list(plan.unavailable_tags),
         maps=[_preview_map(m) for m in plan.maps],
         sections=[_preview_section(s) for s in plan.sections],
+        glossary=[_preview_glossary_entry(g) for g in plan.glossary],
+        glossary_left_out=plan.glossary_left_out,
+    )
+
+
+def _preview_glossary_entry(planned: PlannedGlossaryEntry) -> PreviewGlossaryEntryResponse:
+    """A planned Glossary entry as the preview shows it."""
+    return PreviewGlossaryEntryResponse(
+        key=planned.key,
+        file_name=planned.file_name,
+        term=planned.term,
+        aliases=list(planned.aliases),
+        existing_entry_id=planned.existing_id,
+        skipped=planned.skipped,
+        warnings=[_warning(w.code, w.count, w.names) for w in planned.warnings],
     )
 
 
@@ -495,6 +554,8 @@ async def start_import(
         None if chosen.maps is None else frozenset(chosen.maps),
         None if chosen.sections is None else frozenset(chosen.sections),
         frozenset(chosen.page_cards),
+        None if chosen.glossary is None else frozenset(chosen.glossary),
+        frozenset(chosen.glossary_replace),
     )
     await _plan(session, room_id, importer, parsed, import_choices, locale)
 

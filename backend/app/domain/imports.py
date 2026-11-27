@@ -11,7 +11,7 @@ that still exists here (Decision 5)."""
 
 import uuid
 from collections.abc import Callable, Collection, Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, field, replace
 from datetime import datetime, timedelta
 from enum import StrEnum
 from typing import Any
@@ -22,11 +22,23 @@ from app.domain.documents import (
     clean_subtitle,
 )
 from app.domain.errors import DomainError
+from app.domain.glossary import (
+    MAX_DEFINITION_LENGTH,
+    MAX_ENTRIES_PER_ROOM,
+    MAX_RELATED_DOCUMENTS,
+    TermRequiredError,
+    TermTooLongError,
+    TooManyAliasesError,
+    clean_aliases,
+    clean_term,
+    term_key,
+)
 from app.domain.import_files import (
     OBSIDIAN_KEY_PREFIX,
     ImportCannotReplaceError,
     ImportDocument,
     ImportFile,
+    ImportGlossaryEntry,
     ImportRefusedError,
     MentionRef,
     Text,
@@ -152,6 +164,14 @@ class ImportContext:
     # only (only their import brings Sections).
     room_id: uuid.UUID | None = None
     sections: tuple[Section, ...] = ()
+    # Spec 79c: whether the importer manages the Glossary (Administrator or
+    # Master), the Room's words (term and alias keys) with the entry holding
+    # each, the entries the importer sees by id, and how many entries the
+    # Room has. Read for a Glossary manager only.
+    can_manage_glossary: bool = False
+    glossary_words: Mapping[str, uuid.UUID] = field(default_factory=dict)
+    glossary_entries: Mapping[uuid.UUID, str] = field(default_factory=dict)
+    glossary_count: int = 0
 
 
 @dataclass(frozen=True)
@@ -167,6 +187,10 @@ class ImportChoices:
     maps: frozenset[str] | None = None
     sections: frozenset[str] | None = None
     page_cards: frozenset[str] | None = None
+    # Spec 79c: the keys of the Glossary entries to import (None = all) and,
+    # among them, those that replace the Room's entry with the same term.
+    glossary: frozenset[str] | None = None
+    glossary_replace: frozenset[str] = frozenset()
 
 
 @dataclass(frozen=True)
@@ -254,6 +278,52 @@ class ImportPlan:
     # Documents by the file's id, so its clocks point at them (the Master's
     # import only).
     clock_files: tuple[tuple[Mapping[str, Any], dict[str, uuid.UUID]], ...] = ()
+    # Spec 79c: the Glossary entries (selected ones, the skipped ones
+    # included), and how many the files hold that the importer may not bring.
+    glossary: tuple["PlannedGlossaryEntry", ...] = ()
+    glossary_left_out: int = 0
+
+
+class GlossarySkipReason(StrEnum):
+    """Why a Glossary entry of the file is not written (spec 79c):
+    `exists` (the Room has an entry with this term and the importer did not
+    choose to replace it), `taken` (the term is another entry's word, or one
+    the importer doesn't see, or an earlier entry of the import), `invalid`
+    (no term, or one over a limit), `limit` (the Room is full)."""
+
+    EXISTS = "exists"
+    TAKEN = "taken"
+    INVALID = "invalid"
+    LIMIT = "limit"
+
+
+@dataclass(frozen=True)
+class PlannedGlossaryEntry:
+    """A Glossary entry of the files (spec 79c Decisions 2 to 6): created
+    under a fresh `id`, or written onto the Room's entry with the same term
+    (`replaces`, under its `id`, which keeps its own visibility). `existing_id`
+    is that entry when the importer sees one; `skipped` says why it is not
+    written, else None. `definition` is in the stored format."""
+
+    key: str
+    file_name: str
+    id: uuid.UUID
+    term: str
+    aliases: tuple[str, ...]
+    definition: str
+    visibility: DocumentVisibility
+    highlight: bool
+    tag_ids: tuple[uuid.UUID, ...]
+    document_ids: tuple[uuid.UUID, ...]
+    existing_id: uuid.UUID | None
+    replaces: bool
+    skipped: GlossarySkipReason | None
+    warnings: tuple[ImportWarning, ...] = ()
+
+
+def glossary_key(file_index: int, entry_index: int) -> str:
+    """The key a client uses for a Glossary entry of an upload, like `map_key`."""
+    return f"{file_index}:glossary:{entry_index}"
 
 
 def document_key(file_index: int, document_index: int) -> str:
@@ -540,6 +610,7 @@ def plan_import(
     if chose and sum(len(document.images) for document in planned) > MAX_IMAGES:
         raise ImportRefusedError("errors.import.tooManyImages", max=MAX_IMAGES)
     sections = _plan_sections(files, context, choices, book)
+    glossary = _plan_glossary(files, context, choices, book, targets, new_id)
     return ImportPlan(
         documents=tuple(planned),
         new_tags=tuple(book.created.values()),
@@ -561,7 +632,171 @@ def plan_import(
         )
         if context.is_master
         else (),
+        glossary=glossary,
+        glossary_left_out=0
+        if context.can_manage_glossary
+        else sum(len(file.glossary) for file in files),
     )
+
+
+def _plan_glossary(
+    files: Sequence[ImportFile],
+    context: ImportContext,
+    choices: ImportChoices,
+    book: _TagBook,
+    targets: Mapping[tuple[int, str], tuple[uuid.UUID, str]],
+    new_id: Callable[[], uuid.UUID],
+) -> tuple[PlannedGlossaryEntry, ...]:
+    """The selected Glossary entries of every file (spec 79c), for a
+    Glossary manager only, in file order. A word is checked against the
+    Room's entries and the entries planned before it."""
+    if not context.can_manage_glossary or context.room_id is None:
+        return ()
+    claimed: dict[str, uuid.UUID] = dict(context.glossary_words)
+    room_left = MAX_ENTRIES_PER_ROOM - context.glossary_count
+    planned: list[PlannedGlossaryEntry] = []
+    for fi, file in enumerate(files):
+        for gi, raw in enumerate(file.glossary):
+            key = glossary_key(fi, gi)
+            if choices.glossary is not None and key not in choices.glossary:
+                continue
+            entry = _plan_glossary_entry(
+                file, fi, key, raw, context, choices, book, targets, claimed, new_id
+            )
+            if entry.skipped is None and not entry.replaces:
+                if room_left <= 0:
+                    entry = _skip_entry(entry, GlossarySkipReason.LIMIT)
+                else:
+                    room_left -= 1
+            if entry.skipped is None:
+                for word in [entry.term, *entry.aliases]:
+                    claimed[term_key(word)] = entry.id
+            planned.append(entry)
+    return tuple(planned)
+
+
+def _skip_entry(entry: PlannedGlossaryEntry, reason: GlossarySkipReason) -> PlannedGlossaryEntry:
+    """`entry`, not written for `reason`."""
+    return replace(entry, skipped=reason, replaces=False)
+
+
+def _plan_glossary_entry(
+    file: ImportFile,
+    file_index: int,
+    key: str,
+    raw: ImportGlossaryEntry,
+    context: ImportContext,
+    choices: ImportChoices,
+    book: _TagBook,
+    targets: Mapping[tuple[int, str], tuple[uuid.UUID, str]],
+    claimed: Mapping[str, uuid.UUID],
+    new_id: Callable[[], uuid.UUID],
+) -> PlannedGlossaryEntry:
+    """One Glossary entry: its term against the Room (Decision 3), its
+    aliases without the words other entries hold, its Tags and Documents
+    re-pointed (Decision 4) and its level (Decision 5)."""
+
+    def resolve(ref: MentionRef) -> tuple[MentionKind, uuid.UUID, str] | None:
+        if ref.kind is MentionKind.DOCUMENT:
+            target = targets.get((file_index, ref.key))
+            return None if target is None else (MentionKind.DOCUMENT, target[0], target[1])
+        if ref.kind is MentionKind.TAG:
+            tag = file.tags.get(ref.key)
+            found = book.lookup(tag.name if tag else ref.name)
+            return None if found is None else (MentionKind.TAG, found[0], found[1])
+        return None
+
+    level, selective = _level(raw.visibility, context)
+    definition = _render(raw.definition, resolve)
+    base = PlannedGlossaryEntry(
+        key=key,
+        file_name=file.name,
+        id=new_id(),
+        term=" ".join(raw.term.split()),
+        aliases=(),
+        definition=definition,
+        visibility=level,
+        highlight=raw.highlight,
+        tag_ids=(),
+        document_ids=(),
+        existing_id=None,
+        replaces=False,
+        skipped=None,
+    )
+    try:
+        term = clean_term(raw.term)
+        aliases = clean_aliases(raw.aliases)
+    except (TermRequiredError, TermTooLongError, TooManyAliasesError):
+        return _skip_entry(base, GlossarySkipReason.INVALID)
+    if len(definition) > MAX_DEFINITION_LENGTH:
+        return _skip_entry(base, GlossarySkipReason.INVALID)
+
+    holder = claimed.get(term_key(term))
+    existing_id: uuid.UUID | None = None
+    if holder is not None:
+        visible_term = context.glossary_entries.get(holder)
+        if visible_term is None or term_key(visible_term) != term_key(term):
+            return _skip_entry(base, GlossarySkipReason.TAKEN)
+        existing_id = holder
+    replaces = existing_id is not None and key in choices.glossary_replace
+    entry_id = existing_id if replaces and existing_id is not None else base.id
+
+    kept: list[str] = []
+    dropped: list[str] = []
+    seen = {term_key(term)}
+    for alias in aliases:
+        alias_key = term_key(alias)
+        owner = claimed.get(alias_key)
+        if alias_key in seen or (owner is not None and owner != entry_id):
+            dropped.append(alias)
+        else:
+            seen.add(alias_key)
+            kept.append(alias)
+
+    # A Glossary manager may create Tags too (both are the Administrator or
+    # the Master), so every name resolves.
+    tag_ids: list[uuid.UUID] = []
+    for tag_name in raw.tag_names:
+        tag_id = book.resolve(tag_name)
+        if tag_id is not None and tag_id not in tag_ids:
+            tag_ids.append(tag_id)
+    document_ids: list[uuid.UUID] = []
+    for document_key_ in raw.document_keys:
+        target = targets.get((file_index, document_key_))
+        document_id = target[0] if target is not None else _room_document(context, document_key_)
+        if document_id is not None and document_id not in document_ids:
+            document_ids.append(document_id)
+
+    warnings: list[ImportWarning] = []
+    if dropped:
+        warnings.append(ImportWarning("aliases_dropped", len(dropped), tuple(dropped)))
+    if selective and not replaces:
+        warnings.append(ImportWarning("selective_to_private", 1))
+    return PlannedGlossaryEntry(
+        key=key,
+        file_name=file.name,
+        id=entry_id,
+        term=term,
+        aliases=tuple(kept),
+        definition=definition,
+        visibility=level,
+        highlight=raw.highlight,
+        tag_ids=tuple(tag_ids),
+        document_ids=tuple(document_ids[:MAX_RELATED_DOCUMENTS]),
+        existing_id=existing_id,
+        replaces=replaces,
+        skipped=None if existing_id is None or replaces else GlossarySkipReason.EXISTS,
+        warnings=tuple(warnings),
+    )
+
+
+def _room_document(context: ImportContext, raw_id: str) -> uuid.UUID | None:
+    """The Room's Document with this id, if the importer sees it."""
+    try:
+        document_id = uuid.UUID(raw_id)
+    except ValueError:
+        return None
+    return document_id if document_id in context.existing else None
 
 
 def _plan_sections(

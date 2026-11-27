@@ -2843,3 +2843,273 @@ async def test_the_relational_link_flag_travels_through_export_copy_and_replace(
     assert {n["title"]: n["relational_link"] for n in after} == {
         n["title"]: n["id"] == flagged["id"] for n in before["notes"]
     }
+
+
+# --- Spec 79c: the Glossary --------------------------------------------------
+
+
+async def _glossary(client: AsyncClient, room: _Room) -> dict[str, Any]:
+    response = await client.get(f"{room.url}/glossary", headers=room.master)
+    assert response.status_code == 200, response.text
+    return {e["term"]: e for e in response.json()}
+
+
+async def test_a_room_export_carries_its_glossary_into_another_room(
+    db_session: AsyncSession,
+    make_token: Callable[..., str],
+    client: AsyncClient,
+    inline_jobs: None,
+) -> None:
+    """Decisions 2, 4 and 5: the entries come with their Tags matched or
+    created by name, their Documents and mentions re-pointed to the copies,
+    and Selective turned Private."""
+    room = await _room(client, make_token)
+    lore = await _post(client, f"{room.url}/tags", room.master, name="Lore")
+    castle = await _post(client, f"{room.url}/documents", room.master, name="Castle")
+    await _post(
+        client,
+        f"{room.url}/glossary",
+        room.master,
+        term="Mist",
+        aliases=["Fog"],
+        definition=f"Around #[Castle](doc:{castle['id']}).",
+        tag_ids=[lore["id"]],
+        document_ids=[castle["id"]],
+        visibility="room",
+    )
+    await _post(
+        client,
+        f"{room.url}/glossary",
+        room.master,
+        term="Strahd",
+        visibility="selective",
+        selective_user_ids=[room.player_id],
+        highlight=False,
+    )
+    exported = await _export(client, room, room.master, "json")
+    target = await _second_room(client, room)
+
+    preview = await _preview(client, target, target.master, ("room.json", exported))
+    assert preview.status_code == 200, preview.text
+    listed = preview.json()["glossary"]
+    assert [(g["term"], g["skipped"]) for g in listed] == [("Mist", None), ("Strahd", None)]
+    assert listed[1]["warnings"] == [{"code": "selective_to_private", "count": 1, "names": []}]
+
+    job = await _import(client, target, target.master, ("room.json", exported))
+
+    assert job["status"] == "done", job
+    assert sorted(g["term"] for g in job["result"]["glossary"]) == ["Mist", "Strahd"]
+    entries = await _glossary(client, target)
+    copy = (await _documents(client, target))["Castle"]
+    mist = entries["Mist"]
+    assert mist["aliases"] == ["Fog"]
+    assert [d["id"] for d in mist["documents"]] == [copy["id"]]
+    assert mist["tag_ids"] == [(await _tags(client, target))["Lore"]["id"]]
+    assert f"doc:{copy['id']}" in mist["definition"]
+    assert entries["Strahd"]["visibility"] == "private"
+    assert entries["Strahd"]["highlight"] is False
+
+
+async def test_an_existing_term_is_skipped_or_replaced_as_chosen(
+    db_session: AsyncSession,
+    make_token: Callable[..., str],
+    client: AsyncClient,
+    inline_jobs: None,
+) -> None:
+    """Decision 3: Salta by default, Sostituisci on request (the entry keeps
+    its own visibility); an alias another entry holds is dropped."""
+    room = await _room(client, make_token)
+    existing = await _post(
+        client,
+        f"{room.url}/glossary",
+        room.master,
+        term="Mist",
+        definition="Old.",
+        visibility="master",
+    )
+    await _post(client, f"{room.url}/glossary", room.master, term="Haze")
+    file = _json_file(
+        {"name": "Inn"},
+        glossary=[{"term": "mist", "aliases": ["Haze", "Fog"], "definition": "New."}],
+    )
+
+    preview = (await _preview(client, room, room.master, file)).json()["glossary"]
+    assert preview[0]["skipped"] == "exists"
+    assert preview[0]["existing_entry_id"] == existing["id"]
+    assert preview[0]["aliases"] == ["Fog"]
+    assert preview[0]["warnings"][0] == {"code": "aliases_dropped", "count": 1, "names": ["Haze"]}
+
+    skipped = await _job(
+        client, room, room.master, await _start_with(client, room, room.master, file)
+    )
+    assert skipped["result"]["skipped_glossary"] == [{"term": "mist", "reason": "exists"}]
+    assert (await _glossary(client, room))["Mist"]["definition"] == "Old."
+
+    replaced = await _job(
+        client,
+        room,
+        room.master,
+        await _start_with(client, room, room.master, file, glossary_replace=["0:glossary:0"]),
+    )
+    assert replaced["result"]["glossary"] == [{"id": existing["id"], "term": "mist"}]
+    entry = (await _glossary(client, room))["mist"]
+    assert entry["id"] == existing["id"]
+    assert entry["definition"] == "New."
+    assert entry["aliases"] == ["Fog"]
+    assert entry["visibility"] == "master"
+
+
+async def test_a_players_import_brings_no_glossary(
+    db_session: AsyncSession,
+    make_token: Callable[..., str],
+    client: AsyncClient,
+    inline_jobs: None,
+) -> None:
+    """Decision 1: only an Administrator or the Master brings entries."""
+    room = await _room(client, make_token)
+    await client.patch(room.url, json={"players_can_create_documents": True}, headers=room.master)
+    file = _json_file({"name": "Inn"}, glossary=[{"term": "Mist"}, {"term": "Fog"}])
+
+    preview = (await _preview(client, room, room.player, file)).json()
+    job = await _job(client, room, room.player, await _start_with(client, room, room.player, file))
+
+    assert preview["glossary"] == [] and preview["glossary_left_out"] == 2
+    assert job["result"]["glossary"] == []
+    assert await _glossary(client, room) == {}
+
+
+async def test_glossary_entries_that_cannot_be_written_are_listed(
+    db_session: AsyncSession,
+    make_token: Callable[..., str],
+    client: AsyncClient,
+    inline_jobs: None,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Decision 6 and the words the importer can't see: invalid, a word
+    taken (by a hidden entry, another entry's alias, an earlier entry of
+    the file), past the Room's cap, and unticked ones not even listed."""
+    room = await _room(client, make_token)
+    promoted = await client.patch(
+        f"{room.url}/members/{room.player_id}", json={"is_admin": True}, headers=room.master
+    )
+    assert promoted.status_code == 200
+    await _post(client, f"{room.url}/glossary", room.master, term="Secret", visibility="master")
+    await _post(client, f"{room.url}/glossary", room.master, term="Mist", aliases=["Fog"])
+    file = _json_file(
+        {"name": "Inn", "id": "d1"},
+        tags=[{"id": "t1", "name": "New tag"}],
+        glossary=[
+            {"term": "   "},
+            {"term": "x" * 121},
+            {"term": "Secret"},
+            {"term": "fog"},
+            {"term": "Wolf", "document_ids": ["d1", "nope", str(uuid.uuid4())]},
+            {"term": "WOLF"},
+            {"term": "Bat"},
+            {"term": "Unticked"},
+            {"term": "Raven", "visibility": "weird", "tag_ids": ["t1"]},
+        ],
+    )
+    monkeypatch.setattr("app.domain.imports.MAX_ENTRIES_PER_ROOM", 4)
+
+    preview = (await _preview(client, room, room.player, file)).json()["glossary"]
+    assert [(g["term"], g["skipped"]) for g in preview] == [
+        ("", "invalid"),
+        ("x" * 121, "invalid"),
+        ("Secret", "taken"),
+        ("fog", "taken"),
+        ("Wolf", None),
+        ("WOLF", "taken"),
+        ("Bat", None),
+        ("Unticked", "limit"),
+        ("Raven", "limit"),
+    ]
+    chosen = [g["key"] for g in preview if g["term"] not in ("Unticked", "Bat")]
+    job = await _job(
+        client,
+        room,
+        room.player,
+        await _start_with(client, room, room.player, file, glossary=chosen),
+    )
+
+    assert [g["term"] for g in job["result"]["glossary"]] == ["Wolf", "Raven"]
+    entries = await _glossary(client, room)
+    inn = (await _documents(client, room))["Inn"]
+    assert [d["id"] for d in entries["Wolf"]["documents"]] == [inn["id"]]
+    assert entries["Raven"]["visibility"] == "room"
+    assert entries["Raven"]["tag_ids"] == [(await _tags(client, room))["New tag"]["id"]]
+    assert "Unticked" not in entries and "Bat" not in entries
+
+
+async def test_glossary_definitions_keep_tag_mentions_and_limits(
+    db_session: AsyncSession,
+    make_token: Callable[..., str],
+    client: AsyncClient,
+    inline_jobs: None,
+) -> None:
+    """A Tag mention is re-pointed by name, a member mention becomes plain
+    text, a definition over the limit is skipped, an unreadable list refuses
+    the file."""
+    room = await _room(client, make_token)
+    lore = await _post(client, f"{room.url}/tags", room.master, name="Lore")
+    file = _json_file(
+        {"name": "Inn"},
+        tags=[{"id": "t1", "name": "Lore"}],
+        glossary=[
+            {
+                "term": "Mist",
+                "definition": [
+                    "See ",
+                    {"type": "mention", "kind": "tag", "target_id": "t1", "name": "Lore"},
+                    " and ",
+                    {"type": "mention", "kind": "tag", "target_id": "t9", "name": "Gone"},
+                    " with ",
+                    {"type": "mention", "kind": "user", "target_id": "u1", "name": "Ara"},
+                ],
+            },
+            {"term": "Long", "definition": "x" * 10_001},
+        ],
+    )
+
+    job = await _import(client, room, room.master, file)
+
+    assert [g["term"] for g in job["result"]["glossary"]] == ["Mist"]
+    assert job["result"]["skipped_glossary"] == [{"term": "Long", "reason": "invalid"}]
+    definition = (await _glossary(client, room))["Mist"]["definition"]
+    assert f"tag:{lore['id']}" in definition
+    assert "#Gone" in definition and "@Ara" in definition
+    refused = await _preview(client, room, room.master, _json_file({"name": "Inn"}, glossary=[1]))
+    assert refused.status_code == 422
+
+
+async def test_the_room_changing_while_a_glossary_import_waits(
+    db_session: AsyncSession,
+    make_token: Callable[..., str],
+    client: AsyncClient,
+    held_jobs: list[Coroutine[Any, Any, None]],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The job plans again against the Room as it is: the entry to replace
+    is gone (so it is created), a word defined meanwhile is there, and the
+    cap reached meanwhile is checked under the Room's lock."""
+    room = await _room(client, make_token)
+    mist = await _post(client, f"{room.url}/glossary", room.master, term="Mist")
+    file = _json_file(
+        {"name": "Inn"},
+        glossary=[{"term": "Mist"}, {"term": "Wolf"}, {"term": "Bat"}, {"term": "Owl"}],
+    )
+    started = await _start_with(client, room, room.master, file, glossary_replace=["0:glossary:0"])
+    deleted = await client.delete(f"{room.url}/glossary/{mist['id']}", headers=room.master)
+    assert deleted.status_code == 204
+    await _post(client, f"{room.url}/glossary", room.master, term="Wolf")
+    monkeypatch.setattr("app.api.import_job.MAX_ENTRIES_PER_ROOM", 2)
+
+    await held_jobs.pop()
+
+    job = await _job(client, room, room.master, started)
+    assert [g["term"] for g in job["result"]["glossary"]] == ["Mist"]
+    assert job["result"]["skipped_glossary"] == [
+        {"term": "Wolf", "reason": "exists"},
+        {"term": "Bat", "reason": "limit"},
+        {"term": "Owl", "reason": "limit"},
+    ]
