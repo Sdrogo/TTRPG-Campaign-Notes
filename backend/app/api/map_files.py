@@ -17,7 +17,7 @@ from app.api.access import require_membership, visible_documents
 from app.api.errors import http_error, translated_error
 from app.api.geographic_maps import GeoDetailResponse, geo_detail
 from app.api.rate_limits import Group, limit
-from app.api.relationship_maps import get_visible_map, insert_map
+from app.api.relationship_maps import get_visible_map, insert_map, legend_for_viewer
 from app.api.validation import UniqueIds
 from app.auth.dependencies import CurrentUserDep
 from app.db import documents_repo, geographic_maps_repo, relationship_maps_repo, rooms_repo
@@ -41,6 +41,7 @@ from app.domain.map_import import (
     export_map_file,
     plan_map_import,
 )
+from app.domain.map_legends import hidden_colors
 from app.domain.models import DocumentVisibility, Membership
 from app.domain.relationship_maps import (
     AreaLabels,
@@ -124,6 +125,7 @@ class MapFileBody(_FileModel):
     description: str | None = None
     plane: FilePlane
     area_labels: AreaLabels | None = None
+    color_legend: dict[MapColor, str] = {}
     areas: list[FileArea] = []
     pins: list[FilePin] = []
     links: list[FileLink] = []
@@ -214,6 +216,7 @@ def _map_file(body: MapFileBody) -> MapFile:
         pins=[ImportedPin(**pin.model_dump()) for pin in body.pins],
         links=[ImportedLink(**link.model_dump()) for link in body.links],
         area_labels=body.area_labels,
+        color_legend=body.color_legend,
     )
 
 
@@ -300,9 +303,14 @@ async def import_map(
         plane_width=planned.plane_width,
         plane_height=planned.plane_height,
     )
-    if map_file.area_labels is not None:
+    if map_file.area_labels is not None or planned.color_legend:
         relationship_map = await relationship_maps_repo.update_map(
-            session, replace(relationship_map, area_labels=map_file.area_labels)
+            session,
+            replace(
+                relationship_map,
+                area_labels=map_file.area_labels or relationship_map.area_labels,
+                color_legend=planned.color_legend,
+            ),
         )
     await geographic_maps_repo.save_geo_board(session, relationship_map.id, planned.plan)
     return await geo_detail(session, relationship_map, grants, membership)
@@ -335,6 +343,11 @@ async def export_map(
         membership,
     )
     shown = visible_geo_board(board, {document.id for document in documents}, membership.role)
+    meanings, _ = await legend_for_viewer(
+        session,
+        relationship_map,
+        hidden_colors({a.color for a in board.areas}, {a.color for a in shown.areas}),
+    )
     return export_map_file(
         relationship_map.name,
         relationship_map.description,
@@ -343,4 +356,5 @@ async def export_map(
         shown,
         {document.id: document.name for document in documents},
         relationship_map.area_labels,
+        meanings,
     )

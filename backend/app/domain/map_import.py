@@ -38,6 +38,7 @@ from app.domain.geographic_maps import (
     polygon_surface,
     share_document_colors,
 )
+from app.domain.map_legends import clean_meanings
 from app.domain.models import Document, RoomRole
 from app.domain.relationship_maps import AreaLabels, ArrowDirection, MapColor, MapLimitError
 
@@ -113,6 +114,7 @@ class MapFile:
     pins: Sequence[ImportedPin] = ()
     links: Sequence[ImportedLink] = ()
     area_labels: AreaLabels | None = None
+    color_legend: Mapping[MapColor, str] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
@@ -140,13 +142,14 @@ class ImportReport:
 @dataclass(frozen=True)
 class MapImport:
     """An import ready to be written: the new map's plane and content (with
-    fresh ids, checked as a save of the importer's would be) and its
-    report."""
+    fresh ids, checked as a save of the importer's would be), its area color
+    meanings (spec 77b Decision 9, cleaned) and its report."""
 
     plane_width: int
     plane_height: int
     plan: GeoBoardPlan
     report: ImportReport
+    color_legend: Mapping[MapColor, str] = field(default_factory=dict)
 
 
 @dataclass
@@ -364,6 +367,7 @@ def plan_map_import(
             repeated=tuple(matches.repeated),
             recolored=tuple(recolored),
         ),
+        color_legend=clean_meanings(map_file.color_legend),
     )
 
 
@@ -419,12 +423,15 @@ def export_map_file(
     shown: GeoBoard,
     document_names: Mapping[uuid.UUID, str],
     area_labels: AreaLabels | None = None,
+    color_legend: Mapping[MapColor, str] | None = None,
 ) -> dict[str, Any]:
     """The map as an import file (Decision 10), from `shown`, the map as the
     viewer sees it (`visible_geo_board`); `document_names` holds the names of
     the Documents on it. Keys are made from the names, so importing the file
     again gives back the same map. `area_labels` is written only when it
-    isn't the default (spec 77 Decision 5)."""
+    isn't the default (spec 77 Decision 5), `color_legend` (the area color
+    meanings, already filtered for the viewer, spec 77b) only when not
+    empty."""
     taken: set[str] = set()
     keys: dict[uuid.UUID, str] = {}
 
@@ -489,6 +496,11 @@ def export_map_file(
         "description": description,
         "plane": {"width": plane_width, "height": plane_height},
         **({"area_labels": area_labels.value} if area_labels == AreaLabels.LARGEST else {}),
+        **(
+            {"color_legend": {color.value: meaning for color, meaning in color_legend.items()}}
+            if color_legend
+            else {}
+        ),
         "areas": areas,
         "pins": pins,
         "links": links,

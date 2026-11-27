@@ -28,12 +28,16 @@ from app.api.image_uploads import (
 )
 from app.api.rate_limits import Group, limit
 from app.api.relationship_maps import (
+    LegendBody,
+    LegendPresetRef,
     MapDocumentResponse,
     MapResponse,
     get_editable_map,
     get_managed_map,
     get_visible_map,
+    legend_for_viewer,
     map_summary,
+    store_with_legend,
     visible_document_ids,
 )
 from app.api.validation import UniqueIds
@@ -63,6 +67,7 @@ from app.domain.geographic_maps import (
     plan_geo_board_edit,
     visible_geo_board,
 )
+from app.domain.map_legends import hidden_colors
 from app.domain.models import Document, DocumentImage, Membership
 from app.domain.relationship_maps import (
     MAX_LABEL_OFFSET,
@@ -163,19 +168,23 @@ class GeoRequest(BaseModel):
     """The whole map as the editor sees it: new items with ids the client
     made up, the others with their own ids. What the editor sees and leaves
     out is deleted; what they can't see stays as it is. `base_revision` as
-    on a free board (spec 42 Decision 7)."""
+    on a free board (spec 42 Decision 7). `legend`, when sent, replaces the
+    map's area color legend (spec 77b, as `BoardRequest.legend`)."""
 
     base_revision: int | None = None
     areas: list[AreaBody] = []
     pins: list[PinBody] = []
     links: list[LinkBody] = []
+    legend: LegendBody | None = None
 
 
 class GeoChangesRequest(BaseModel):
     """What an editor changed on the map since their last save (spec 43
     Decision 1), as `BoardChangesRequest` on a free board: every created or
     changed area, pin and link, whole, `created_ids` naming the new ones,
-    `deleted_ids` what they removed. `base_revision` is informative only."""
+    `deleted_ids` what they removed. `base_revision` is informative only.
+    `legend`, when sent, replaces the map's area color legend (spec 77b);
+    omitted, it stays as it is."""
 
     base_revision: int | None = None
     areas: list[AreaBody] = []
@@ -183,16 +192,21 @@ class GeoChangesRequest(BaseModel):
     links: list[LinkBody] = []
     created_ids: UniqueIds = []
     deleted_ids: UniqueIds = []
+    legend: LegendBody | None = None
 
 
 class GeoDetailResponse(MapResponse):
     """A geographic map with its background (a short-lived signed link) and
-    its content as the requester sees it (Invariant 1)."""
+    its content as the requester sees it (Invariant 1). `color_legend` and
+    `legend_preset` as on a free map's detail, for the area colors (spec
+    77b): never the meaning of a color only hidden areas use."""
 
     background_url: str | None
     areas: list[AreaResponse]
     pins: list[PinResponse]
     links: list[LinkBody]
+    color_legend: dict[MapColor, str] = {}
+    legend_preset: LegendPresetRef | None = None
 
 
 class BackgroundFromUrlRequest(BaseModel):
@@ -290,9 +304,16 @@ async def geo_detail(
     summary = map_summary(
         relationship_map, grants, viewer, geo_document_count(shown, visible.keys())
     )
+    meanings, preset_ref = await legend_for_viewer(
+        session,
+        relationship_map,
+        hidden_colors({a.color for a in board.areas}, {a.color for a in shown.areas}),
+    )
     return GeoDetailResponse(
         **summary.model_dump(),
         background_url=background,
+        color_legend=meanings,
+        legend_preset=preset_ref,
         areas=[
             AreaResponse(
                 id=area.id,
@@ -458,9 +479,7 @@ async def save_geo(
     )
     _ensure_geographic(relationship_map, locale)
     await apply_geo_board(session, relationship_map, membership, body, locale)
-    updated = await relationship_maps_repo.update_map(
-        session, replace(relationship_map, updated_at=_now())
-    )
+    updated = await store_with_legend(session, relationship_map, body.legend, membership, locale)
     await push_map(session, updated, grants)
     return await geo_detail(session, updated, grants, membership)
 
@@ -485,9 +504,7 @@ async def save_geo_changes(
     )
     _ensure_geographic(relationship_map, locale)
     await apply_geo_board(session, relationship_map, membership, body, locale)
-    updated = await relationship_maps_repo.update_map(
-        session, replace(relationship_map, updated_at=_now())
-    )
+    updated = await store_with_legend(session, relationship_map, body.legend, membership, locale)
     await push_map(session, updated, grants)
     return await geo_detail(session, updated, grants, membership)
 

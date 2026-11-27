@@ -63,7 +63,7 @@ from app.domain.export import (
 )
 from app.domain.geographic_maps import GeoBoard, placed_document_ids, visible_geo_board
 from app.domain.landing_transfer import section_to_json
-from app.domain.map_legends import effective_meanings
+from app.domain.map_legends import effective_meanings, hidden_colors, meanings_for_viewer
 from app.domain.map_transfer import map_to_json
 from app.domain.models import DocumentVisibility, Membership, Room
 from app.domain.relationship_maps import (
@@ -426,14 +426,20 @@ async def export_maps(
                 for card in board.cards
             ],
         )
+        whole_geo = geo.get(relationship_map.id, GeoBoard())
+        shown_geo = visible_geo_board(whole_geo, visible, viewer.role)
+        # Spec 77b Decision 3: no meaning for a color only hidden areas use.
+        hidden = hidden_colors(
+            {a.color for a in whole_geo.areas}, {a.color for a in shown_geo.areas}
+        )
         result.append(
             map_to_json(
                 relationship_map,
                 board,
-                visible_geo_board(geo.get(relationship_map.id, GeoBoard()), visible, viewer.role),
+                shown_geo,
                 backgrounds.get(relationship_map.background_path or ""),
                 [d for d in linked[relationship_map.id] if d in in_file],
-                effective_meanings(relationship_map, presets),
+                meanings_for_viewer(effective_meanings(relationship_map, presets), hidden),
             )
         )
     return result

@@ -1,6 +1,8 @@
-"""Relation color legends of the free maps (spec 68): a meaning per palette
-color, either the map's own or a Room preset the map stays linked to
-(Decision 20). Meanings are plain text written by the users, never
+"""Color legends (spec 68): a meaning per palette color, either the map's
+own or a Room preset the map stays linked to (Decision 20). A free map's
+legend tells its relation colors, a geographic map's its area colors (spec
+77b); each preset is of one kind and serves only maps of that kind
+(77b Decision 8). Meanings are plain text written by the users, never
 translated (Decision 2).
 
 Who may do what: a map's meanings change with its board, so whoever edits
@@ -10,13 +12,14 @@ the board (spec 42) changes them, links the map to a preset or unlinks it
 (Decision 25)."""
 
 import uuid
-from collections.abc import Mapping
+from collections.abc import Collection, Mapping
 from dataclasses import dataclass
 from datetime import datetime
+from enum import StrEnum
 
 from app.domain.errors import DomainError
 from app.domain.models import RoomRole
-from app.domain.relationship_maps import MapColor, RelationshipMap, clean_line
+from app.domain.relationship_maps import MapColor, MapKind, RelationshipMap, clean_line
 
 MAX_MEANING_LENGTH = 40
 MAX_PRESET_NAME_LENGTH = 60
@@ -40,10 +43,26 @@ class TooManyPresetsError(DomainError):
     """The Room already has `MAX_PRESETS_PER_ROOM` presets (Decision 19)."""
 
 
+class LegendKind(StrEnum):
+    """What a legend's colors color: the relations of a free map or the
+    areas of a geographic one (spec 77b Decision 8)."""
+
+    RELATIONS = "relations"
+    AREAS = "areas"
+
+
+def legend_kind(map_kind: MapKind) -> LegendKind:
+    """The kind of legend a map of `map_kind` has, and of the presets it may
+    link to (spec 77b Decision 8)."""
+    return LegendKind.AREAS if map_kind == MapKind.GEOGRAPHIC else LegendKind.RELATIONS
+
+
 @dataclass(frozen=True)
 class LegendPreset:
-    """A Room's named set of relation color meanings (Decision 19). Maps
-    linked to it show `entries` live (Decision 20)."""
+    """A Room's named set of color meanings (Decision 19), for relations or
+    for areas (`kind`, spec 77b). Maps linked to it show `entries` live
+    (Decision 20). Its name is unique in the Room among presets of its
+    kind."""
 
     id: uuid.UUID
     room_id: uuid.UUID
@@ -51,6 +70,7 @@ class LegendPreset:
     entries: Mapping[MapColor, str]
     created_at: datetime
     updated_at: datetime
+    kind: LegendKind = LegendKind.RELATIONS
 
 
 def clean_meanings(meanings: Mapping[MapColor, str]) -> dict[MapColor, str]:
@@ -101,3 +121,35 @@ def effective_meanings(
     if preset_id is not None and preset_id in presets:
         return dict(presets[preset_id].entries)
     return dict(relationship_map.color_legend)
+
+
+def hidden_colors(
+    all_colors: Collection[MapColor], shown_colors: Collection[MapColor]
+) -> set[MapColor]:
+    """The area colors a viewer must not read a meaning for (spec 77b
+    Decision 3): those of areas on the map (`all_colors`) that no area they
+    see (`shown_colors`) uses. A meaning for a color no area uses is not
+    hidden: it points at nothing."""
+    return set(all_colors) - set(shown_colors)
+
+
+def meanings_for_viewer(
+    meanings: Mapping[MapColor, str], hidden: Collection[MapColor]
+) -> dict[MapColor, str]:
+    """`meanings` without those of the `hidden` colors (spec 77b Decision
+    3), in palette order."""
+    return {color: meaning for color, meaning in meanings.items() if color not in hidden}
+
+
+def keep_hidden_meanings(
+    sent: Mapping[MapColor, str],
+    current: Mapping[MapColor, str],
+    hidden: Collection[MapColor],
+) -> dict[MapColor, str]:
+    """The meanings an editor's save leaves on a geographic map: what they
+    sent for the colors they see, and the current meanings of the `hidden`
+    colors, which they never received and so can't have meant to change
+    (spec 77b Decision 3, as the board keeps what they can't see)."""
+    kept = {color: meaning for color, meaning in sent.items() if color not in hidden}
+    kept.update({color: meaning for color, meaning in current.items() if color in hidden})
+    return {color: kept[color] for color in MapColor if color in kept}
