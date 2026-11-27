@@ -340,6 +340,23 @@
       "try": "Prova",
       "sample": "Ecco come suona questa voce mentre legge i tuoi appunti."
     },
+    "palette": {
+      "title": "Colori delle mappe",
+      "description": "La tavolozza con cui vedi mappe, legende, Clock e Sessione 0. Se distingui male alcuni colori, scegli quella adatta: i colori salvati non cambiano.",
+      "note": "Ognuno vede la propria tavolozza, ma ogni colore mantiene il suo nome: il \"rosso\" di una relazione è il rosso per tutti. Nella legenda, un clic su un significato evidenzia le relazioni di quel colore.",
+      "names": {
+        "standard": "Standard",
+        "protan": "Protanopia (rosso)",
+        "deutan": "Deuteranopia (verde)",
+        "tritan": "Tritanopia (blu)"
+      },
+      "hints": {
+        "standard": "I colori di sempre",
+        "protan": "Per chi vede poco il rosso",
+        "deutan": "Per chi vede poco il verde, il caso più comune",
+        "tritan": "Per chi vede poco il blu"
+      }
+    },
     "privacy": {
       "title": "I tuoi dati",
       "description": "Scarica una copia di tutto ciò che l'app conserva su di te, oppure elimina il tuo account.",

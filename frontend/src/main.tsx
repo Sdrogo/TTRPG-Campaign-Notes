@@ -22,9 +22,14 @@ import './index.css';
 // strings (a language that isn't bundled is fetched), so every component has them.
 import { i18nReady } from './i18n';
 import { theme } from './theme/theme';
+import { applyPalette, readStoredPalette } from './lib/palette';
 import App from './App.tsx';
 
 const queryClient = new QueryClient();
+
+// The map palette last used in this browser (spec 78), before the first paint;
+// the account's own choice replaces it once it loads (`useAccount`).
+applyPalette(readStoredPalette());
 
 void i18nReady.then(() => {
   createRoot(document.getElementById('root')!).render(

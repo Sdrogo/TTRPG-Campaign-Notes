@@ -1,3 +1,4 @@
+import { applyPalette, currentPalette } from '../../lib/palette';
 import { waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { apiDownload, apiFetch } from '../../lib/apiClient';
@@ -51,7 +52,18 @@ describe('useAccount', () => {
       bio: null,
       avatarUrl: 'http://a/v.webp',
       appAdmin: false,
+      colorPalette: 'standard',
     });
+  });
+
+  it("draws the account's map palette (spec 78)", async () => {
+    fetchMock.mockResolvedValue(rawAccount({ color_palette: 'tritan' }));
+
+    const { result } = renderHookWithProviders(() => useAccount(true));
+
+    await waitFor(() => expect(result.current.data?.colorPalette).toBe('tritan'));
+    await waitFor(() => expect(currentPalette()).toBe('tritan'));
+    applyPalette('standard');
   });
 
   it('marks an app admin', async () => {

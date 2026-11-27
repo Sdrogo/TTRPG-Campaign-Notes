@@ -22,6 +22,7 @@ import { FriendsSection } from '../components/account/FriendsSection';
 import { RoomInvitationsSection } from '../components/account/RoomInvitationsSection';
 import { RevealsSection } from '../components/account/RevealsSection';
 import { SpeechSection } from '../components/account/SpeechSection';
+import { ColorPaletteSection } from '../components/account/ColorPaletteSection';
 import { PrivacySection } from '../components/account/PrivacySection';
 import type { AccountProfile } from '../types/profile';
 import { useTranslation } from 'react-i18next';
@@ -137,6 +138,8 @@ function AccountContent({ profile }: { profile: AccountProfile }) {
       <FriendsSection />
 
       <SpeechSection />
+
+      <ColorPaletteSection value={profile.colorPalette} />
 
       <AccountSection title={t('account.access.title')}>
         <Grid gap={{ base: 'md', md: 'xl' }} align="flex-end">

@@ -279,7 +279,11 @@ async def test_export_holds_the_callers_data_and_nothing_hidden_from_them(
     player = _user(make_token, email="player@example.com")
     room = await _room(client, master, "Barovia")
     await _join(client, room, master, player)
-    await client.patch("/account", json={"display_name": "Ireena"}, headers=player.headers)
+    await client.patch(
+        "/account",
+        json={"display_name": "Ireena", "color_palette": "deutan"},
+        headers=player.headers,
+    )
     await client.patch("/account", json={"display_name": "The DM"}, headers=master.headers)
 
     open_doc = await _document(client, room, master, "Village")
@@ -304,6 +308,7 @@ async def test_export_holds_the_callers_data_and_nothing_hidden_from_them(
     assert data["format_version"] == 1
     assert data["profile"]["email"] == "player@example.com"
     assert data["profile"]["display_name"] == "Ireena"
+    assert data["profile"]["color_palette"] == "deutan"
     assert [(r["name"], r["role"]) for r in data["rooms"]] == [("Barovia", "player")]
     assert [(d["name"], d["owner"], d["created_by_you"]) for d in data["documents"]] == [
         ("My journal", True, True)

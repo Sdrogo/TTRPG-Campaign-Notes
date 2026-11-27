@@ -104,7 +104,7 @@ describe('RetroColumn', () => {
   it('wears its colour, which the Master changes from its menu', async () => {
     const { act, user } = renderBoard(<RetroColumn column={first} index={0} count={2} open />, master);
     const frame = screen.getByRole('heading', { name: 'Lo vogliamo al tavolo' }).closest('.sz-column') as HTMLElement;
-    expect(frame.style.getPropertyValue('--sz-color')).toBe('var(--mantine-color-green-5)');
+    expect(frame.style.getPropertyValue('--sz-color')).toBe('var(--palette-green)');
 
     await user.click(screen.getByRole('button', { name: 'Azioni della colonna Lo vogliamo al tavolo' }));
     await user.click(await screen.findByRole('menuitem', { name: 'Colore' }));
@@ -271,7 +271,7 @@ describe('LinesVeilsColumn', () => {
   // Spec 46c Decision 6: the Master writes a limit directly, published at once.
   it('lets the Master write in it directly', async () => {
     const { act, user } = renderBoard(<LinesVeilsColumn column={lines} />, master);
-    expect(frameOf('Linee').style.getPropertyValue('--sz-color')).toBe('var(--accent-strong)');
+    expect(frameOf('Linee').style.getPropertyValue('--sz-color')).toBe('var(--palette-red)');
     await user.click(screen.getByRole('button', { name: 'Aggiungi' }));
     expect(screen.queryByText('Ancora nessun post-it.')).not.toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Annulla' }));

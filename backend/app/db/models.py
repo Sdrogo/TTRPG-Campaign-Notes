@@ -202,6 +202,9 @@ class UserRow(Base):
     avatar_path: Mapped[str | None] = mapped_column(String(500))
     # Set once the Google name/picture have been copied in as defaults.
     profile_prefilled_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    # The map palette this user sees (spec 78): 'protan', 'deutan', 'tritan';
+    # null is the standard palette. Only the drawing changes, never stored colors.
+    color_palette: Mapped[str | None] = mapped_column(String(10))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 

@@ -85,6 +85,7 @@ async def test_new_user_gets_an_empty_profile_with_their_token_email(
         "pronouns": None,
         "bio": None,
         "avatar_url": None,
+        "color_palette": None,
     }
 
 
@@ -120,6 +121,33 @@ async def test_partial_update_leaves_other_fields_and_blank_clears(
 
     assert body["display_name"] == "Ismark"
     assert body["pronouns"] is None
+
+
+async def test_user_picks_and_clears_a_color_palette(
+    db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
+) -> None:
+    headers = _headers(make_token, str(uuid.uuid4()), "a@example.com")
+    await client.patch("/account", json={"display_name": "Ismark"}, headers=headers)
+
+    body = (
+        await client.patch("/account", json={"color_palette": "deutan"}, headers=headers)
+    ).json()
+    assert body["color_palette"] == "deutan"
+    assert body["display_name"] == "Ismark"
+    assert (await client.get("/account", headers=headers)).json()["color_palette"] == "deutan"
+
+    body = (await client.patch("/account", json={"color_palette": None}, headers=headers)).json()
+    assert body["color_palette"] is None
+
+
+async def test_unknown_color_palette_is_rejected(
+    db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
+) -> None:
+    headers = _headers(make_token, str(uuid.uuid4()), "a@example.com")
+    response = await client.patch("/account", json={"color_palette": "sepia"}, headers=headers)
+
+    assert response.status_code == 422
+    assert (await client.get("/account", headers=headers)).json()["color_palette"] is None
 
 
 async def test_too_long_name_is_rejected(

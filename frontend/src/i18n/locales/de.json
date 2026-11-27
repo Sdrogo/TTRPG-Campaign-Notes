@@ -340,6 +340,23 @@
       "try": "Ausprobieren",
       "sample": "So klingt diese Stimme, wenn sie deine Notizen vorliest."
     },
+    "palette": {
+      "title": "Kartenfarben",
+      "description": "Die Palette, in der du Karten, Legenden, Uhren und Session 0 siehst. Wenn du manche Farben schlecht unterscheidest, wähle die passende: gespeicherte Farben ändern sich nicht.",
+      "note": "Alle sehen ihre eigene Palette, aber jede Farbe behält ihren Namen: das „Rot“ einer Beziehung ist für alle Rot. In der Legende hebt ein Klick auf eine Bedeutung die Beziehungen dieser Farbe hervor.",
+      "names": {
+        "standard": "Standard",
+        "protan": "Protanopie (Rot)",
+        "deutan": "Deuteranopie (Grün)",
+        "tritan": "Tritanopie (Blau)"
+      },
+      "hints": {
+        "standard": "Die gewohnten Farben",
+        "protan": "Bei Rotschwäche",
+        "deutan": "Bei Grünschwäche, der häufigsten Form",
+        "tritan": "Bei Blauschwäche"
+      }
+    },
     "privacy": {
       "title": "Deine Daten",
       "description": "Lade eine Kopie von allem herunter, was die App über dich speichert, oder lösche dein Konto.",

@@ -8,6 +8,7 @@ import {
   signIn,
   signOut,
 } from '../../lib/auth';
+import { applyPalette, currentPalette, readStoredPalette } from '../../lib/palette';
 
 const USER = { id: 'user-1', email: 'io@example.com', provider: 'google' };
 
@@ -159,6 +160,17 @@ describe('signOut', () => {
     await expect(getSession()).resolves.toBeNull();
   });
 
+  it("puts the map palette back to standard, so the next person doesn't get it (spec 78)", async () => {
+    stubFetch(refreshAnswer('token-1'), answer(204));
+    await getSession();
+    applyPalette('deutan');
+
+    await signOut();
+
+    expect(currentPalette()).toBe('standard');
+    expect(readStoredPalette()).toBe('standard');
+  });
+
   it('throws and keeps the session when the backend refuses', async () => {
     stubFetch(refreshAnswer('token-1'), answer(403, { detail: 'Bad origin' }));
     await getSession();
@@ -177,5 +189,13 @@ describe('forgetSession', () => {
 
     await expect(getSession()).resolves.toBeNull();
     expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('puts the map palette back to standard (spec 78)', () => {
+    applyPalette('tritan');
+
+    forgetSession();
+
+    expect(currentPalette()).toBe('standard');
   });
 });

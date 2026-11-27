@@ -11,6 +11,7 @@ from app.domain.profiles import (
     MAX_PRONOUNS_LENGTH,
     ProfileChanges,
     ProfileFieldTooLongError,
+    UnknownColorPaletteError,
     google_avatar_source,
     plan_avatar_path,
     plan_google_prefill,
@@ -128,3 +129,20 @@ def test_other_picture_urls_are_used_as_they_are() -> None:
         "https://example.com/me.png=s96-c"
     )
     assert google_avatar_source(None) is None
+
+
+def test_color_palette_is_set_and_cleared() -> None:
+    assert plan_profile_update(CURRENT, _changes(color_palette="deutan")).color_palette == "deutan"
+    with_palette = plan_profile_update(CURRENT, _changes(color_palette="tritan"))
+    assert plan_profile_update(with_palette, _changes(color_palette=None)).color_palette is None
+    assert plan_profile_update(with_palette, _changes(color_palette="")).color_palette is None
+
+
+def test_unknown_color_palette_is_rejected() -> None:
+    with pytest.raises(UnknownColorPaletteError):
+        plan_profile_update(CURRENT, _changes(color_palette="purple"))
+
+
+def test_other_changes_keep_the_color_palette() -> None:
+    with_palette = plan_profile_update(CURRENT, _changes(color_palette="protan"))
+    assert plan_profile_update(with_palette, _changes(bio="x")).color_palette == "protan"

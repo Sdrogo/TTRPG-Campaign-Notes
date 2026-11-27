@@ -79,7 +79,7 @@ describe('toSessionZero', () => {
       ['veils', 'gold'],
       ['lines', 'red'],
     ]);
-    expect(columnColor(board.retro[0])).toBe('var(--mantine-color-yellow-5)');
+    expect(columnColor(board.retro[0])).toBe('var(--palette-gold)');
     expect(board.timer).toEqual({
       state: 'paused',
       durationS: 300,

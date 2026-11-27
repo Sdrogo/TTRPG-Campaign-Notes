@@ -136,6 +136,7 @@
         "bio": "紹介文"
       },
       "fieldTooLong": "{field}は最大{max}文字です",
+      "unknownPalette": "不明なカラーパレットです",
       "deletionNotConfirmed": "アカウントの削除を確認するには、DELETEと入力してください",
       "successorNeeded": "アカウントを削除する前に、次のルームで他の人をMasterまたはAdminにしてください: {rooms}"
     },
