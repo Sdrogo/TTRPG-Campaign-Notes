@@ -158,8 +158,9 @@ accepted with "ok, implementa" the same day (see Answered).*
    (unknown value: 422). It follows the user to every device. The frontend
    also keeps the last value in `localStorage` (`ttrpg.palette`, try/catch)
    and applies it before the first paint, so the board doesn't flash the
-   standard colors while `/account` loads. Signed out (landing, demo):
-   the `localStorage` value, else Standard. One migration (one column).
+   standard colors while `/account` loads. Signing out (or a deleted
+   account) puts it back to Standard, so on a shared browser the next
+   person doesn't inherit it. One migration (one column).
    The GDPR data export (spec 31) includes it.
 7. **Non-color cues, already there and kept**: the legend rows name the
    color ("Rosso") as tooltip and accessible name, and clicking a row
