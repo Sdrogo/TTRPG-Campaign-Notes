@@ -455,6 +455,17 @@ html body[data-scroll-locked] {
   opacity: 0.55;
 }
 
+/* A map palette on the Account page (spec 78): only the border shows the
+   choice, so the swatches keep their real colors. */
+.palette-card {
+  transition: border-color 120ms ease;
+}
+
+.palette-card[data-checked] {
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 1px var(--accent-primary);
+}
+
 .pdf-style-card:not([data-checked]):hover,
 .pdf-style-card:not([data-checked]):focus-visible {
   opacity: 0.85;

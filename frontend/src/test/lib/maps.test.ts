@@ -323,12 +323,10 @@ describe('the wire shape', () => {
 });
 
 describe('looks', () => {
-  it('maps every color to a theme value', () => {
-    expect(colorValue('default')).toBe('var(--text-primary)');
-    expect(colorValue('gold')).toContain('yellow');
-    expect(colorValue('orange')).toBe('#FF9500');
-    expect(colorValue('lime')).toBe('#9ACD32');
-    for (const color of MAP_COLORS) expect(colorValue(color)).toBeTruthy();
+  it("draws every color with the viewer's palette variable (spec 78)", () => {
+    expect(colorValue('default')).toBe('var(--palette-default)');
+    expect(colorValue('orange')).toBe('var(--palette-orange)');
+    for (const color of MAP_COLORS) expect(colorValue(color)).toBe(`var(--palette-${color})`);
   });
 
   it('makes a fresh id each time', () => {

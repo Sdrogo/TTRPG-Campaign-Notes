@@ -36,6 +36,7 @@ def profile_from_row(user_id: uuid.UUID, row: UserRow | None) -> UserProfile:
         pronouns=row.pronouns,
         bio=row.bio,
         avatar_path=row.avatar_path,
+        color_palette=row.color_palette,
         google_prefilled=row.profile_prefilled_at is not None,
     )
 
@@ -62,6 +63,7 @@ async def save_profile(session: AsyncSession, profile: UserProfile) -> None:
     row.pronouns = profile.pronouns
     row.bio = profile.bio
     row.avatar_path = profile.avatar_path
+    row.color_palette = profile.color_palette
     await session.flush()
 
 

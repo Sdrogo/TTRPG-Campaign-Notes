@@ -24,6 +24,7 @@ from app.domain.models import UserProfile
 from app.domain.profiles import (
     ProfileChanges,
     ProfileFieldTooLongError,
+    UnknownColorPaletteError,
     google_avatar_source,
     plan_avatar_path,
     plan_google_prefill,
@@ -44,6 +45,9 @@ class AccountResponse(ProfileFields):
 
     user_id: uuid.UUID
     app_admin: bool = False
+    # The map palette the caller sees (spec 78); private, so not in
+    # ProfileFields. None is the standard palette.
+    color_palette: str | None = None
 
 
 class UpdateProfileRequest(BaseModel):
@@ -52,6 +56,8 @@ class UpdateProfileRequest(BaseModel):
     display_name: str | None = None
     pronouns: str | None = None
     bio: str | None = None
+    # 'protan', 'deutan', 'tritan', or null for the standard palette (spec 78).
+    color_palette: str | None = None
 
 
 class AvatarFromUrlRequest(BaseModel):
@@ -66,6 +72,7 @@ async def _response(profile: UserProfile) -> AccountResponse:
     return AccountResponse(
         user_id=profile.user_id,
         app_admin=is_admin(str(profile.user_id), settings.admin_user_ids),
+        color_palette=profile.color_palette,
         **fields.model_dump(),
     )
 
@@ -173,11 +180,12 @@ async def update_account(
         display_name=body.display_name,
         pronouns=body.pronouns,
         bio=body.bio,
+        color_palette=body.color_palette,
     )
     profile = await _load_for_update(session, current_user)
     try:
         updated = plan_profile_update(profile, changes)
-    except ProfileFieldTooLongError as exc:
+    except (ProfileFieldTooLongError, UnknownColorPaletteError) as exc:
         raise translated_error(status.HTTP_422_UNPROCESSABLE_CONTENT, exc, locale) from exc
     await users_repo.save_profile(session, updated)
     return await _response(updated)

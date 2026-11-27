@@ -340,6 +340,23 @@
       "try": "Wypróbuj",
       "sample": "Tak brzmi ten głos podczas czytania twoich notatek."
     },
+    "palette": {
+      "title": "Kolory map",
+      "description": "Paleta, w której widzisz mapy, legendy, zegary i Sesję 0. Jeśli trudno ci odróżnić niektóre kolory, wybierz odpowiednią: zapisane kolory się nie zmieniają.",
+      "note": "Każdy widzi własną paletę, ale każdy kolor zachowuje nazwę: „czerwony” relacji jest czerwony dla wszystkich. W legendzie kliknięcie znaczenia wyróżnia relacje w tym kolorze.",
+      "names": {
+        "standard": "Standardowa",
+        "protan": "Protanopia (czerwony)",
+        "deutan": "Deuteranopia (zielony)",
+        "tritan": "Tritanopia (niebieski)"
+      },
+      "hints": {
+        "standard": "Zwykłe kolory",
+        "protan": "Przy słabym widzeniu czerwieni",
+        "deutan": "Przy słabym widzeniu zieleni, najczęstszy przypadek",
+        "tritan": "Przy słabym widzeniu błękitu"
+      }
+    },
     "privacy": {
       "title": "Twoje dane",
       "description": "Pobierz kopię wszystkiego, co aplikacja przechowuje o tobie, albo usuń swoje konto.",

@@ -136,6 +136,7 @@
         "bio": "简介"
       },
       "fieldTooLong": "{field}最多 {max} 个字符",
+      "unknownPalette": "未知的调色板",
       "deletionNotConfirmed": "请输入 DELETE 以确认删除账户",
       "successorNeeded": "删除账户之前，请先在以下房间中指定其他人为 Master 或管理员：{rooms}"
     },

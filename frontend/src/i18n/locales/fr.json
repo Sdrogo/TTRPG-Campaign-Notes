@@ -340,6 +340,23 @@
       "try": "Essayer",
       "sample": "Voici comment sonne cette voix quand elle lit tes notes."
     },
+    "palette": {
+      "title": "Couleurs des cartes",
+      "description": "La palette dans laquelle tu vois les cartes, les légendes, les horloges et la Session 0. Si tu distingues mal certaines couleurs, choisis celle qui te convient : les couleurs enregistrées ne changent pas.",
+      "note": "Chacun voit sa propre palette, mais chaque couleur garde son nom : le « rouge » d'une relation est rouge pour tout le monde. Dans la légende, un clic sur une signification met en évidence les relations de cette couleur.",
+      "names": {
+        "standard": "Standard",
+        "protan": "Protanopie (rouge)",
+        "deutan": "Deutéranopie (vert)",
+        "tritan": "Tritanopie (bleu)"
+      },
+      "hints": {
+        "standard": "Les couleurs habituelles",
+        "protan": "Si tu perçois mal le rouge",
+        "deutan": "Si tu perçois mal le vert, le cas le plus courant",
+        "tritan": "Si tu perçois mal le bleu"
+      }
+    },
     "privacy": {
       "title": "Tes données",
       "description": "Télécharge une copie de tout ce que l'app conserve sur toi, ou supprime ton compte.",

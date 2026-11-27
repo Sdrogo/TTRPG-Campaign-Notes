@@ -136,6 +136,7 @@
         "bio": "Biographie"
       },
       "fieldTooLong": "{field} doit avoir {max} caractères au maximum",
+      "unknownPalette": "Palette de couleurs inconnue",
       "deletionNotConfirmed": "Écris DELETE pour confirmer la suppression du compte",
       "successorNeeded": "Avant de supprimer le compte, nomme un autre Master ou administrateur dans : {rooms}"
     },

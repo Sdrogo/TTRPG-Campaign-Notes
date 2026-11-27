@@ -340,6 +340,23 @@
       "try": "Proberen",
       "sample": "Zo klinkt deze stem terwijl hij je aantekeningen voorleest."
     },
+    "palette": {
+      "title": "Kaartkleuren",
+      "description": "Het palet waarin je kaarten, legenda's, klokken en Sessie 0 ziet. Kun je sommige kleuren slecht onderscheiden, kies dan het passende: opgeslagen kleuren veranderen niet.",
+      "note": "Iedereen ziet zijn eigen palet, maar elke kleur houdt zijn naam: het \"rood\" van een relatie is voor iedereen rood. In de legenda markeert een klik op een betekenis de relaties in die kleur.",
+      "names": {
+        "standard": "Standaard",
+        "protan": "Protanopie (rood)",
+        "deutan": "Deuteranopie (groen)",
+        "tritan": "Tritanopie (blauw)"
+      },
+      "hints": {
+        "standard": "De gewone kleuren",
+        "protan": "Bij zwak roodzien",
+        "deutan": "Bij zwak groenzien, de meest voorkomende vorm",
+        "tritan": "Bij zwak blauwzien"
+      }
+    },
     "privacy": {
       "title": "Jouw gegevens",
       "description": "Download een kopie van alles wat de app over je bewaart, of verwijder je account.",

@@ -10,6 +10,9 @@
   deve essere 1 a 1 tra uno che ha settato una palette per daltonici ed uno
   che non l'ha settata. Ognuno vede i colori suoi, ma c'è una corrispondenza
   che è sempre uguale".
+- **Status: built 2026-11-27** on the ticket's PR (#378), after the product
+  owner's "ok, implementa" took the proposed answers to the open questions
+  (see Answered). One migration, `f2a7c4e9b1d3`.
 - That is: (1) check the 17-color map palette (`MAP_COLORS`, spec 28
   Decision 8, mostly Tokyo metro line colors) for protanopia, deuteranopia
   and tritanopia; (2) let **each user** pick, on the Account page, a palette
@@ -33,9 +36,12 @@ far more common anomalous trichromacy; distance between every pair
 (136 pairs) measured as **CIEDE2000** (ΔE00). Rule of thumb for 2 px lines
 on a dark board: under 5 is the same color, 5-10 is hard to tell apart,
 over 10 is distinguishable. Contrast is WCAG against the board
-(`--bg-base` #0d0a0f); 3:1 is the minimum for graphics. Script and data:
-`/mnt/project-files/color-blind-palettes/` (`final.json`, and
-`confronto-palette.png`, every palette drawn as swatch + relation line).
+(`--bg-base` #0d0a0f); 3:1 is the minimum for graphics. The script and
+images are outside the repository, in the project files
+(`color-blind-palettes/`: `final.json`, `confronto-palette.png` with every
+palette drawn as swatch + relation line, screenshots); the hex table below is
+enough to reproduce the numbers, and `src/test/lib/palette.test.ts` checks
+them on every run (its own Machado + CIEDE2000 in TypeScript).
 
 Theme colors resolve to: default #e8e3ea, red #f75555 (`--accent-strong`),
 green #51cf66, purple #cc5de8, blue #339af0, gold #fcc419 (Mantine `-5`
@@ -111,19 +117,22 @@ Draft values (to fine-tune in the mock-up; `default` never changes):
 
 ## Decisions
 
-*Proposed 2026-11-27. Decisions 1-3 are the product owner's; the others are
-defaults to confirm (see Open questions).*
+*Proposed 2026-11-27. Decisions 1-3 are the product owner's; the others were
+accepted with "ok, implementa" the same day (see Answered).*
 
 1. **Four palettes, same 17 slots**: "Standard" (today's, unchanged),
    "Protanopia", "Deuteranopia", "Tritanopia". Each maps every color name
    to a hex; names, order (`MAP_COLORS`) and translated labels
    (`maps.colors.*`) stay the same. Picking a palette changes only what
    **this user** sees.
-2. **Chosen on the Account page**, by each user (product owner): a new
-   section "Colori" / "Accessibilità dei colori" with a radio list of the
-   four palettes, each with a strip of its 17 swatches, and one line saying
-   that the others in the Room keep seeing their own colors and that the
-   color names stay the same. The choice applies at once, without a reload.
+2. **Chosen on the Account page**, by each user (product owner): a section
+   "Map colors" (`account.palette.title`, after "Read aloud") with the four
+   palettes as radio cards (`names.*`: "Standard", "Protanopia (red)",
+   "Deuteranopia (green)", "Tritanopia (blue)", each with a `hints.*` line
+   and a strip of its 16 colored swatches), and a closing line (`note`)
+   saying that everyone sees their own palette, colors keep their names, and
+   a legend row highlights its color. The choice is drawn at once, without a
+   reload, and put back if saving fails.
 3. **1-to-1 mapping** (product owner): stored data never holds a palette's
    hex, only the name, so nothing is migrated or converted and a map drawn
    by someone on "Deuteranopia" opens in the same slots for someone on
@@ -135,15 +144,14 @@ defaults to confirm (see Open questions).*
    Session 0 columns (`--sz-color`, spec 46c), the demo (spec 45). The red
    **accent** of the UI (buttons, links) is a theme token, not a palette
    color, and does not change.
-5. **How it is built**: the palette becomes CSS custom properties
-   (`--palette-red` ...) defined on `:root` for Standard and overridden
-   under `:root[data-palette='protan' | 'deutan' | 'tritan']`; `COLOR_VALUES`
-   returns `var(--palette-<name>)`. Switching sets one attribute on
-   `<html>`, so nothing re-renders and SVG strokes/fills follow by
-   themselves. The values live in one place (`index.css`), and
-   `ui-context.md` lists them as the third exception to "no hex in
-   components". Anything that needs a real hex (none today: no canvas or
-   image export draws map colors) reads it with `getComputedStyle`.
+5. **How it is built**: the four tables live in one place,
+   `PALETTES` in `src/lib/palette.ts` (replacing `COLOR_VALUES` in
+   `lib/maps.ts`; `ui-context.md` lists it as the exception to "no hex in
+   components"). `colorValue(color)` returns `var(--palette-<name>)`, and
+   `applyPalette(id)` sets the 17 `--palette-*` custom properties on
+   `<html>` (plus `data-palette`), so switching re-renders nothing and SVG
+   strokes, fills and arrow markers follow by themselves. Nothing draws map
+   colors to a canvas or an image today.
 6. **Stored per account** (product owner: "ogni user"): nullable
    `users.color_palette` (`'protan' | 'deutan' | 'tritan'`, null =
    Standard), sent in `GET /account` and changed with `PATCH /account`
@@ -172,13 +180,13 @@ defaults to confirm (see Open questions).*
 
 ## Design
 
-- **Frontend**: `src/lib/palette.ts` (the four ids, read/apply/store,
-  `applyPalette(id)` sets `document.documentElement.dataset.palette`);
-  `COLOR_VALUES` → `var(--palette-*)`; the `--palette-*` block in
-  `index.css`; `main.tsx` applies the stored value before render; the
-  account hook applies the server value when it arrives; new
+- **Frontend**: `src/lib/palette.ts` (the four ids, `PALETTES`, read /
+  apply / store); `colorValue` → `var(--palette-*)`; `main.tsx` applies the
+  stored value before render; `useAccount` applies the server value when it
+  arrives, `useUpdateColorPalette` saves it; new
   `components/account/ColorPaletteSection.tsx` on `AccountPage` (after
-  "Lettura ad alta voce"); i18n keys `account.palette.*` in 12 files.
+  "Read aloud"); i18n keys `account.palette.*` in 12 files, backend
+  error `errors.account.unknownPalette`.
 - **Backend**: `users.color_palette` column + Alembic migration;
   `AccountResponse.color_palette`, `UpdateProfileRequest.color_palette`
   (Literal of the three ids or null); domain validation; GDPR export field.
@@ -201,19 +209,21 @@ defaults to confirm (see Open questions).*
 ## Estimate
 
 About **2 hours** of Claude build time (migration, account field,
-CSS palettes, Account section, 12 languages, tests), plus a mock-up first
-if the product owner wants to see the four palettes on real maps before the
-build (~30 min).
+palettes, Account section, 12 languages, tests); built in about one hour.
 
-## Open questions
+## Answered (product owner, 2026-11-27: "ok, implementa")
 
-1. **Per account (migration) or per browser?** Proposed per account, since
-   it's on the Account page and should follow you to the phone. The other
-   choices on that page made per browser (language, spec 34; read aloud,
-   spec 30) needed no migration.
-2. **Fix midnight in the Standard palette too** (Decision 8)? It is below
-   3:1 for everyone. It changes how every existing map looks a little.
-3. **Achromatopsia** (seeing no color at all, very rare): no palette can
-   help with 17 colors; leave it to the legend highlight (Decision 7)?
-4. **Mock-up first?** An HTML page with a sample map in the four palettes,
-   seen with and without the simulation, before the build.
+1. **Per account** (Decision 6), with the browser copy for the first paint.
+2. **Midnight fixed in Standard too** (Decision 8): #5566c8.
+3. **Achromatopsia**: no palette; the color names and the legend highlight
+   (Decision 7) cover it.
+4. **No mock-up**: built directly; screenshots of the Account section and
+   of the demo maps in each palette are in the project files
+   (`color-blind-palettes/`).
+
+## Notes for the merge
+
+- The migration `f2a7c4e9b1d3` revises `c6f1a9d3e7b2`. Tickets 77/77b
+  (PR #377) add their own migration on the same parent: whichever PR merges
+  second must point its `down_revision` at the other one, or Alembic has two
+  heads.
