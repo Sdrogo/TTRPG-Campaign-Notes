@@ -152,6 +152,28 @@ same day (see Answered). Confirmed.*
 - Demo (spec 45/64): one demo Document gets a second area, so the landing
   tour shows a patchwork territory.
 
+### Color-blind palettes (ticket 78, PR #378)
+
+Ticket 78 lets each user pick a palette (Standard, Protanopia,
+Deuteranopia, Tritanopia) with the same 17 color names; `colorValue`
+returns `var(--palette-<name>)` instead of a hex. This ticket stays
+compatible with it:
+
+- **Only names are stored and sent**: the shared color of a Document's
+  areas (Decision 4b), the import/export and the live updates carry the
+  color's **name** (`"red"`), never a hex, so a Document's areas are the
+  same slot for everyone, whatever palette each viewer uses.
+- **Every color drawn goes through `colorValue`**, and transparency is set
+  with `fill-opacity` / `stroke-opacity` (as areas do today, 0.22), never by
+  appending an alpha to a hex string or computing `rgba()` from it, which
+  would break on a CSS variable.
+- **Never color alone** (Decision 6): the selected area and its siblings
+  differ by **outline width and a halo in the theme's text color**, not by
+  hue; the "1 of 3" line and the name tooltip say which Document it is.
+- Whichever of the two PRs merges second checks the new code against the
+  other (no hex in the area components; the palette's CSS variables in the
+  sibling highlight).
+
 ### Docs
 
 - Spec 38: Decisions 3, 4 and the import format ("A Document may have

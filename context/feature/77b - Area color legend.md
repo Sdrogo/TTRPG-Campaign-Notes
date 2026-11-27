@@ -101,6 +101,13 @@ same day (see Answered). Confirmed.*
   arrows; `GeographicBoard` mounts it and the highlight; `AreaDialog` gets
   the meanings like `ArrowDialog`; `MapLegendDialog` lists the colors the
   areas use. New strings in the 12 UI languages.
+- **Color-blind palettes (ticket 78, PR #378)**: as ticket 77 → "Color-blind
+  palettes". The legend stores and sends only color **names** (meanings and
+  presets are keyed by name), so a meaning means the same slot for every
+  viewer whatever palette they picked; the area swatch and the highlight use
+  `colorValue` and opacity, never a hex; each row keeps the color's name as
+  tooltip and accessible name, and the highlight works by fading, so the
+  legend is usable without telling hues apart (ticket 78 Decision 7).
 - **Docs**: spec 68 Decision 15 points here; `architecture.md` (legend on
   geographic maps), `ui-context.md` (the area swatch), progress tracker.
 - **No mock-up** (*proposed*): the panel, chip, drawer and dialogs are
