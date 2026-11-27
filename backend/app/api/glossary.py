@@ -320,10 +320,11 @@ async def update_entry(
     if the edit hides the entry from the requester (VR-07)."""
     requester_id = uuid.UUID(current_user.id)
     membership = await require_membership(session, room_id, requester_id, locale)
+    # Lock before reading, so a concurrent edit can't be overwritten.
+    await rooms_repo.lock_room(session, room_id)
     entry, selective_ids = await _get_visible_entry(session, room_id, entry_id, membership, locale)
     # Visibility first (404), then permission (403), as for Notes.
     _ensure_manager(membership, locale)
-    await rooms_repo.lock_room(session, room_id)
 
     if body.tag_ids is not None:
         await _check_tags(session, room_id, body.tag_ids, locale)

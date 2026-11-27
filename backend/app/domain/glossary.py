@@ -206,8 +206,10 @@ def plan_entry_edit(
         highlight=entry.highlight if highlight is None else highlight,
         updated_at=now,
     )
-    grants_changed = new_selective_ids is not None and set(new_selective_ids) != set(
-        current_selective_ids
+    grants_changed = (
+        updated.visibility == DocumentVisibility.SELECTIVE
+        and new_selective_ids is not None
+        and set(new_selective_ids) != set(current_selective_ids)
     )
     audit_entry = None
     if updated.visibility != entry.visibility or grants_changed:
@@ -222,10 +224,15 @@ def plan_entry_edit(
                 "term": entry.term,
                 "from": entry.visibility.value,
                 "to": updated.visibility.value,
+                # Only a Selective entry keeps grants; the API clears the rest.
                 "selective_user_ids": sorted(
                     str(user_id)
                     for user_id in (
-                        current_selective_ids if new_selective_ids is None else new_selective_ids
+                        ()
+                        if updated.visibility != DocumentVisibility.SELECTIVE
+                        else current_selective_ids
+                        if new_selective_ids is None
+                        else new_selective_ids
                     )
                 ),
             },

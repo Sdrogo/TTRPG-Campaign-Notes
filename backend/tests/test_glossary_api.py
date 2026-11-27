@@ -4,6 +4,7 @@ unique, and visibility at every exit (VR-07, VR-10)."""
 import uuid
 from collections.abc import AsyncIterator, Callable
 from dataclasses import dataclass
+from datetime import UTC, datetime
 from typing import Any
 
 import pytest
@@ -11,7 +12,14 @@ import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.domain.glossary import MAX_ALIASES, MAX_TERM_LENGTH, term_key
+from app.domain.glossary import (
+    MAX_ALIASES,
+    MAX_TERM_LENGTH,
+    GlossaryEntry,
+    plan_entry_edit,
+    term_key,
+)
+from app.domain.models import DocumentVisibility
 from app.main import app
 
 
@@ -74,6 +82,25 @@ async def _define(
 
 def test_term_key_ignores_case_accents_and_spaces() -> None:
     assert term_key("  Bärovia  Mist ") == term_key("barovia mist")
+
+
+def test_audit_records_no_grants_once_the_entry_leaves_selective() -> None:
+    friend = uuid.uuid4()
+    now = datetime.now(UTC)
+    entry = GlossaryEntry(
+        uuid.uuid4(), uuid.uuid4(), "Mist", (), "", DocumentVisibility.SELECTIVE,
+        True, uuid.uuid4(), now, now,
+    )  # fmt: skip
+    plan = plan_entry_edit(
+        entry,
+        uuid.uuid4(),
+        now,
+        visibility=DocumentVisibility.ROOM,
+        current_selective_ids=[friend],
+        new_selective_ids=[friend],
+    )
+    assert plan.audit_entry is not None
+    assert plan.audit_entry.details["selective_user_ids"] == []
 
 
 async def test_master_defines_and_members_read(
