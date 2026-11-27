@@ -27,7 +27,8 @@ type Step = 'pick' | 'review' | 'existing' | 'job';
 /**
  * The import dialog (spec 27 Frontend): pick the files, read the preview and
  * untick the Documents and maps (spec 40) that are not wanted, tick the
- * Sections of the Room home to bring and page cards to apply (spec 56), choose Copy or Replace for the Documents that
+ * Sections of the Room home to bring and page cards to apply (spec 56), the
+ * Glossary entries to bring or replace (spec 79c), choose Copy or Replace for the Documents that
  * already exist in the Room, then follow the background job to its result. Only
  * offered to members who may create Documents, and never while previewing as a
  * member; the backend checks both and decides every rule (what is dropped,
@@ -45,6 +46,8 @@ export function ImportDocumentsModal({ opened, onClose, roomId }: ImportDocument
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [selectedMaps, setSelectedMaps] = useState<Set<string>>(new Set());
   const [selectedSections, setSelectedSections] = useState<Set<string>>(new Set());
+  const [selectedGlossary, setSelectedGlossary] = useState<Set<string>>(new Set());
+  const [glossaryReplace, setGlossaryReplace] = useState<Set<string>>(new Set());
   const [resolutions, setResolutions] = useState<Record<string, ImportResolution>>({});
   const [jobId, setJobId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -60,6 +63,8 @@ export function ImportDocumentsModal({ opened, onClose, roomId }: ImportDocument
     setSelected(new Set());
     setSelectedMaps(new Set());
     setSelectedSections(new Set());
+    setSelectedGlossary(new Set());
+    setGlossaryReplace(new Set());
     setResolutions({});
     setJobId(null);
     setError(null);
@@ -89,6 +94,11 @@ export function ImportDocumentsModal({ opened, onClose, roomId }: ImportDocument
               .map((section) => section.key),
           ),
         );
+        // Spec 79c: new entries come ticked; one already in the Room is skipped unless replaced.
+        setSelectedGlossary(
+          new Set(found.glossary.filter((entry) => entry.skipped === null).map((e) => e.key)),
+        );
+        setGlossaryReplace(new Set());
         setResolutions({});
         setStep('review');
       },
@@ -118,6 +128,10 @@ export function ImportDocumentsModal({ opened, onClose, roomId }: ImportDocument
         maps: [...selectedMaps],
         sections: chosenSections.filter((section) => !isPageCard(section)).map((s) => s.key),
         pageCards: chosenSections.filter(isPageCard).map((section) => section.key),
+        glossary: {
+          selected: [...selectedGlossary, ...glossaryReplace],
+          replace: [...glossaryReplace],
+        },
       },
       {
         onSuccess: (started) => {
@@ -215,6 +229,17 @@ export function ImportDocumentsModal({ opened, onClose, roomId }: ImportDocument
             onToggleMap={toggleIn(setSelectedMaps)}
             selectedSections={selectedSections}
             onToggleSection={toggleIn(setSelectedSections)}
+            selectedGlossary={selectedGlossary}
+            onToggleGlossary={toggleIn(setSelectedGlossary)}
+            glossaryReplace={glossaryReplace}
+            onChooseGlossary={(key, replace) =>
+              setGlossaryReplace((current) => {
+                const next = new Set(current);
+                if (replace) next.add(key);
+                else next.delete(key);
+                return next;
+              })
+            }
           />
         )}
         {step === 'existing' && (

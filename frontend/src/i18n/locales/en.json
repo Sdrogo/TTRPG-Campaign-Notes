@@ -1145,7 +1145,28 @@
       "skippedTitle_other": "{{count}} Sections not fully imported"
     },
     "failed": "The import failed. Check the list of Documents before trying again.",
-    "another": "Import more files"
+    "another": "Import more files",
+    "glossary": {
+      "found": "Glossary terms",
+      "leftOut": "The files also hold Glossary terms: only an Admin or the Master can import them.",
+      "select": "Import the term {{term}}",
+      "aliases": "Also: {{names}}",
+      "choice": "What to do with {{term}}",
+      "skip": "Skip",
+      "replace": "Replace",
+      "skipReason": {
+        "exists": "This term is already in the Room's Glossary",
+        "taken": "A word of it already belongs to another term of the Room",
+        "invalid": "Can't be imported: it can't be read or breaks a Glossary rule",
+        "limit": "The Room's Glossary already has the maximum number of terms"
+      },
+      "warning": {
+        "aliases_dropped": "Aliases left out, already used by other terms: {{names}}",
+        "selective_to_private": "Visible to selected members in the file: it comes in as Private"
+      },
+      "written": "Glossary terms created or replaced",
+      "skippedTitle": "Glossary terms not imported"
+    }
   },
   "imageSearch": {
     "action": "Search",

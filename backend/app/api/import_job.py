@@ -24,6 +24,7 @@ from app.api.versions import record_revision
 from app.db import (
     clocks_repo,
     documents_repo,
+    glossary_repo,
     import_jobs_repo,
     import_staging,
     imports_repo,
@@ -55,6 +56,8 @@ from app.domain.documents import (
 )
 from app.domain.errors import DomainError
 from app.domain.geographic_maps import MAX_BACKGROUND_DIMENSION, plan_background_path
+from app.domain.glossary import MAX_ENTRIES_PER_ROOM, GlossaryEntry, can_manage_glossary
+from app.domain.glossary import term_key as fold_word
 from app.domain.images import (
     MAX_INPUT_BYTES,
     ImageTooLargeError,
@@ -65,12 +68,14 @@ from app.domain.import_files import VAULT_URL_PREFIX, ImportFile, file_from_json
 from app.domain.imports import (
     ACTIVE_IMPORT_STATUSES,
     ExistingDocument,
+    GlossarySkipReason,
     ImportChoices,
     ImportContext,
     ImportJob,
     ImportPlan,
     ImportStatus,
     PlannedDocument,
+    PlannedGlossaryEntry,
     fold,
     next_block,
     plan_import,
@@ -86,7 +91,7 @@ from app.domain.room_sections import (
     plan_new_section,
     plan_section_image_path,
 )
-from app.domain.visibility import is_document_visible
+from app.domain.visibility import is_document_visible, is_glossary_entry_visible
 from app.realtime.audience import CHANGED, push
 from app.realtime.broker import CLOCK_RULES, LANDING, Event
 
@@ -110,6 +115,8 @@ def job_payload(files: list[ImportFile], choices: ImportChoices) -> dict[str, An
         "maps": None if choices.maps is None else sorted(choices.maps),
         "sections": None if choices.sections is None else sorted(choices.sections),
         "page_cards": None if choices.page_cards is None else sorted(choices.page_cards),
+        "glossary": None if choices.glossary is None else sorted(choices.glossary),
+        "glossary_replace": sorted(choices.glossary_replace),
     }
 
 
@@ -121,6 +128,8 @@ def _from_payload(payload: dict[str, Any]) -> tuple[list[ImportFile], ImportChoi
     # Absent before spec 56: every custom Section, no page card.
     sections = payload.get("sections")
     page_cards = payload.get("page_cards", [])
+    # Absent before spec 79c: every entry, none replacing.
+    glossary = payload.get("glossary")
     return (
         [file_from_json(data) for data in payload["files"]],
         ImportChoices(
@@ -129,6 +138,8 @@ def _from_payload(payload: dict[str, Any]) -> tuple[list[ImportFile], ImportChoi
             None if maps is None else frozenset(maps),
             None if sections is None else frozenset(sections),
             None if page_cards is None else frozenset(page_cards),
+            None if glossary is None else frozenset(glossary),
+            frozenset(payload.get("glossary_replace", [])),
         ),
     )
 
@@ -157,6 +168,26 @@ async def load_import_context(
     notes = await notes_repo.list_notes_for_documents(session, managed)
     tags = await tags_repo.list_tags(session, room.id)
     is_master = importer.role is RoomRole.MASTER
+    manages_glossary = can_manage_glossary(importer)
+    glossary_words: dict[str, uuid.UUID] = {}
+    glossary_entries: dict[uuid.UUID, str] = {}
+    glossary_count = 0
+    if manages_glossary:
+        glossary_words = await glossary_repo.list_words(session, room.id)
+        entries = await glossary_repo.list_entries(session, room.id)
+        glossary_count = len(entries)
+        entry_grants = await glossary_repo.list_grants(session, [e.id for e in entries])
+        glossary_entries = {
+            entry.id: entry.term
+            for entry in entries
+            if is_glossary_entry_visible(
+                entry.visibility,
+                entry.created_by,
+                importer.user_id,
+                importer.role,
+                entry_grants[entry.id],
+            )
+        }
     return ImportContext(
         default_visibility=room.default_visibility,
         existing={
@@ -177,6 +208,10 @@ async def load_import_context(
         sections=tuple(await room_sections_repo.list_sections(session, room.id))
         if is_master
         else (),
+        can_manage_glossary=manages_glossary,
+        glossary_words=glossary_words,
+        glossary_entries=glossary_entries,
+        glossary_count=glossary_count,
     )
 
 
@@ -213,8 +248,10 @@ async def _run(job_id: uuid.UUID) -> None:
         if started is None:
             return
         job, importer, plan = started
-        created, replaced, maps, sections = await _write(job, importer, plan)
+        created, replaced, maps, sections, glossary = await _write(job, importer, plan)
         progress = _image_progress(plan, created, replaced, maps, sections)
+        progress["result"]["glossary"] = glossary[0]
+        progress["skipped_glossary"] = glossary[1]
         async with session_module.independent_session() as session:
             await import_jobs_repo.start_images(session, job.id, progress)
             await session.commit()
@@ -381,6 +418,8 @@ async def _run_images(job_id: uuid.UUID, room_id: uuid.UUID, importer_id: uuid.U
         "skipped": progress["skipped"],
         "skipped_maps": progress["skipped_maps"],
         "skipped_sections": progress["skipped_sections"],
+        # Absent from the progress of a job started before spec 79c.
+        "skipped_glossary": progress.get("skipped_glossary", []),
         "images": {"total": len(work), "stored": len(progress["stored"])},
     }
     async with session_module.independent_session() as session:
@@ -423,7 +462,13 @@ async def _start(job_id: uuid.UUID) -> tuple[ImportJob, Membership, ImportPlan] 
 
 async def _write(
     job: ImportJob, importer: Membership, plan: ImportPlan
-) -> tuple[list[dict[str, str]], list[dict[str, str]], list[PlannedMap], list[PlannedSection]]:
+) -> tuple[
+    list[dict[str, str]],
+    list[dict[str, str]],
+    list[PlannedMap],
+    list[PlannedSection],
+    tuple[list[dict[str, str]], list[dict[str, str]]],
+]:
     """The one transaction of the import (Decision 9): Tags, copied Documents,
     replaced information, backlinks, history, the maps (spec 40) and the
     Sections of the Room home (spec 56). Returns the Documents created and
@@ -461,6 +506,7 @@ async def _write(
             session, job.room_id, [s for s in plan.sections if s.skipped is None]
         )
         await _write_clocks(session, job.room_id, importer.user_id, plan, now)
+        glossary = await _write_glossary(session, job.room_id, importer.user_id, plan, now)
         await session.commit()
         await session_module.run_after_commit(session)
     return (
@@ -468,7 +514,76 @@ async def _write(
         [{"id": str(d.id), "name": d.name} for d in replaced],
         maps,
         sections,
+        glossary,
     )
+
+
+async def _write_glossary(
+    session: AsyncSession,
+    room_id: uuid.UUID,
+    importer_id: uuid.UUID,
+    plan: ImportPlan,
+    now: datetime,
+) -> tuple[list[dict[str, str]], list[dict[str, str]]]:
+    """Spec 79c: writes the planned Glossary entries under the Room's lock,
+    checking their words and the Room's cap again as the Room is now. A
+    replaced entry keeps its own visibility and grants. Returns the entries
+    written (`{id, term}`) and the ones left out (`{term, reason}`)."""
+    written: list[dict[str, str]] = []
+    skipped = [
+        {"term": e.term, "reason": e.skipped.value} for e in plan.glossary if e.skipped is not None
+    ]
+    wanted = [e for e in plan.glossary if e.skipped is None]
+    if not wanted:
+        return written, skipped
+    await rooms_repo.lock_room(session, room_id)
+    room_left = MAX_ENTRIES_PER_ROOM - await glossary_repo.count_entries(session, room_id)
+    for planned in wanted:
+        reason = await _write_entry(session, room_id, importer_id, planned, now, room_left)
+        if reason is None:
+            room_left -= 0 if planned.replaces else 1
+            written.append({"id": str(planned.id), "term": planned.term})
+        else:
+            skipped.append({"term": planned.term, "reason": reason.value})
+    return written, skipped
+
+
+async def _write_entry(
+    session: AsyncSession,
+    room_id: uuid.UUID,
+    importer_id: uuid.UUID,
+    planned: PlannedGlossaryEntry,
+    now: datetime,
+    room_left: int,
+) -> GlossarySkipReason | None:
+    """Writes one entry, or says why it can't be written now."""
+    existing = await glossary_repo.get_entry(session, planned.id) if planned.replaces else None
+    if planned.replaces and existing is None:  # pragma: no cover - deleted since the plan
+        return GlossarySkipReason.TAKEN
+    if existing is None and room_left <= 0:
+        return GlossarySkipReason.LIMIT
+    entry = GlossaryEntry(
+        id=planned.id,
+        room_id=room_id,
+        term=planned.term,
+        aliases=planned.aliases,
+        definition=planned.definition,
+        visibility=planned.visibility if existing is None else existing.visibility,
+        highlight=planned.highlight,
+        created_by=importer_id if existing is None else existing.created_by,
+        created_at=now if existing is None else existing.created_at,
+        updated_at=now,
+    )
+    keys = [fold_word(word) for word in [entry.term, *entry.aliases]]
+    if await glossary_repo.find_conflicting_entry(session, room_id, keys, entry.id):
+        return GlossarySkipReason.TAKEN  # pragma: no cover - a word defined since the plan
+    if existing is None:
+        await glossary_repo.insert_entry(session, entry)
+    else:
+        await glossary_repo.update_entry(session, entry)
+    await glossary_repo.set_tag_ids(session, entry.id, planned.tag_ids)
+    await glossary_repo.set_document_ids(session, entry.id, planned.document_ids)
+    return None
 
 
 async def _write_clocks(

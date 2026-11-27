@@ -94,6 +94,31 @@ export interface ImportPreviewSection {
   skipped: Exclude<ImportSectionSkipReason, "image"> | null;
 }
 
+/** Why a Glossary entry is not written (spec 79c). */
+export type ImportGlossarySkipReason = "exists" | "taken" | "invalid" | "limit";
+
+/**
+ * A Glossary entry found in the files (spec 79c), listed for an Administrator
+ * or the Master only. `existingEntryId` is the Room's entry with the same term,
+ * which it replaces only when chosen (skipped as `exists` otherwise).
+ */
+export interface ImportPreviewGlossaryEntry {
+  /** Names it in the import request (`glossary`, and `glossary_replace`). */
+  key: string;
+  fileName: string;
+  term: string;
+  aliases: string[];
+  existingEntryId: string | null;
+  skipped: ImportGlossarySkipReason | null;
+  warnings: { code: "aliases_dropped" | "selective_to_private"; count: number; names: string[] }[];
+}
+
+/** A Glossary entry the import did not write, and why. */
+export interface ImportSkippedGlossaryEntry {
+  term: string;
+  reason: ImportGlossarySkipReason;
+}
+
 /** A Tag the import would create. */
 export interface ImportTagToCreate {
   name: string;
@@ -109,6 +134,10 @@ export interface ImportPreview {
   maps: ImportPreviewMap[];
   /** The Sections of the Room home (spec 56); empty unless the importer is the Master. */
   sections: ImportPreviewSection[];
+  /** The Glossary entries (spec 79c); empty unless the importer manages the Glossary. */
+  glossary: ImportPreviewGlossaryEntry[];
+  /** How many entries the files hold that the importer may not bring. */
+  glossaryLeftOut: number;
 }
 
 /** Why an image was skipped (`SkippedResponse.reason`). */
@@ -166,6 +195,9 @@ export interface ImportResult {
   /** The Sections of the Room home it wrote (spec 56). */
   sections: ImportedSection[];
   skippedSections: ImportSkippedSection[];
+  /** The Glossary entries it created or replaced (spec 79c). */
+  glossary: { id: string; term: string }[];
+  skippedGlossary: ImportSkippedGlossaryEntry[];
   /** How many images the files brought and how many were stored (spec 59); null for older jobs. */
   images: ImportImageCount | null;
 }
@@ -242,6 +274,16 @@ export interface RawImportPreview {
     skipped_blocks: number;
     skipped: Exclude<ImportSectionSkipReason, "image"> | null;
   }[];
+  glossary?: {
+    key: string;
+    file_name: string;
+    term: string;
+    aliases: string[];
+    existing_entry_id: string | null;
+    skipped: ImportGlossarySkipReason | null;
+    warnings: ImportPreviewGlossaryEntry["warnings"];
+  }[];
+  glossary_left_out?: number;
 }
 
 /** A job as the API sends it (`ImportJobResponse`): converted in `toImportJob` only. */
@@ -263,6 +305,8 @@ export interface RawImportJob {
     skipped_maps: ImportSkippedMap[];
     sections: ImportedSection[];
     skipped_sections: ImportSkippedSection[];
+    glossary?: { id: string; term: string }[];
+    skipped_glossary?: ImportSkippedGlossaryEntry[];
     images?: ImportImageCount | null;
   } | null;
   progress?: ImportImageCount | null;
@@ -305,6 +349,16 @@ export function toImportPreview(raw: RawImportPreview): ImportPreview {
       skippedBlocks: found.skipped_blocks,
       skipped: found.skipped,
     })),
+    glossary: (raw.glossary ?? []).map((found) => ({
+      key: found.key,
+      fileName: found.file_name,
+      term: found.term,
+      aliases: found.aliases,
+      existingEntryId: found.existing_entry_id,
+      skipped: found.skipped,
+      warnings: found.warnings,
+    })),
+    glossaryLeftOut: raw.glossary_left_out ?? 0,
   };
 }
 
@@ -331,6 +385,8 @@ export function toImportJob(raw: RawImportJob): ImportJob {
             skippedMaps: raw.result.skipped_maps,
             sections: raw.result.sections,
             skippedSections: raw.result.skipped_sections,
+            glossary: raw.result.glossary ?? [],
+            skippedGlossary: raw.result.skipped_glossary ?? [],
             images: raw.result.images ?? null,
           },
     progress: raw.progress ?? null,
@@ -370,7 +426,8 @@ export function vaultFiles(files: File[]): File[] {
  * The upload of the import: the files again and the choices, as a JSON field —
  * the Documents to import (`selected`), among them the ones to replace
  * (`replace`), the maps to import (`maps`, spec 40), and the custom Sections
- * to add and page cards to apply (`sections`, `page_cards`, spec 56).
+ * to add and page cards to apply (`sections`, `page_cards`, spec 56), and the
+ * Glossary entries to import and those replacing the Room's (spec 79c).
  */
 export function importFormData(
   files: File[],
@@ -380,6 +437,7 @@ export function importFormData(
   sections: string[],
   pageCards: string[],
   obsidian?: boolean,
+  glossary: { selected: string[]; replace: string[] } = { selected: [], replace: [] },
 ): FormData {
   const body = previewFormData(files, obsidian);
   body.append(
@@ -390,6 +448,8 @@ export function importFormData(
       maps,
       sections,
       page_cards: pageCards,
+      glossary: glossary.selected,
+      glossary_replace: glossary.replace,
     }),
   );
   return body;

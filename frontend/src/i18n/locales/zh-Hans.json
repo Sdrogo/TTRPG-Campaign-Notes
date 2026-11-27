@@ -1113,7 +1113,28 @@
       "skippedTitle_other": "{{count}} 个版块未完整导入"
     },
     "failed": "导入失败。重试之前请先检查文档列表。",
-    "another": "导入其他文件"
+    "another": "导入其他文件",
+    "glossary": {
+      "found": "术语表条目",
+      "leftOut": "文件中还有术语表条目:只有管理员或 Master 可以导入。",
+      "select": "导入条目 {{term}}",
+      "aliases": "别名:{{names}}",
+      "choice": "如何处理 {{term}}",
+      "skip": "跳过",
+      "replace": "替换",
+      "skipReason": {
+        "exists": "该条目已在房间的术语表中",
+        "taken": "其中一个词已属于房间的另一个条目",
+        "invalid": "无法导入:无法读取或违反术语表规则",
+        "limit": "房间的术语表条目数量已达上限"
+      },
+      "warning": {
+        "aliases_dropped": "已省略的别名(已被其他条目使用):{{names}}",
+        "selective_to_private": "文件中对选定成员可见:导入为私密"
+      },
+      "written": "已创建或替换的术语表条目",
+      "skippedTitle": "未导入的术语表条目"
+    }
   },
   "imageSearch": {
     "action": "搜索",

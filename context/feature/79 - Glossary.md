@@ -164,9 +164,8 @@ staging and later to production.
 
 Everything above, in one PR, except what is listed here as left out:
 
-- Left out for now: **reading the `glossary` list on import** (the export
-  writes it, schema 7; the import accepts version 7 and ignores the list),
-  the **Obsidian** import, a **Glossary card on the landing page** (the page
+- Left out for now: the **Obsidian** import (reading the `glossary` list of
+  a JSON import is ticket 79c, PR #384), a **Glossary card on the landing page** (the page
   is linked from the Room Index), the **Terms chapter of the PDF**, the
   **Account switch stored on the server** (it is kept per device in
   `localStorage`, so no second migration), **Reveal** of one entry and the

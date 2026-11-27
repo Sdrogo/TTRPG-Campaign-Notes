@@ -1209,7 +1209,28 @@
       "skippedTitle_other": "{{count}} sekcji nie zostało w pełni zaimportowanych"
     },
     "failed": "Import się nie udał. Sprawdź listę dokumentów, zanim spróbujesz ponownie.",
-    "another": "Importuj kolejne pliki"
+    "another": "Importuj kolejne pliki",
+    "glossary": {
+      "found": "Hasła Słownika",
+      "leftOut": "Pliki zawierają też hasła Słownika: zaimportować je może tylko Admin lub Master.",
+      "select": "Zaimportuj hasło {{term}}",
+      "aliases": "Także: {{names}}",
+      "choice": "Co zrobić z {{term}}",
+      "skip": "Pomiń",
+      "replace": "Zastąp",
+      "skipReason": {
+        "exists": "To hasło jest już w Słowniku Pokoju",
+        "taken": "Jedno z jego słów należy już do innego hasła Pokoju",
+        "invalid": "Nie można zaimportować: nie da się go odczytać lub łamie zasadę Słownika",
+        "limit": "Słownik Pokoju ma już maksymalną liczbę haseł"
+      },
+      "warning": {
+        "aliases_dropped": "Pominięte aliasy, używane już przez inne hasła: {{names}}",
+        "selective_to_private": "W pliku widoczne dla wybranych członków: trafia jako Prywatne"
+      },
+      "written": "Utworzone lub zastąpione hasła Słownika",
+      "skippedTitle": "Niezaimportowane hasła Słownika"
+    }
   },
   "imageSearch": {
     "action": "Szukaj",

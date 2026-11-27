@@ -58,6 +58,17 @@ async def find_conflicting_entry(
     return (await session.execute(query.limit(1))).first() is not None
 
 
+async def list_words(session: AsyncSession, room_id: uuid.UUID) -> dict[str, uuid.UUID]:
+    """Every word (term and alias key) of the Room's entries, hidden ones
+    included, with the entry holding it (spec 79c)."""
+    result = await session.execute(
+        select(GlossaryEntryKeyRow.key, GlossaryEntryKeyRow.entry_id).where(
+            GlossaryEntryKeyRow.room_id == room_id
+        )
+    )
+    return {key: entry_id for key, entry_id in result.tuples()}
+
+
 async def _write_keys(session: AsyncSession, entry: GlossaryEntry) -> None:
     """Replaces the entry's keys with those of its term and aliases."""
     await session.execute(

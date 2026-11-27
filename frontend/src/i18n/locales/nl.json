@@ -1145,7 +1145,28 @@
       "skippedTitle_other": "{{count}} secties niet volledig geïmporteerd"
     },
     "failed": "Het importeren is mislukt. Controleer de lijst met Documenten voordat je het opnieuw probeert.",
-    "another": "Meer bestanden importeren"
+    "another": "Meer bestanden importeren",
+    "glossary": {
+      "found": "Termen uit de Woordenlijst",
+      "leftOut": "De bestanden bevatten ook termen uit de Woordenlijst: alleen een Admin of de Master kan ze importeren.",
+      "select": "Term {{term}} importeren",
+      "aliases": "Ook: {{names}}",
+      "choice": "Wat te doen met {{term}}",
+      "skip": "Overslaan",
+      "replace": "Vervangen",
+      "skipReason": {
+        "exists": "Deze term staat al in de Woordenlijst van de Kamer",
+        "taken": "Een van zijn woorden hoort al bij een andere term van de Kamer",
+        "invalid": "Kan niet worden geïmporteerd: onleesbaar of in strijd met een regel van de Woordenlijst",
+        "limit": "De Woordenlijst van de Kamer heeft al het maximale aantal termen"
+      },
+      "warning": {
+        "aliases_dropped": "Weggelaten aliassen, al gebruikt door andere termen: {{names}}",
+        "selective_to_private": "In het bestand zichtbaar voor gekozen leden: komt binnen als Privé"
+      },
+      "written": "Gemaakte of vervangen termen uit de Woordenlijst",
+      "skippedTitle": "Niet geïmporteerde termen uit de Woordenlijst"
+    }
   },
   "imageSearch": {
     "action": "Zoeken",

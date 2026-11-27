@@ -114,6 +114,22 @@ class ImportDocument:
 
 
 @dataclass(frozen=True)
+class ImportGlossaryEntry:
+    """A Glossary entry of a JSON export (spec 79c), as the file writes it:
+    cleaned and checked when the import is planned. `tag_names` are the names
+    of the file's Tags it points at, `document_keys` the file's ids of its
+    linked Documents."""
+
+    term: str
+    aliases: tuple[str, ...]
+    definition: Text
+    visibility: str | None
+    highlight: bool
+    tag_names: tuple[str, ...]
+    document_keys: tuple[str, ...]
+
+
+@dataclass(frozen=True)
 class ImportFile:
     """One parsed file: its name, its Documents in order, its Tags by the id
     the file gives them (what a Tag mention points at) and its maps (spec 40)
@@ -129,6 +145,8 @@ class ImportFile:
     # Spec 61: the file's clock keys (`clock_transfer.CLOCK_KEYS`) as written,
     # read when the import is written (`clock_transfer.plan_clock_import`).
     clocks: Mapping[str, Any] = field(default_factory=dict)
+    # Spec 79c: the file's Glossary entries, in order.
+    glossary: tuple[ImportGlossaryEntry, ...] = ()
 
 
 # --- Entry point -------------------------------------------------------------
@@ -206,6 +224,7 @@ def _parse_json(name: str, text: str) -> ImportFile:
         raw_maps: Any = []
         raw_sections: Any = []
         raw_clocks: dict[str, Any] = {}
+        raw_glossary: Any = []
     elif isinstance(data, dict):
         version = data.get("schema_version", SCHEMA_VERSION)
         if not isinstance(version, int) or isinstance(version, bool):
@@ -219,11 +238,12 @@ def _parse_json(name: str, text: str) -> ImportFile:
         raw_maps = data.get("maps") or []
         raw_sections = data.get("sections") or []
         raw_clocks = {key: data[key] for key in CLOCK_KEYS if data.get(key) is not None}
+        raw_glossary = data.get("glossary") or []
     else:
         raise _unreadable(name)
     if not isinstance(raw_documents, list) or not isinstance(raw_tags, list):
         raise _unreadable(name)
-    for raw_list in (raw_maps, raw_sections):
+    for raw_list in (raw_maps, raw_sections, raw_glossary):
         if not isinstance(raw_list, list) or not all(isinstance(m, dict) for m in raw_list):
             raise _unreadable(name)
 
@@ -235,7 +255,29 @@ def _parse_json(name: str, text: str) -> ImportFile:
         if tag_name and tag_name.strip() and tag_id:
             tags[tag_id] = ImportTag(tag_name.strip(), _optional_str(item.get("category"), name))
     documents = tuple(_json_document(_object(raw, name), name, tags) for raw in raw_documents)
-    return ImportFile(name, documents, tags, tuple(raw_maps), tuple(raw_sections), raw_clocks)
+    glossary = tuple(_json_glossary_entry(raw, name, tags) for raw in raw_glossary)
+    return ImportFile(
+        name, documents, tags, tuple(raw_maps), tuple(raw_sections), raw_clocks, glossary
+    )
+
+
+def _json_glossary_entry(
+    raw: dict[str, Any], name: str, tags: Mapping[str, ImportTag]
+) -> ImportGlossaryEntry:
+    """One Glossary entry object of the file (spec 79c)."""
+    aliases = tuple(alias for alias in _list(raw.get("aliases"), name) if isinstance(alias, str))
+    tag_names = [
+        tags[str(tag_id)].name for tag_id in _list(raw.get("tag_ids"), name) if str(tag_id) in tags
+    ]
+    return ImportGlossaryEntry(
+        term=_optional_str(raw.get("term"), name) or "",
+        aliases=aliases,
+        definition=_json_text(raw.get("definition"), name),
+        visibility=_optional_str(raw.get("visibility"), name),
+        highlight=raw.get("highlight") is not False,
+        tag_names=_clean_names(tag_names),
+        document_keys=tuple(str(key) for key in _list(raw.get("document_ids"), name)),
+    )
 
 
 def _object(value: Any, name: str) -> dict[str, Any]:
@@ -608,6 +650,18 @@ def file_to_json(file: ImportFile) -> dict[str, Any]:
         "maps": list(file.maps),
         "sections": list(file.sections),
         "clocks": dict(file.clocks),
+        "glossary": [
+            {
+                "term": g.term,
+                "aliases": list(g.aliases),
+                "definition": _text_to_json(g.definition),
+                "visibility": g.visibility,
+                "highlight": g.highlight,
+                "tag_names": list(g.tag_names),
+                "document_keys": list(g.document_keys),
+            }
+            for g in file.glossary
+        ],
     }
 
 
@@ -646,4 +700,17 @@ def file_from_json(data: dict[str, Any]) -> ImportFile:
         sections=tuple(data.get("sections", ())),
         # Absent from the payload of a job queued before spec 61.
         clocks=dict(data.get("clocks", {})),
+        # Absent from the payload of a job queued before spec 79c.
+        glossary=tuple(
+            ImportGlossaryEntry(
+                term=g["term"],
+                aliases=tuple(g["aliases"]),
+                definition=_text_from_json(g["definition"]),
+                visibility=g["visibility"],
+                highlight=g["highlight"],
+                tag_names=tuple(g["tag_names"]),
+                document_keys=tuple(g["document_keys"]),
+            )
+            for g in data.get("glossary", ())
+        ),
     )
