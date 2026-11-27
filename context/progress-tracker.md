@@ -234,6 +234,11 @@ image search, read aloud, GDPR (10-01 → 10-10). See the older archives.
 
 ## Next Up
 
+- **77, Several areas for one Document** (ticket written 2026-11-27, PR
+  into staging, awaiting the product owner's confirmation before code): a
+  Document may have several areas on a geographic map (patchwork faction
+  territory); pins stay one per Document. One migration (drop
+  `uq_relationship_map_areas_document`). Three open questions in the ticket.
 - **76, Security hardening 2** (built 2026-11-18, PR #355 into staging):
   pinned builds from `uv.lock` + digests + `dependabot.yml`, Caddy access
   log with masked IPs, backup vault on staging (`backup-vault.sh`). After

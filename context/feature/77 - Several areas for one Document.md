@@ -1,0 +1,170 @@
+# 77 - Several areas for one Document
+
+## Goals
+
+- Product owner's request (2026-11-27): "vorrei permettere, in una mappa
+  geografica, di definire più aree legate ad uno stesso documento. Può
+  succedere che parte del territorio di una qualche fazione sia distribuita
+  a macchia di leopardo". That is: on a geographic map (spec 38), one
+  Document (a faction, a clan, a corporation) may own **several separate
+  areas**, a patchwork territory.
+- Today a Document is on a geographic map **at most once**, as one area or
+  one pin (spec 38 Decisions 3-4). This ticket lifts the rule for **areas
+  only**; everything else about areas, pins and links stays as it is.
+- Needs **one small migration** (drop a unique constraint). No new table,
+  no new column. `requirements.md` is not touched: D-32 and FR-M4 don't
+  state the "once per map" rule, so they stay true.
+
+## Today (what the code does)
+
+- **Database**: `relationship_map_areas` has `UNIQUE (map_id, document_id)`
+  (`uq_relationship_map_areas_document`, migration `d7c1f5a9e3b8`);
+  `relationship_map_pins` has the same constraint. A Document's areas and
+  pins go with it (`ON DELETE CASCADE`), links go with their ends.
+- **Rules** (`app/domain/geographic_maps.py`): `plan_geo_board_edit` refuses
+  (422) a Document placed twice, counting areas and pins together and the
+  places hidden from the editor; `merge_geo_changes` (spec 43, the live
+  `PATCH` of spec 42/52) drops a new area or pin for a Document already on
+  the map; `geo_document_count` (the Maps list's "N Documents") counts
+  every placed item.
+- **Import/export** (`app/domain/map_import.py`, spec 38_3): a Document
+  named twice in the file fails the import through `plan_geo_board_edit`
+  (a generic 422); the export gives each area its own `key`, made unique
+  from the name (`_unique_key`). The Room export, import and duplication
+  (specs 40 and 33, `map_transfer.py`, `room_copy.py`) copy areas one by
+  one, so they already carry several; `MapUpload.document_count` counts
+  places, not Documents.
+- **Frontend** (`lib/geoMaps.ts`, `components/maps/`): `PlaceDocumentSelect`
+  hides every Document already on the map (`placedDocumentIds`);
+  `placeOfDocument` returns **one** place, used by `RelationshipMapPage` to
+  select on the map the Document open in the split pane (spec 50); a click
+  on an area selects that area only.
+
+## Decisions (proposed 2026-11-27, confirm in the PR)
+
+1. **Many areas, one pin.** A Document may have **any number of areas** on
+   a geographic map (within the map's cap of 60 areas, Decision 11 of spec
+   38, unchanged). A pin stays **at most one** per Document per map.
+2. **Areas or a pin, never both** (*proposed*, see Open question 1). A
+   Document placed as a pin can't get an area on the same map and the
+   reverse, as today. A faction's headquarters is usually a Document of its
+   own (a place), which can be a pin next to the faction's areas.
+3. **Each area is its own item.** Every area keeps its own shape, color,
+   dashed and filled flags, and its own links (a link joins two **areas or
+   pins**, not two Documents). Name and subtitle follow the Document on
+   every area, as today. Visibility is per area as today (Invariant 1): a
+   hidden Document hides all its areas and every link touching them.
+4. **Creating.** The Document picker of the area dialog offers every
+   Document except those placed as a **pin** (a Document that already has
+   areas stays offered, with "(already on the map)" next to its name). When
+   an area bound to a Document is selected in editing mode, its card gets
+   an **"Add an area"** button ("Aggiungi un'area"): it starts drawing a new
+   area bound to the same Document, with the same color, dashed and filled
+   flags, which the editor can still change.
+5. **Names on every area** (*proposed*, see Open question 2). Each area
+   shows the Document's name (and subtitle) placed by `placeAreaLabels`, as
+   any area today, so every patch is readable on its own when zoomed in.
+6. **Selecting and highlighting.** A click on one of a Document's areas
+   selects that area (for dragging, corners, Delete) and **highlights all
+   the Document's other areas** with a softer outline, so the whole
+   territory reads at a glance. While reading, a click opens the Document in
+   the split pane (spec 37/38b) as today; the Document open in the pane,
+   after a reload or a pick there, highlights all its areas
+   (`placeOfDocument` becomes `placesOfDocument`, a list). The pin of a
+   Document (Decision 2) is unchanged.
+7. **Deleting.** Delete removes only the selected area (and its links); the
+   Document's other areas stay. Deleting the Document removes all of them
+   (the existing cascade). When a selected area's Document has more than
+   one area, its card says how many ("1 of 3 areas of this Document").
+8. **Counting.** The Maps list's "N Documents" and the Room import preview
+   (`document_count`) count **distinct** Documents, not areas.
+9. **Tag filter** (spec 38 Decision 8): dims or keeps all of a Document's
+   areas together (no change needed: it reads each area's Document).
+10. **Phone**: read-only as today; a tap highlights the Document's areas
+    like Decision 6.
+
+## Design
+
+### Backend
+
+- **Migration** (reversible): drop `uq_relationship_map_areas_document`.
+  The `document_id` index stays. Downgrade recreates the constraint and
+  **fails with a clear message** if a map already has a Document twice as
+  an area (it never deletes areas on its own). Applied through the
+  `db-migration` label (ticket 74): staging when the PR merges, production
+  with the next release PR.
+- **Domain** (`geographic_maps.py`): `plan_geo_board_edit` checks pins
+  once per Document and areas never twice against a pin (Decisions 1-2),
+  with hidden places counted as today; `merge_geo_changes` keeps a new area
+  for a Document already on the map as areas and still drops one for a
+  Document that is a pin (and the reverse); `geo_document_count` counts
+  distinct Documents. `RelationshipMapAreaRow` loses its `UniqueConstraint`.
+- **Import** (`map_import.py`): several areas may name the same `document`;
+  a Document named by an area **and** a pin, or by two pins, is refused
+  with its own message (`errors.mapImport.documentTwice`, naming the second
+  key) instead of the generic 422. The format stays `schema_version` 1 (a
+  file with one area per Document still imports the same way). The export
+  writes each area with the same `document` and keys `name`, `name-2`, ...
+  (already the case).
+- **Room export/import/duplication** (`map_transfer.py`, `room_copy.py`):
+  no change beyond `document_count` (Decision 8).
+- **Tests** (100% on the touched domain): several areas for one Document
+  save and come back; area + pin, two pins still refused (save, import,
+  live `PATCH`); a hidden area of a Document plus a new visible one by a
+  Player; the count of distinct Documents; export → import round trip with
+  three areas of one Document; the migration up and down on an empty map.
+
+### Frontend
+
+- `lib/geoMaps.ts`: `placesOfDocument(board, documentId)` (all areas or the
+  pin); `pinnedDocumentIds` for the picker (Decisions 2, 4); unit tests.
+- `PlaceDocumentSelect`: offer Documents with areas, mark them "(already on
+  the map)", hide those with a pin when picking for an area, and those with
+  an area or a pin when picking for a pin.
+- `GeographicBoard.tsx`: the sibling highlight (Decision 6), drawn from the
+  theme (a thinner outline in the area's color, light and dark), the "Add an
+  area" button and the "1 of 3" line on the card; `RelationshipMapPage`
+  passes the list from `placesOfDocument` for the split pane.
+- New strings in all 12 UI languages (spec 34: `en.json` first).
+- Demo (spec 45/64): one demo Document gets a second area, so the landing
+  tour shows a patchwork territory.
+
+### Docs
+
+- Spec 38: Decisions 3, 4 and the import format ("A Document may have
+  several areas, or one pin") and the prompt for Claude in another chat.
+- `architecture.md` (geographic maps rules), `progress-tracker.md` (Next
+  Up, migration pending).
+
+## Open questions
+
+1. **Pin and areas together?** Proposed: no (Decision 2). Alternative: a
+   Document may have one pin **and** any number of areas (for example a
+   faction's base plus its territory); then a click on the pin highlights
+   the areas too.
+2. **Name on every area?** Proposed: yes (Decision 5). Alternative: only on
+   the largest area, the others unnamed (cleaner when the patches are
+   small, but a lone patch zoomed in has no name).
+3. **"Add an area" button** (Decision 4): fine as proposed, or is the
+   Document picker in the dialog enough?
+
+## Effort
+
+About **3 hours of Claude's own build time**, one PR into `staging`:
+backend, migration and tests about 1 hour; frontend (picker, highlight,
+card, split pane) about 1.5 hours; strings in 12 languages, demo and docs
+about 30 minutes. Plus a quick check on staging once deployed.
+
+## Definition of Done
+
+- A Document can be bound to several areas of one geographic map, by
+  drawing, by "Add an area" and by JSON import; each area can be moved,
+  reshaped, linked and deleted on its own.
+- Selecting one area, or opening its Document in the split pane,
+  highlights all of the Document's areas.
+- Pins keep the one-per-Document rule; area + pin follows the answer to
+  Open question 1.
+- Visibility unchanged: a Player never sees any area of a hidden Document
+  (save, export, live updates).
+- Migration applied to staging through the label; listed as pending for
+  production in the tracker.
