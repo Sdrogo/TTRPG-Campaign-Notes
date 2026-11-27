@@ -12,6 +12,7 @@ import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.db import glossary_repo
 from app.domain.glossary import (
     MAX_ALIASES,
     MAX_TERM_LENGTH,
@@ -354,6 +355,11 @@ async def test_the_room_export_carries_only_the_visible_glossary(
             f"/rooms/{room.id}/documents", json={"name": "Castle"}, headers=room.master.headers
         )
     ).json()
+    rule = (
+        await client.post(
+            f"/rooms/{room.id}/tags", json={"name": "Rule"}, headers=room.master.headers
+        )
+    ).json()
     await _define(
         client,
         room,
@@ -361,6 +367,7 @@ async def test_the_room_export_carries_only_the_visible_glossary(
         aliases=["Fog"],
         definition=f"Around #[Castle](doc:{castle['id']}).",
         document_ids=[castle["id"]],
+        tag_ids=[rule["id"]],
         visibility="room",
     )
     await _define(client, room, "Strahd", visibility="master")
@@ -382,4 +389,96 @@ async def test_the_room_export_carries_only_the_visible_glossary(
     )
     assert "## Glossary" in markdown.text
     assert "**Mist** (Fog)" in markdown.text
+    assert "Tags: Rule" in markdown.text
     assert "Strahd" not in markdown.text
+
+
+async def test_an_administrator_who_hides_an_entry_from_themselves_gets_nothing_back(
+    client: AsyncClient, make_token: Callable[..., str]
+) -> None:
+    room = await _room(client, make_token)
+    promoted = await client.patch(
+        f"/rooms/{room.id}/members/{room.player.id}",
+        json={"is_admin": True},
+        headers=room.master.headers,
+    )
+    assert promoted.status_code == 200
+
+    made = await client.post(
+        room.url, json={"term": "Crypt", "visibility": "master"}, headers=room.player.headers
+    )
+    assert made.status_code == 201
+    assert made.json() is None
+    shown = await _define(client, room, "Mist", visibility="room")
+    hidden = await client.patch(
+        f"{room.url}/{shown['id']}", json={"visibility": "master"}, headers=room.player.headers
+    )
+    assert hidden.status_code == 200
+    assert hidden.json() is None
+
+
+async def test_edit_checks_what_it_links_and_its_limits(
+    client: AsyncClient, make_token: Callable[..., str]
+) -> None:
+    room = await _room(client, make_token)
+    entry = await _define(client, room, "Mist", visibility="room")
+    url = f"{room.url}/{entry['id']}"
+    for fields in (
+        {"tag_ids": [str(uuid.uuid4())]},
+        {"document_ids": [str(uuid.uuid4())]},
+        {"document_ids": [str(uuid.uuid4()) for _ in range(21)]},
+        {"visibility": "selective", "selective_user_ids": [str(uuid.uuid4())]},
+        {"term": "   "},
+        {"aliases": ["x" * (MAX_TERM_LENGTH + 1)]},
+    ):
+        response = await client.patch(url, json=fields, headers=room.master.headers)
+        assert response.status_code == 422, fields
+
+    tag = (
+        await client.post(
+            f"/rooms/{room.id}/tags", json={"name": "Rule"}, headers=room.master.headers
+        )
+    ).json()
+    document = (
+        await client.post(
+            f"/rooms/{room.id}/documents",
+            json={"name": "Castle", "visibility": "room"},
+            headers=room.master.headers,
+        )
+    ).json()
+    linked = await client.patch(
+        url,
+        json={"tag_ids": [tag["id"]], "document_ids": [document["id"]]},
+        headers=room.master.headers,
+    )
+    assert linked.status_code == 200
+    assert linked.json()["tag_ids"] == [tag["id"]]
+    assert [d["id"] for d in linked.json()["documents"]] == [document["id"]]
+
+
+async def test_a_room_holds_a_limited_number_of_entries(
+    client: AsyncClient,
+    make_token: Callable[..., str],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr("app.domain.glossary.MAX_ENTRIES_PER_ROOM", 1)
+    room = await _room(client, make_token)
+    await _define(client, room, "Mist")
+
+    response = await client.post(room.url, json={"term": "Fog"}, headers=room.master.headers)
+
+    assert response.status_code == 409
+
+
+async def test_a_vanished_entry_cannot_be_updated(db_session: AsyncSession) -> None:
+    now = datetime.now(UTC)
+    ghost = GlossaryEntry(
+        uuid.uuid4(), uuid.uuid4(), "Mist", (), "", DocumentVisibility.ROOM,
+        True, uuid.uuid4(), now, now,
+    )  # fmt: skip
+    with pytest.raises(LookupError):
+        await glossary_repo.update_entry(db_session, ghost)
+
+
+async def test_no_ids_find_no_entries(db_session: AsyncSession) -> None:
+    assert await glossary_repo.list_entries_by_ids(db_session, []) == []
