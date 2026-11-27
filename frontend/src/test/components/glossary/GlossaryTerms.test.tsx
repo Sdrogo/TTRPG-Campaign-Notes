@@ -1,6 +1,8 @@
-import { screen } from '@testing-library/react';
+import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { GlossaryTermPreview } from '../../../components/glossary/GlossaryTermPreview';
+import { HOVER_POINTER_QUERY } from '../../../components/mentions/DocumentMentionPreview';
 import { DocumentMentionsContext } from '../../../hooks/useDocumentMentions';
 import { renderWithProviders } from '../../utils';
 import { MentionText } from '../../../components/mentions/MentionText';
@@ -73,5 +75,78 @@ describe('Glossary terms in texts', () => {
       'href',
       '/rooms/room-1/documents/doc-1',
     );
+  });
+});
+
+function setCanHover(canHover: boolean) {
+  window.matchMedia = ((query: string) => ({
+    matches: canHover && query === HOVER_POINTER_QUERY,
+    media: query,
+    onchange: null,
+    addListener: vi.fn(),
+    removeListener: vi.fn(),
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    dispatchEvent: vi.fn(),
+  })) as typeof window.matchMedia;
+}
+
+describe('the term card', () => {
+  const original = window.matchMedia;
+  afterEach(() => {
+    window.matchMedia = original;
+  });
+
+  it('opens on hover where there is a mouse', async () => {
+    setCanHover(true);
+    renderWithProviders(withGlossary(<MentionText text="The mist rolls in." />));
+
+    await userEvent.hover(screen.getByTestId('glossary-term'));
+
+    expect(await screen.findByTestId('glossary-preview')).toHaveTextContent('haze');
+  });
+
+  it('opens and closes from the keyboard', async () => {
+    const user = userEvent.setup();
+    renderWithProviders(withGlossary(<MentionText text="The mist rolls in." />));
+
+    screen.getByTestId('glossary-term').focus();
+    await user.keyboard('{Enter}');
+    expect(await screen.findByTestId('glossary-preview')).toBeInTheDocument();
+    await user.keyboard(' ');
+    await waitFor(() => expect(screen.queryByTestId('glossary-preview')).toBeNull());
+    await user.keyboard('x');
+    expect(screen.queryByTestId('glossary-preview')).toBeNull();
+  });
+
+  it('stays plain inside a link, where a card cannot open', () => {
+    renderWithProviders(withGlossary(<MentionText text="The mist rolls in." linked={false} />));
+
+    expect(screen.queryByTestId('glossary-term')).toBeNull();
+    expect(screen.getByText('The mist rolls in.')).toBeInTheDocument();
+  });
+
+  it('also works outside a mentions context, with a bare entry', async () => {
+    renderWithProviders(
+      <GlossaryTermPreview roomId="room-1" entry={{ ...mist, definition: '  ', aliases: [] }} tags={[]}>
+        mist
+      </GlossaryTermPreview>,
+    );
+
+    await userEvent.click(screen.getByTestId('glossary-term'));
+
+    expect(await screen.findByTestId('glossary-preview')).toHaveTextContent('Mist');
+  });
+
+  it('shows an entry without a definition, aliases, Tags or Documents', async () => {
+    renderWithProviders(
+      withGlossary(<MentionText text="The mist rolls in." />, [
+        { ...mist, definition: '', aliases: [], tagIds: [], documents: [] },
+      ]),
+    );
+
+    await userEvent.click(screen.getByTestId('glossary-term'));
+
+    expect(await screen.findByTestId('glossary-preview')).toHaveTextContent('Mist');
   });
 });

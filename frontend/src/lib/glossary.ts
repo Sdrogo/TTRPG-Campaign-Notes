@@ -83,14 +83,6 @@ export function canSubmitGlossary(values: GlossaryFormValues): boolean {
   );
 }
 
-/** The aliases typed as one comma- or line-separated string, as a list. */
-export function parseAliases(typed: string): string[] {
-  return typed
-    .split(/[,\n]/)
-    .map((alias) => alias.trim())
-    .filter(Boolean);
-}
-
 /** Lower case without accents: the same word whatever its spelling (backend `term_key`). */
 export function termKey(text: string): string {
   return text
@@ -116,7 +108,8 @@ export function groupByLetter(entries: GlossaryEntry[]): { letter: string; entri
     groups.set(letter, [...(groups.get(letter) ?? []), entry]);
   }
   return [...groups.entries()]
-    .sort(([a], [b]) => (a === '#' ? -1 : b === '#' ? 1 : a.localeCompare(b)))
+    // `#` is punctuation, which collation puts before every letter.
+    .sort(([a], [b]) => a.localeCompare(b))
     .map(([letter, list]) => ({ letter, entries: list }));
 }
 

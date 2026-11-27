@@ -37,8 +37,9 @@ export function MentionSegmentView({ segment, linked = true, members }: MentionS
   const mentions = useDocumentMentions();
   if (segment.kind === 'glossary') {
     // Inside a link a card can't open (links can't nest): the term stays plain.
-    return mentions && linked === true ? (
-      <GlossaryTermPreview roomId={mentions.roomId} entry={segment.entry} tags={mentions.tags}>
+    // (A glossary segment only exists under a mentions context.)
+    return linked === true ? (
+      <GlossaryTermPreview roomId={mentions!.roomId} entry={segment.entry} tags={mentions!.tags}>
         {segment.text}
       </GlossaryTermPreview>
     ) : (

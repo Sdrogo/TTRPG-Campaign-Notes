@@ -85,11 +85,6 @@ export function GlossaryTermPreview({ roomId, entry, tags, children }: GlossaryT
   );
 }
 
-/** What the card shows: the term, its aliases, the definition, Tags and linked Documents. */
-export function GlossaryEntryCard({ roomId, entry, tags }: Omit<GlossaryTermPreviewProps, 'children'>) {
-  return <PreviewCard roomId={roomId} entry={entry} tags={tags} />;
-}
-
 function PreviewCard({ roomId, entry, tags }: Omit<GlossaryTermPreviewProps, 'children'>) {
   const { t } = useTranslation();
   const mentions = useDocumentMentions();

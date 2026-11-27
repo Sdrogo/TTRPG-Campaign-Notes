@@ -1,10 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import {
   filterGlossary,
+  glossaryFormValues,
   glossaryLetter,
   groupByLetter,
   splitGlossaryTerms,
   termKey,
+  toGlossaryBody,
 } from '../../lib/glossary';
 import type { GlossaryEntry } from '../../types/glossary';
 
@@ -87,5 +89,43 @@ describe('listing', () => {
     expect(filterGlossary(entries, 'fog', []).map((e) => e.id)).toEqual(['mist']);
     expect(filterGlossary(entries, '', ['t1']).map((e) => e.id)).toEqual(['a']);
     expect(filterGlossary(entries, '', ['t1', 't2'])).toEqual([]);
+  });
+});
+
+describe('glossaryFormValues', () => {
+  it('turns an entry into the form values, linked Documents as ids', () => {
+    const linked = entry({
+      id: 'g',
+      term: 'Mist',
+      aliases: ['Fog'],
+      tagIds: ['t1'],
+      documents: [{ id: 'd1', name: 'Castle' }],
+    });
+    expect(glossaryFormValues(linked)).toMatchObject({
+      term: 'Mist',
+      aliases: ['Fog'],
+      tagIds: ['t1'],
+      documentIds: ['d1'],
+      visibility: 'room',
+      highlight: true,
+    });
+  });
+});
+
+describe('smaller cases', () => {
+  it('ignores a word with no letters and finds a term that ends the text', () => {
+    const runs = splitGlossaryTerms('the mist', [entry({ id: 'x', term: ' ' }), mist]);
+    expect(runs.map((run) => run.text)).toEqual(['the ', 'mist']);
+  });
+
+  it('puts terms that start with no letter first, under #', () => {
+    const groups = groupByLetter([mist, entry({ id: 'n', term: '9 Lives' })]);
+    expect(groups.map((group) => group.letter)).toEqual(['#', 'M']);
+  });
+
+  it('keeps Selective grants in the body only for a Selective entry', () => {
+    const values = { ...glossaryFormValues(mist), selectiveUserIds: ['u2'] };
+    expect(toGlossaryBody({ ...values, visibility: 'selective' }).selective_user_ids).toEqual(['u2']);
+    expect(toGlossaryBody({ ...values, visibility: 'room' }).selective_user_ids).toEqual([]);
   });
 });

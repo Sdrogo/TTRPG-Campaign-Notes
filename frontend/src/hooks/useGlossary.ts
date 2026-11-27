@@ -34,11 +34,11 @@ export function useCreateGlossaryEntry(roomId: string) {
   const reload = useReloadGlossary(roomId);
   return useMutation({
     mutationFn: async (values: GlossaryFormValues) => {
-      const raw = await apiFetch<RawGlossaryEntry | null>(`/rooms/${roomId}/glossary`, {
+      const raw = await apiFetch<RawGlossaryEntry>(`/rooms/${roomId}/glossary`, {
         method: 'POST',
         json: toGlossaryBody(values),
       });
-      return raw === null ? null : toGlossaryEntry(raw);
+      return toGlossaryEntry(raw);
     },
     onSuccess: reload,
   });

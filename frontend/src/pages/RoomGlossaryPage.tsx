@@ -293,12 +293,6 @@ function EditModal({ roomId, editing, onClose, defaultVisibility, tags, document
     update.reset();
     onClose();
   };
-  const initial: GlossaryFormValues | null =
-    editing === 'new'
-      ? { ...EMPTY_GLOSSARY_VALUES, visibility: defaultVisibility ?? 'room' }
-      : editing
-        ? glossaryFormValues(editing)
-        : null;
   return (
     <Modal
       opened={editing !== null}
@@ -306,10 +300,14 @@ function EditModal({ roomId, editing, onClose, defaultVisibility, tags, document
       title={editing === 'new' ? t('glossary.form.createTitle') : t('glossary.form.editTitle')}
       size="lg"
     >
-      {initial && (
+      {editing !== null && (
         <GlossaryEntryForm
-          key={editing === 'new' ? 'new' : (editing as GlossaryEntry).id}
-          initialValues={initial}
+          key={editing === 'new' ? 'new' : editing.id}
+          initialValues={
+            editing === 'new'
+              ? { ...EMPTY_GLOSSARY_VALUES, visibility: defaultVisibility ?? 'room' }
+              : glossaryFormValues(editing)
+          }
           members={members}
           tags={tags}
           documents={documents}
@@ -320,8 +318,8 @@ function EditModal({ roomId, editing, onClose, defaultVisibility, tags, document
           onSubmit={(values) => {
             if (editing === 'new') {
               create.mutate(values, { onSuccess: close });
-            } else if (editing) {
-              update.mutate({ entryId: editing.id, values }, { onSuccess: close });
+            } else {
+              update.mutate({ entryId: (editing as GlossaryEntry).id, values }, { onSuccess: close });
             }
           }}
         />

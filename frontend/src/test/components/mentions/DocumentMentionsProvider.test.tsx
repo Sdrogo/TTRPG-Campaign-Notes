@@ -1,8 +1,9 @@
-import { waitFor } from '@testing-library/react';
+import { act, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { apiFetch } from '../../../lib/apiClient';
 import { useDocumentMentions } from '../../../hooks/useDocumentMentions';
 import { rawDocument, rawMember, rawRoom } from '../../fixtures';
+import { setGlossaryHighlight } from '../../../lib/glossaryPreference';
 import { renderHookWithProviders } from '../../utils';
 import { DocumentMentionsProvider } from '../../../components/mentions/DocumentMentionsProvider';
 import type { ReactNode } from 'react';
@@ -11,6 +12,21 @@ vi.mock('../../../lib/apiClient', () => ({ apiFetch: vi.fn() }));
 
 const fetchMock = vi.mocked(apiFetch);
 
+const rawGlossary = {
+  id: 'g1',
+  term: 'Nebbia',
+  aliases: [],
+  definition: '',
+  visibility: 'room',
+  selective_user_ids: [],
+  highlight: true,
+  tag_ids: [],
+  documents: [],
+  created_at: '',
+  updated_at: '',
+  can_edit: false,
+  can_delete: false,
+};
 const tags = [{ id: 'tag-1', name: 'Luoghi', category: null }];
 const routes: { members: unknown; room: unknown } = {
   members: [rawMember()],
@@ -36,6 +52,7 @@ beforeEach(() => {
     if (path === '/rooms/room-1/documents') {
       return Promise.resolve(init?.method === 'POST' ? rawDocument() : [rawDocument()]);
     }
+    if (path === '/rooms/room-1/glossary') return Promise.resolve([rawGlossary]);
     if (path === '/rooms/room-1/tags') return Promise.resolve(tags);
     if (path === '/rooms/room-1/members') return Promise.resolve(routes.members);
     if (path === '/rooms/room-1') return Promise.resolve(routes.room);
@@ -154,5 +171,16 @@ describe('what the viewer may create', () => {
     await waitFor(() => expect(queryClient.isFetching()).toBe(0));
     expect(result.current?.canCreateDocument).toBe(false);
     expect(result.current?.canCreateTag).toBe(false);
+  });
+
+  // Spec 79 Decision 12: the device switch decides whether terms are offered.
+  it("exposes the Room's Glossary, unless this device switched highlighting off", async () => {
+    const { result } = mount();
+    await waitFor(() => expect(result.current?.glossary).toHaveLength(1));
+
+    act(() => setGlossaryHighlight(false));
+    await waitFor(() => expect(result.current?.glossary).toEqual([]));
+    act(() => setGlossaryHighlight(true));
+    await waitFor(() => expect(result.current?.glossary).toHaveLength(1));
   });
 });
