@@ -404,8 +404,6 @@ export const MAP_COLORS: MapColor[] = [
 /** How many colors the picker shows before "more colors" (one row). */
 export const MAP_COLORS_VISIBLE = 6;
 
-
-
 /**
  * The CSS color a map color is drawn with: a variable that the viewer's
  * palette fills in (spec 78, `applyPalette` in `lib/palette.ts`), so the
