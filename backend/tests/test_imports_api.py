@@ -2997,7 +2997,7 @@ async def test_glossary_entries_that_cannot_be_written_are_listed(
     await _post(client, f"{room.url}/glossary", room.master, term="Mist", aliases=["Fog"])
     file = _json_file(
         {"name": "Inn", "id": "d1"},
-        tags=[{"id": "t1", "name": "New tag"}],
+        tags=[{"id": "t1", "name": "New tag"}, {"id": "t2", "name": "Other tag"}],
         glossary=[
             {"term": "   "},
             {"term": "x" * 121},
@@ -3008,11 +3008,15 @@ async def test_glossary_entries_that_cannot_be_written_are_listed(
             {"term": "Bat"},
             {"term": "Unticked"},
             {"term": "Raven", "visibility": "weird", "tag_ids": ["t1"]},
+            {"term": "Mist", "tag_ids": ["t2"]},
         ],
     )
     monkeypatch.setattr("app.domain.imports.MAX_ENTRIES_PER_ROOM", 4)
 
-    preview = (await _preview(client, room, room.player, file)).json()["glossary"]
+    answer = (await _preview(client, room, room.player, file)).json()
+    # A skipped entry (past the cap, or already in the Room) creates no Tag.
+    assert answer["tags_to_create"] == []
+    preview = answer["glossary"]
     assert [(g["term"], g["skipped"]) for g in preview] == [
         ("", "invalid"),
         ("x" * 121, "invalid"),
@@ -3023,6 +3027,7 @@ async def test_glossary_entries_that_cannot_be_written_are_listed(
         ("Bat", None),
         ("Unticked", "limit"),
         ("Raven", "limit"),
+        ("Mist", "exists"),
     ]
     chosen = [g["key"] for g in preview if g["term"] not in ("Unticked", "Bat")]
     job = await _job(
@@ -3039,6 +3044,7 @@ async def test_glossary_entries_that_cannot_be_written_are_listed(
     assert entries["Raven"]["visibility"] == "room"
     assert entries["Raven"]["tag_ids"] == [(await _tags(client, room))["New tag"]["id"]]
     assert "Unticked" not in entries and "Bat" not in entries
+    assert "Other tag" not in await _tags(client, room)
 
 
 async def test_glossary_definitions_keep_tag_mentions_and_limits(

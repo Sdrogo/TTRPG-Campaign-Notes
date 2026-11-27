@@ -661,13 +661,10 @@ def _plan_glossary(
             if choices.glossary is not None and key not in choices.glossary:
                 continue
             entry = _plan_glossary_entry(
-                file, fi, key, raw, context, choices, book, targets, claimed, new_id
+                file, fi, key, raw, context, choices, book, targets, claimed, new_id, room_left > 0
             )
             if entry.skipped is None and not entry.replaces:
-                if room_left <= 0:
-                    entry = _skip_entry(entry, GlossarySkipReason.LIMIT)
-                else:
-                    room_left -= 1
+                room_left -= 1
             if entry.skipped is None:
                 for word in [entry.term, *entry.aliases]:
                     claimed[term_key(word)] = entry.id
@@ -691,10 +688,13 @@ def _plan_glossary_entry(
     targets: Mapping[tuple[int, str], tuple[uuid.UUID, str]],
     claimed: Mapping[str, uuid.UUID],
     new_id: Callable[[], uuid.UUID],
+    room_has_space: bool,
 ) -> PlannedGlossaryEntry:
     """One Glossary entry: its term against the Room (Decision 3), its
     aliases without the words other entries hold, its Tags and Documents
-    re-pointed (Decision 4) and its level (Decision 5)."""
+    re-pointed (Decision 4) and its level (Decision 5). A new entry past the
+    cap is skipped (Decision 6) before its Tags are looked at, and only an
+    entry that will be written may create Tags."""
 
     def resolve(ref: MentionRef) -> tuple[MentionKind, uuid.UUID, str] | None:
         if ref.kind is MentionKind.DOCUMENT:
@@ -739,6 +739,9 @@ def _plan_glossary_entry(
             return _skip_entry(base, GlossarySkipReason.TAKEN)
         existing_id = holder
     replaces = existing_id is not None and key in choices.glossary_replace
+    if existing_id is None and not room_has_space:
+        return _skip_entry(base, GlossarySkipReason.LIMIT)
+    written = existing_id is None or replaces
     entry_id = existing_id if replaces and existing_id is not None else base.id
 
     kept: list[str] = []
@@ -754,10 +757,14 @@ def _plan_glossary_entry(
             kept.append(alias)
 
     # A Glossary manager may create Tags too (both are the Administrator or
-    # the Master), so every name resolves.
+    # the Master), so every name resolves; a skipped entry creates none.
     tag_ids: list[uuid.UUID] = []
     for tag_name in raw.tag_names:
-        tag_id = book.resolve(tag_name)
+        if written:
+            tag_id: uuid.UUID | None = book.resolve(tag_name)
+        else:
+            found = book.lookup(tag_name)
+            tag_id = None if found is None else found[0]
         if tag_id is not None and tag_id not in tag_ids:
             tag_ids.append(tag_id)
     document_ids: list[uuid.UUID] = []
