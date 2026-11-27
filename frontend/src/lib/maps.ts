@@ -43,6 +43,7 @@ export interface RawMap {
   revision: number;
   can_edit: boolean;
   can_manage: boolean;
+  area_labels?: 'every' | 'largest' | null;
 }
 
 export interface RawMapGroup {
@@ -126,6 +127,7 @@ export function toMap(raw: RawMap): RelationshipMap {
     revision: raw.revision,
     canEdit: raw.can_edit,
     canManage: raw.can_manage,
+    areaLabels: raw.area_labels ?? null,
   };
 }
 
@@ -188,18 +190,18 @@ export function toMapDetail(raw: RawMapDetail): RelationshipMapDetail {
 
 // --- Color legend (spec 68) ----------------------------------------------------
 
-/** The colors the relations use, in palette order. */
-export function usedColors(arrows: MapArrow[]): MapColor[] {
-  const used = new Set(arrows.map((arrow) => arrow.color));
+/** The colors the relations (or a geographic map's areas, spec 77b) use, in palette order. */
+export function usedColors(items: readonly { color: MapColor }[]): MapColor[] {
+  const used = new Set(items.map((item) => item.color));
   return MAP_COLORS.filter((color) => used.has(color));
 }
 
 /**
- * The legend's rows (Decision 4): each color a relation the viewer sees uses
- * and that has a meaning, in palette order.
+ * The legend's rows (Decision 4): each color a relation (or an area, spec
+ * 77b) the viewer sees uses and that has a meaning, in palette order.
  */
-export function legendRows(meanings: ColorMeanings, arrows: MapArrow[]): [MapColor, string][] {
-  return usedColors(arrows).flatMap((color) => {
+export function legendRows(meanings: ColorMeanings, items: readonly { color: MapColor }[]): [MapColor, string][] {
+  return usedColors(items).flatMap((color) => {
     const meaning = meanings[color];
     return meaning ? [[color, meaning] as [MapColor, string]] : [];
   });

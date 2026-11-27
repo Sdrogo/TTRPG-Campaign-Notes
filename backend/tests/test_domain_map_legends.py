@@ -7,6 +7,7 @@ from app.db.relationship_maps_repo import legend_from_json, legend_to_json
 from app.domain.map_legends import (
     MAX_PRESETS_PER_ROOM,
     EmptyPresetError,
+    LegendKind,
     LegendPreset,
     PresetNameRequiredError,
     TooManyPresetsError,
@@ -15,9 +16,13 @@ from app.domain.map_legends import (
     clean_preset,
     effective_meanings,
     ensure_room_for_another_preset,
+    hidden_colors,
+    keep_hidden_meanings,
+    legend_kind,
+    meanings_for_viewer,
 )
 from app.domain.models import DocumentVisibility, RoomRole
-from app.domain.relationship_maps import MapColor, MapTextTooLongError, RelationshipMap
+from app.domain.relationship_maps import MapColor, MapKind, MapTextTooLongError, RelationshipMap
 
 NOW = datetime(2026, 11, 9, tzinfo=UTC)
 
@@ -76,3 +81,33 @@ def test_stored_meanings_skip_colors_the_palette_lacks() -> None:
     assert legend_from_json(None) == {}
     assert legend_to_json({}) is None
     assert legend_to_json({MapColor.RED: "Rival"}) == {"red": "Rival"}
+
+
+def test_each_kind_of_map_has_its_kind_of_legend() -> None:
+    assert legend_kind(MapKind.FREE) == LegendKind.RELATIONS
+    assert legend_kind(MapKind.GEOGRAPHIC) == LegendKind.AREAS
+
+
+def test_a_viewer_reads_no_meaning_of_a_color_only_hidden_areas_use() -> None:
+    hidden = hidden_colors(
+        {MapColor.RED, MapColor.BLUE, MapColor.GREEN}, {MapColor.RED, MapColor.GREEN}
+    )
+    assert hidden == {MapColor.BLUE}
+    meanings = {MapColor.RED: "Yakuza", MapColor.BLUE: "Cult", MapColor.GOLD: "Unused"}
+    assert meanings_for_viewer(meanings, hidden) == {
+        MapColor.RED: "Yakuza",
+        MapColor.GOLD: "Unused",
+    }
+
+
+def test_a_save_keeps_the_meanings_of_the_hidden_colors() -> None:
+    kept = keep_hidden_meanings(
+        {MapColor.PINK: "Clan", MapColor.BLUE: "Guess", MapColor.RED: "Gang"},
+        {MapColor.RED: "Yakuza", MapColor.BLUE: "Cult"},
+        {MapColor.BLUE},
+    )
+    assert list(kept.items()) == [
+        (MapColor.RED, "Gang"),
+        (MapColor.BLUE, "Cult"),
+        (MapColor.PINK, "Clan"),
+    ]

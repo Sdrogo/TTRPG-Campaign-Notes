@@ -1,11 +1,14 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiFetch } from '../lib/apiClient';
+import { toGeoMapDetail, type RawGeoMapDetail } from '../lib/geoMaps';
 import { toMapDetail, type RawMapDetail } from '../lib/maps';
-import type { ColorMeanings, LegendPreset } from '../types/map';
+import type { ColorMeanings, LegendKind, LegendPreset } from '../types/map';
+import { geoQueryKey } from './useGeoMap';
 
 interface RawPreset {
   id: string;
   name: string;
+  kind: LegendKind;
   entries: ColorMeanings;
   map_count: number;
 }
@@ -19,7 +22,7 @@ function presetsQueryKey(roomId: string) {
 }
 
 function toPreset(raw: RawPreset): LegendPreset {
-  return { id: raw.id, name: raw.name, entries: raw.entries, mapCount: raw.map_count };
+  return { id: raw.id, name: raw.name, kind: raw.kind, entries: raw.entries, mapCount: raw.map_count };
 }
 
 /** What a map's legend becomes: linked to a Room preset, or its own meanings (spec 68). */
@@ -27,26 +30,28 @@ export type LegendChange = { presetId: string } | { meanings: ColorMeanings };
 
 /**
  * Sets a map's legend (spec 68 Decisions 10, 21, 22) through `PATCH .../board`
- * with nothing but `legend`, so the board itself is untouched; the map's
- * cached detail takes the answer.
+ * (`PATCH .../geo` for a geographic map's area legend, spec 77b) with nothing
+ * but `legend`, so the board itself is untouched; the map's cached detail
+ * takes the answer.
  */
-export function useSaveLegend(roomId: string, mapId: string) {
+export function useSaveLegend(roomId: string, mapId: string, kind: LegendKind = 'relations') {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (change: LegendChange) =>
-      toMapDetail(
-        await apiFetch<RawMapDetail>(`/rooms/${roomId}/maps/${mapId}/board`, {
-          method: 'PATCH',
-          json: {
-            legend: 'presetId' in change ? { preset_id: change.presetId } : { meanings: change.meanings },
-          },
-        }),
-      ),
-    onSuccess: (detail) => {
-      queryClient.setQueryData(['rooms', roomId, 'maps', mapId], detail);
-      // A preset's count of linked maps changed.
-      return queryClient.invalidateQueries({ queryKey: presetsQueryKey(roomId) });
+    mutationFn: async (change: LegendChange) => {
+      const json = {
+        legend: 'presetId' in change ? { preset_id: change.presetId } : { meanings: change.meanings },
+      };
+      const path = `/rooms/${roomId}/maps/${mapId}`;
+      if (kind === 'areas') {
+        const geo = toGeoMapDetail(await apiFetch<RawGeoMapDetail>(`${path}/geo`, { method: 'PATCH', json }));
+        queryClient.setQueryData(geoQueryKey(roomId, mapId), geo);
+      } else {
+        const detail = toMapDetail(await apiFetch<RawMapDetail>(`${path}/board`, { method: 'PATCH', json }));
+        queryClient.setQueryData(['rooms', roomId, 'maps', mapId], detail);
+      }
     },
+    // A preset's count of linked maps changed.
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: presetsQueryKey(roomId) }),
   });
 }
 
@@ -72,11 +77,11 @@ function useRefreshAfterPreset(roomId: string) {
     ]);
 }
 
-/** The Master saves a new preset (Decision 23). */
+/** The Master saves a new preset (Decision 23), of a kind (spec 77b Decision 8). */
 export function useCreatePreset(roomId: string) {
   const refresh = useRefreshAfterPreset(roomId);
   return useMutation({
-    mutationFn: async (preset: { name: string; entries: ColorMeanings }) =>
+    mutationFn: async (preset: { name: string; kind: LegendKind; entries: ColorMeanings }) =>
       toPreset(await apiFetch<RawPreset>(presetsPath(roomId), { method: 'POST', json: preset })),
     onSuccess: refresh,
   });

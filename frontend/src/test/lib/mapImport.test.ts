@@ -41,6 +41,7 @@ describe('map files (spec 38_3)', () => {
       notFound: ['Elysium'],
       ambiguous: ['Bar'],
       repeated: ['Hachikō'],
+      recolored: [],
     });
   });
 

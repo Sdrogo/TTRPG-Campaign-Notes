@@ -1324,7 +1324,15 @@
       "placePane": "地図の横に開いた場所",
       "noNote": "メモなし",
       "placeNotFound": "場所が見つかりません",
-      "connections": "つながり"
+      "connections": "つながり",
+      "areaLabels": "複数のエリアを持つドキュメントの名前",
+      "areaLabelsHelp": "このマップで複数のエリアを持つドキュメントの名前を表示する場所。",
+      "areaLabelsEvery": "すべてのエリアに",
+      "areaLabelsLargest": "最も大きいエリアだけに",
+      "alreadyOnMap": "{{name}}（マップ上にあり）",
+      "sharedColor": "色はこのドキュメントの{{number}}つのエリアすべてに適用されます。",
+      "addArea": "エリアを追加",
+      "areaOf": "このドキュメントのエリア {{index}}/{{total}}"
     },
     "kind": {
       "label": "マップの種類",
@@ -1348,7 +1356,8 @@
       "ambiguous": "この名前のドキュメントが複数あるため、ただのラベルになります:",
       "repeated": "ドキュメントがすでにマップ上にあるため、ただのラベルになります:",
       "backgroundLater": "背景画像は、新しいマップの「マップ」ボタンからあとでアップロードします。",
-      "submit": "インポート"
+      "submit": "インポート",
+      "recolored": "同じドキュメントのエリアの色が異なります。すべて最初のエリアの色になります："
     },
     "openPreview": "プレビューで開く",
     "legend": {
@@ -1391,7 +1400,16 @@
       "newPreset": "新しいプリセット",
       "addColor": "色を追加",
       "colorMeans": "このマップでは: {{meaning}}",
-      "colorMeansNothing": "この色にはまだ凡例の意味がありません。"
+      "colorMeansNothing": "この色にはまだ凡例の意味がありません。",
+      "areasTitle": "エリアの凡例",
+      "areasChip": "エリアの凡例 · {{number}}",
+      "areasDialogTitle": "エリアの色の凡例",
+      "areasTapHint": "意味をタップすると、そのエリアが強調表示されます。",
+      "areasHighlightHint": "もう一度行をクリックするか、Escですべてのエリアを表示します。",
+      "noAreas": "このマップにはまだエリアがありません。",
+      "areasVisibleHint": "凡例にはエリアで使われている色だけが表示され、各閲覧者には自分が見られるエリアの色だけが表示されます。",
+      "relationsSection": "関係の凡例",
+      "areasSection": "エリアの凡例"
     }
   },
   "sessionZero": {

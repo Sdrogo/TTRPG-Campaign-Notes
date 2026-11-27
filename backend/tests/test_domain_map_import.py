@@ -437,3 +437,60 @@ def test_an_exported_map_imports_back_to_the_same_map() -> None:
     assert [(k.label, k.bend) for k in again.plan.links] == [
         (k.label, k.bend) for k in first.plan.links
     ]
+
+
+def test_several_areas_may_name_one_document_in_one_color() -> None:
+    """Spec 77: every area naming a Document is bound to it, in the first
+    one's color (reported); a pin naming it afterwards, or an area naming a
+    pinned one, becomes a plain label reported as repeated."""
+    yakuza, police = _document("Yakuza"), _document("Polizia")
+    planned = plan_map_import(
+        _file(
+            areas=[
+                ImportedArea(key="y1", points=SQUARE, document="Yakuza", color=MapColor.RED),
+                ImportedArea(key="y2", points=SQUARE, document="yakuza", color=MapColor.BLUE),
+                ImportedArea(key="y3", points=SQUARE, document="Yakuza", color=MapColor.RED),
+                ImportedArea(key="p1", points=SQUARE, document="Polizia"),
+            ],
+            pins=[
+                ImportedPin(key="hq", x=5, y=5, document="Yakuza"),
+                ImportedPin(key="station", x=6, y=6, name="Koban"),
+            ],
+        ),
+        [yakuza, police],
+        RoomRole.MASTER,
+    )
+    areas = planned.plan.areas
+    assert [area.document_id for area in areas] == [yakuza.id] * 3 + [police.id]
+    assert {area.color for area in areas[:3]} == {MapColor.RED}
+    assert planned.report.recolored == ("yakuza",)
+    assert planned.report.repeated == ("Yakuza",)
+    assert planned.report.matched == 2
+    assert planned.plan.pins[0].document_id is None
+
+    board = GeoBoard(areas=areas, pins=planned.plan.pins)
+    exported = export_map_file(
+        "Shibuya", "", 1000, 800, board, {yakuza.id: yakuza.name, police.id: police.name}
+    )
+    assert [area["key"] for area in exported["areas"]] == [
+        "yakuza",
+        "yakuza-2",
+        "yakuza-3",
+        "polizia",
+    ]
+    assert [area["document"] for area in exported["areas"]][:3] == ["Yakuza"] * 3
+
+
+def test_a_pinned_document_is_not_bound_to_a_later_area() -> None:
+    bar = _document("Bar")
+    planned = plan_map_import(
+        _file(
+            areas=[ImportedArea(key="a", points=SQUARE, document="Bar")],
+            pins=[ImportedPin(key="p", x=5, y=5, document="Bar")],
+        ),
+        [bar],
+        RoomRole.MASTER,
+    )
+    # Areas are read first, so the area takes the Document and the pin is plain.
+    assert planned.plan.areas[0].document_id == bar.id
+    assert planned.plan.pins[0].document_id is None

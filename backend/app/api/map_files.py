@@ -16,7 +16,7 @@ from app.api.access import require_membership, visible_documents
 from app.api.errors import http_error, translated_error
 from app.api.geographic_maps import GeoDetailResponse, geo_detail
 from app.api.rate_limits import Group, limit
-from app.api.relationship_maps import get_visible_map, insert_map
+from app.api.relationship_maps import get_visible_map, insert_map, legend_for_viewer
 from app.api.validation import UniqueIds
 from app.auth.dependencies import CurrentUserDep
 from app.db import documents_repo, geographic_maps_repo, rooms_repo
@@ -40,8 +40,10 @@ from app.domain.map_import import (
     export_map_file,
     plan_map_import,
 )
+from app.domain.map_legends import hidden_colors
 from app.domain.models import DocumentVisibility, Membership
 from app.domain.relationship_maps import (
+    AreaLabels,
     ArrowDirection,
     InvalidBoardError,
     MapColor,
@@ -121,6 +123,8 @@ class MapFileBody(_FileModel):
     name: str
     description: str | None = None
     plane: FilePlane
+    area_labels: AreaLabels | None = None
+    color_legend: dict[MapColor, str] = {}
     areas: list[FileArea] = []
     pins: list[FilePin] = []
     links: list[FileLink] = []
@@ -146,7 +150,8 @@ class ImportRequest(ImportPreviewRequest):
 class ImportReportResponse(BaseModel):
     """What the import will create (Decision 10): the map's name and plane,
     how many areas, pins and links, how many are bound to a Document, and the
-    names that will stay plain labels."""
+    names that will stay plain labels; `recolored` the Documents whose
+    areas all take their first area's color (spec 77 Decision 4b)."""
 
     name: str
     description: str
@@ -159,6 +164,7 @@ class ImportReportResponse(BaseModel):
     not_found: list[str]
     ambiguous: list[str]
     repeated: list[str]
+    recolored: list[str] = []
 
 
 _IMPORT_ERROR_STATUS: dict[type[DomainError], int] = {
@@ -208,6 +214,8 @@ def _map_file(body: MapFileBody) -> MapFile:
         ],
         pins=[ImportedPin(**pin.model_dump()) for pin in body.pins],
         links=[ImportedLink(**link.model_dump()) for link in body.links],
+        area_labels=body.area_labels,
+        color_legend=body.color_legend,
     )
 
 
@@ -262,6 +270,7 @@ async def preview_map_import(
         not_found=list(report.not_found),
         ambiguous=list(report.ambiguous),
         repeated=list(report.repeated),
+        recolored=list(report.recolored),
     )
 
 
@@ -292,6 +301,8 @@ async def import_map(
         kind=MapKind.GEOGRAPHIC,
         plane_width=planned.plane_width,
         plane_height=planned.plane_height,
+        area_labels=map_file.area_labels,
+        color_legend=planned.color_legend,
     )
     await geographic_maps_repo.save_geo_board(session, relationship_map.id, planned.plan)
     return await geo_detail(session, relationship_map, grants, membership)
@@ -324,6 +335,11 @@ async def export_map(
         membership,
     )
     shown = visible_geo_board(board, {document.id for document in documents}, membership.role)
+    meanings, _ = await legend_for_viewer(
+        session,
+        relationship_map,
+        hidden_colors({a.color for a in board.areas}, {a.color for a in shown.areas}),
+    )
     return export_map_file(
         relationship_map.name,
         relationship_map.description,
@@ -331,4 +347,6 @@ async def export_map(
         relationship_map.plane_height,
         shown,
         {document.id: document.name for document in documents},
+        relationship_map.area_labels,
+        meanings,
     )

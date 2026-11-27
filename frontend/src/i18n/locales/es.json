@@ -1358,7 +1358,15 @@
       "placePane": "Lugar abierto junto al mapa",
       "noNote": "Sin nota",
       "placeNotFound": "Lugar no encontrado",
-      "connections": "Conexiones"
+      "connections": "Conexiones",
+      "areaLabels": "Nombres de Documentos con varias zonas",
+      "areaLabelsHelp": "Dónde se escribe el nombre de un Documento que tiene varias zonas en este mapa.",
+      "areaLabelsEvery": "En cada zona",
+      "areaLabelsLargest": "Solo en la zona más grande",
+      "alreadyOnMap": "{{name}} (ya en el mapa)",
+      "sharedColor": "El color vale para las {{number}} zonas de este Documento.",
+      "addArea": "Añadir una zona",
+      "areaOf": "Zona {{index}} de {{total}} de este Documento"
     },
     "kind": {
       "label": "Tipo de mapa",
@@ -1382,7 +1390,8 @@
       "ambiguous": "Varios Documentos con este nombre, quedarán como etiquetas simples:",
       "repeated": "Documento ya en el mapa, quedarán como etiquetas simples:",
       "backgroundLater": "La imagen de fondo se sube después, desde el botón Mapa del nuevo mapa.",
-      "submit": "Importar"
+      "submit": "Importar",
+      "recolored": "Zonas de un mismo Documento con colores distintos, todas toman el color de la primera:"
     },
     "openPreview": "Abrir en vista previa",
     "legend": {
@@ -1430,7 +1439,16 @@
       "newPreset": "Nuevo preajuste",
       "addColor": "Añadir un color",
       "colorMeans": "En este mapa: {{meaning}}",
-      "colorMeansNothing": "Este color aún no tiene significado en la leyenda."
+      "colorMeansNothing": "Este color aún no tiene significado en la leyenda.",
+      "areasTitle": "Leyenda de zonas",
+      "areasChip": "Leyenda de zonas · {{number}}",
+      "areasDialogTitle": "Leyenda de colores de las zonas",
+      "areasTapHint": "Toca un significado para resaltar sus zonas.",
+      "areasHighlightHint": "Vuelve a pulsar la fila o pulsa Esc para ver todas las zonas.",
+      "noAreas": "Este mapa aún no tiene zonas.",
+      "areasVisibleHint": "La leyenda muestra solo los colores que usan las zonas, y cada uno ve solo los de las zonas que puede ver.",
+      "relationsSection": "Leyendas de relaciones",
+      "areasSection": "Leyendas de zonas"
     }
   },
   "sessionZero": {

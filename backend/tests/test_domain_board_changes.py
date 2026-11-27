@@ -321,6 +321,13 @@ def test_a_new_place_for_a_document_already_placed_is_dropped() -> None:
     assert merged.pins == [stored_pin, plain]
 
 
+def test_a_new_pin_claims_its_document_once() -> None:
+    fresh = uuid.uuid4()
+    first, again = _pin(fresh), _pin(fresh)
+    merged = _merge_geo(GeoBoard(), GeoBoard(pins=[first, again]), created=(first, again))
+    assert merged.pins == [first]
+
+
 def test_a_link_whose_end_is_gone_is_dropped_and_the_same_id_twice_refused() -> None:
     start, end = _pin(), _area()
     link = _link(start, end)
@@ -330,3 +337,29 @@ def test_a_link_whose_end_is_gone_is_dropped_and_the_same_id_twice_refused() -> 
     assert kept.links == [link]
     with pytest.raises(InvalidBoardError):
         _merge_geo(GeoBoard(), GeoBoard(pins=[start, start]), created=(start,))
+
+
+def test_new_areas_join_a_document_already_with_areas_in_its_color() -> None:
+    """Spec 77: a new area for a Document with areas is kept and takes their
+    color, unless the change itself recolors them; a new area for a pinned
+    Document, or a new pin for a Document with areas, is still dropped."""
+    faction, pinned = uuid.uuid4(), uuid.uuid4()
+    stored = _area(faction)
+    pin = _pin(pinned)
+    added = replace(_area(faction), color=MapColor.RED)
+    late_area, late_pin = _area(pinned), _pin(faction)
+    merged = _merge_geo(
+        GeoBoard(areas=[stored], pins=[pin]),
+        GeoBoard(areas=[added, late_area], pins=[late_pin]),
+        created=(added, late_area, late_pin),
+    )
+    assert [area.id for area in merged.areas] == [stored.id, added.id]
+    assert {area.color for area in merged.areas} == {stored.color}
+    assert merged.pins == [pin]
+
+    recolored = replace(stored, color=MapColor.GOLD)
+    merged = _merge_geo(
+        GeoBoard(areas=[stored, replace(added, color=stored.color)]),
+        GeoBoard(areas=[recolored]),
+    )
+    assert {area.color for area in merged.areas} == {MapColor.GOLD}

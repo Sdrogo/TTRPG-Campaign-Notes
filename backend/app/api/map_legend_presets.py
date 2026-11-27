@@ -1,5 +1,6 @@
-"""Relation color legend presets of a Room (spec 68 Decisions 19-25): named
-sets of color meanings the Room's free maps link to. Members only (403);
+"""Color legend presets of a Room (spec 68 Decisions 19-25): named sets of
+color meanings the Room's maps link to, for the relations of free maps or
+the areas of geographic ones (`kind`, spec 77b Decision 8). Members only (403);
 every member reads the list (presets are not secret, Decision 25), only the
 Master writes it (Decision 23). A change reaches every linked map at once,
 live (Decision 20); deleting a preset leaves each linked map a copy of its
@@ -21,6 +22,7 @@ from app.db import map_legends_repo, relationship_maps_repo, rooms_repo
 from app.db.session import SessionDep
 from app.domain.map_legends import (
     EmptyPresetError,
+    LegendKind,
     LegendPreset,
     PresetNameRequiredError,
     TooManyPresetsError,
@@ -42,6 +44,7 @@ class PresetResponse(BaseModel):
 
     id: uuid.UUID
     name: str
+    kind: LegendKind
     entries: dict[MapColor, str]
     map_count: int
     created_at: datetime
@@ -49,11 +52,13 @@ class PresetResponse(BaseModel):
 
 
 class PresetRequest(BaseModel):
-    """A new preset: a name of 1 to 60 characters, unique in the Room, and at
-    least one meaning of at most 40 characters (Decision 19)."""
+    """A new preset: a name of 1 to 60 characters, unique in the Room among
+    presets of its `kind` (`relations` when omitted, spec 77b), and at least
+    one meaning of at most 40 characters (Decision 19)."""
 
     name: str
     entries: dict[MapColor, str]
+    kind: LegendKind = LegendKind.RELATIONS
 
 
 class UpdatePresetRequest(BaseModel):
@@ -73,6 +78,7 @@ def _response(preset: LegendPreset, map_count: int) -> PresetResponse:
     return PresetResponse(
         id=preset.id,
         name=preset.name,
+        kind=preset.kind,
         entries=dict(preset.entries),
         map_count=map_count,
         created_at=preset.created_at,
@@ -150,10 +156,10 @@ async def create_preset(
         ensure_room_for_another_preset(await map_legends_repo.count_presets(session, room_id))
     except TooManyPresetsError as exc:
         raise translated_error(status.HTTP_409_CONFLICT, exc, locale) from exc
-    if name in await map_legends_repo.preset_names(session, room_id):
+    if name in await map_legends_repo.preset_names(session, room_id, body.kind):
         raise http_error(status.HTTP_409_CONFLICT, "errors.map.presetNameTaken", locale)
     now = _now()
-    preset = LegendPreset(uuid.uuid4(), room_id, name, entries, now, now)
+    preset = LegendPreset(uuid.uuid4(), room_id, name, entries, now, now, body.kind)
     try:
         # A SAVEPOINT absorbs a duplicate name that slipped past the check.
         async with session.begin_nested():
@@ -183,7 +189,9 @@ async def update_preset(
         dict(preset.entries) if body.entries is None else body.entries,
         locale,
     )
-    if name != preset.name and name in await map_legends_repo.preset_names(session, room_id):
+    if name != preset.name and name in await map_legends_repo.preset_names(
+        session, room_id, preset.kind
+    ):
         raise http_error(status.HTTP_409_CONFLICT, "errors.map.presetNameTaken", locale)
     now = _now()
     updated = replace(preset, name=name, entries=entries, updated_at=now)

@@ -162,6 +162,29 @@ describe('AreaDialog', () => {
   });
 });
 
+describe('AreaDialog: area legend (spec 77b Decision 6)', () => {
+  it("says what the chosen color means on this map", async () => {
+    const user = userEvent.setup();
+    renderWithProviders(
+      <AreaDialog
+        area={{ ...newArea(square), color: 'red' }}
+        isNew
+        documents={documents}
+        takenDocumentIds={new Set()}
+        isMaster
+        meanings={{ red: 'Yakuza' }}
+        onSave={vi.fn()}
+        onDelete={vi.fn()}
+        onClose={vi.fn()}
+      />,
+    );
+    expect(screen.getByText('In questa mappa: Yakuza')).toBeInTheDocument();
+    expect(screen.getByRole('radio', { name: 'Rosso' })).toHaveAttribute('title', 'Rosso: Yakuza');
+    await user.click(screen.getByRole('radio', { name: 'Verde' }));
+    expect(screen.getByText('Questo colore non ha ancora un significato nella legenda.')).toBeInTheDocument();
+  });
+});
+
 describe('PinDialog', () => {
   it('names a new plain pin, with its note, side, color and Master only', async () => {
     const user = userEvent.setup();
@@ -300,6 +323,22 @@ describe('GeoMapDialog', () => {
       method: 'PATCH',
       json: { plane_width: 1000, plane_height: 900 },
     });
+  });
+
+  it('names a Document with several areas on every area or only on the largest (spec 77)', async () => {
+    fetchMock.mockResolvedValue(rawGeoMapDetail());
+    const { user } = render();
+    expect(screen.getByRole('radio', { name: 'Su ogni area' })).toBeChecked();
+    await user.click(screen.getByRole('radio', { name: "Solo sull'area più grande" }));
+    expect(fetchMock).toHaveBeenCalledWith('/rooms/room-1/maps/map-1', {
+      method: 'PATCH',
+      json: { area_labels: 'largest' },
+    });
+    await vi.waitFor(() => expect(screen.getByRole('radio', { name: "Solo sull'area più grande" })).toBeChecked());
+    // A refusal is said, and the choice goes back to the stored one.
+    fetchMock.mockRejectedValueOnce(new ApiError(409, 'Non è una mappa geografica'));
+    await user.click(screen.getByRole('radio', { name: 'Su ogni area' }));
+    expect(await screen.findByText('Non è una mappa geografica')).toBeInTheDocument();
   });
 
   it('uploads a background, or takes one from a URL', async () => {

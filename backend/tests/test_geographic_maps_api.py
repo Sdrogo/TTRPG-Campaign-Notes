@@ -489,3 +489,50 @@ async def test_an_empty_save_clears_what_the_editor_sees(
     assert cleared.status_code == 200
     body = cleared.json()
     assert (body["areas"], body["pins"], body["links"]) == ([], [], [])
+
+
+async def test_a_document_has_several_areas_of_one_color(
+    db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
+) -> None:
+    """Spec 77: several areas for one Document save and come back, the map
+    list counts it once, a pin for it or a second color is refused, and the
+    names setting is kept on the map (409 on a free map)."""
+    room = await _room(client, make_token)
+    faction = await _document(client, room, "Yakuza")
+    geo = await _geo_map(client, room)
+    patches = [
+        _area(faction, color="red"),
+        _area(faction, color="red"),
+        _area(faction, color="red"),
+    ]
+    saved = await _save(client, room, geo["id"], room.master, areas=patches)
+    assert saved.status_code == 200, saved.text
+    shown = await _get(client, room, geo["id"], room.player)
+    assert [area["document_id"] for area in shown["areas"]] == [faction] * 3
+    listed = (await client.get(room.maps_url, headers=room.player.headers)).json()
+    assert [m["document_count"] for m in listed if m["id"] == geo["id"]] == [1]
+
+    both = await _save(client, room, geo["id"], room.master, areas=patches, pins=[_pin(faction)])
+    assert both.status_code == 422
+    mixed = await _save(
+        client, room, geo["id"], room.master, areas=[*patches[:2], {**patches[2], "color": "blue"}]
+    )
+    assert mixed.status_code == 422
+
+    assert geo["area_labels"] == "every"
+    largest = await client.patch(
+        room.map_url(geo["id"]), json={"area_labels": "largest"}, headers=room.master.headers
+    )
+    assert largest.status_code == 200, largest.text
+    assert largest.json()["area_labels"] == "largest"
+    exported = await client.get(f"{room.map_url(geo['id'])}/export", headers=room.master.headers)
+    assert exported.json()["area_labels"] == "largest"
+    assert [a["key"] for a in exported.json()["areas"]] == ["yakuza", "yakuza-2", "yakuza-3"]
+    free = (
+        await client.post(room.maps_url, json={"name": "Rete"}, headers=room.master.headers)
+    ).json()
+    assert free["area_labels"] is None
+    refused = await client.patch(
+        room.map_url(free["id"]), json={"area_labels": "largest"}, headers=room.master.headers
+    )
+    assert refused.status_code == 409

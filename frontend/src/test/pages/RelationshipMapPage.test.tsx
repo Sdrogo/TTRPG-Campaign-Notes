@@ -87,7 +87,9 @@ vi.mock('../../components/maps/GeographicBoard', () => ({
     onSelectDocument,
     onSelectPlace,
     paneItem,
+    legend,
   }: {
+    legend?: { onEdit?: () => void };
     board: GeoBoard;
     editable: boolean;
     planeWidth: number;
@@ -108,6 +110,11 @@ vi.mock('../../components/maps/GeographicBoard', () => ({
       <button type="button" onClick={() => onChange({ ...board, areas: board.areas.slice(1) })}>
         change
       </button>
+      {legend?.onEdit && (
+        <button type="button" onClick={legend.onEdit}>
+          edit legend
+        </button>
+      )}
       {onSelectDocument && (
         <button type="button" onClick={() => onSelectDocument('doc-9')}>
           select
@@ -470,6 +477,16 @@ describe('RelationshipMapPage', () => {
         '/rooms/room-1/maps/map-1/geo',
         expect.objectContaining({ method: 'PATCH', json: expect.objectContaining({ areas: [], deleted_ids: ['area-1'] }) }),
       );
+    });
+
+    it('opens the area legend dialog for an editor (spec 77b)', async () => {
+      wideScreen();
+      routes.map = geographic;
+      const { user } = render();
+      await user.click(await screen.findByRole('button', { name: 'edit legend' }));
+      expect(await screen.findByRole('dialog', { name: 'Legenda dei colori delle aree' })).toBeInTheDocument();
+      await user.click(screen.getByRole('button', { name: 'Annulla' }));
+      await vi.waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
     });
 
     it('opens the plane dialog for whoever manages the map', async () => {

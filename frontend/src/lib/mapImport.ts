@@ -5,7 +5,9 @@ import { exportFileName } from './roomExport';
 /**
  * What importing a map file will create (spec 38_3, Decision 10): the map's
  * name and plane, how many areas, pins and links, how many are bound to a
- * Document, and the names from the file that will stay plain labels.
+ * Document, and the names from the file that will stay plain labels;
+ * `recolored`, the Documents whose areas all take their first one's color
+ * (spec 77 Decision 4b).
  */
 export interface MapImportReport {
   name: string;
@@ -19,6 +21,7 @@ export interface MapImportReport {
   notFound: string[];
   ambiguous: string[];
   repeated: string[];
+  recolored: string[];
 }
 
 export interface RawMapImportReport {
@@ -33,6 +36,7 @@ export interface RawMapImportReport {
   not_found: string[];
   ambiguous: string[];
   repeated: string[];
+  recolored?: string[];
 }
 
 export function toMapImportReport(raw: RawMapImportReport): MapImportReport {
@@ -48,6 +52,7 @@ export function toMapImportReport(raw: RawMapImportReport): MapImportReport {
     notFound: raw.not_found,
     ambiguous: raw.ambiguous,
     repeated: raw.repeated,
+    recolored: raw.recolored ?? [],
   };
 }
 

@@ -845,6 +845,19 @@ a grid of as many columns as fit. Rows highlight `--bg-raised` on hover.
   only). A linked map names its preset; only the Master edits it there,
   others can "Scollega". The relation dialog shows the chosen color's
   meaning, and the color swatches name it on hover.
+- **Area legend** (ticket 77b): a geographic map has the same panel,
+  titled "Legenda aree", left of the zoom buttons; each row's sample is a
+  16 px rounded square filled at 35% with a 2 px outline in the area's
+  color (`LegendSample kind="areas"`, always through `colorValue`).
+  Clicking a row fades every area of another color (and its name) to 20%;
+  pins and links stay. The area dialog shows the chosen color's meaning
+  like the relation dialog. "Gestisci preset" lists two separate sections,
+  "Leggende delle relazioni" and "Leggende delle aree", each headed by its
+  sample and with its own "Nuovo preset"; a map applies only presets of
+  its kind.
+- **Several areas of one Document** (ticket 77): selecting one outlines
+  all its areas (a halo in `--text-primary` at 45%, not a new hue), its
+  card says "Area 1 of 3 of this Document" and offers "Aggiungi un'area".
 
 ## Mention map (spec 36)
 

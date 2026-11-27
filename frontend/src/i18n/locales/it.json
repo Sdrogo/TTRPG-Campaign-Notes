@@ -1358,7 +1358,15 @@
       "placePane": "Luogo aperto accanto alla mappa",
       "noNote": "Nessuna nota",
       "placeNotFound": "Luogo non trovato",
-      "connections": "Collegamenti"
+      "connections": "Collegamenti",
+      "areaLabels": "Nomi dei Documenti con più aree",
+      "areaLabelsHelp": "Dove si scrive il nome di un Documento che ha più aree su questa mappa.",
+      "areaLabelsEvery": "Su ogni area",
+      "areaLabelsLargest": "Solo sull'area più grande",
+      "alreadyOnMap": "{{name}} (già sulla mappa)",
+      "sharedColor": "Il colore vale per tutte le {{number}} aree di questo Documento.",
+      "addArea": "Aggiungi un'area",
+      "areaOf": "Area {{index}} di {{total}} di questo Documento"
     },
     "kind": {
       "label": "Tipo di mappa",
@@ -1382,7 +1390,8 @@
       "ambiguous": "Più Documenti con questo nome, resteranno etichette semplici:",
       "repeated": "Documento già sulla mappa, resteranno etichette semplici:",
       "backgroundLater": "L'immagine di sfondo si carica dopo, dal pulsante Mappa della nuova mappa.",
-      "submit": "Importa"
+      "submit": "Importa",
+      "recolored": "Aree dello stesso Documento con colori diversi, prendono tutte il colore della prima:"
     },
     "openPreview": "Apri in anteprima",
     "legend": {
@@ -1430,7 +1439,16 @@
       "newPreset": "Nuovo preset",
       "addColor": "Aggiungi un colore",
       "colorMeans": "In questa mappa: {{meaning}}",
-      "colorMeansNothing": "Questo colore non ha ancora un significato nella legenda."
+      "colorMeansNothing": "Questo colore non ha ancora un significato nella legenda.",
+      "areasTitle": "Legenda aree",
+      "areasChip": "Legenda aree · {{number}}",
+      "areasDialogTitle": "Legenda dei colori delle aree",
+      "areasTapHint": "Tocca un significato per evidenziare le sue aree.",
+      "areasHighlightHint": "Clicca di nuovo la riga o premi Esc per vedere tutte le aree.",
+      "noAreas": "Questa mappa non ha ancora aree.",
+      "areasVisibleHint": "La legenda mostra solo i colori usati dalle aree, e ognuno vede solo quelli delle aree che vede.",
+      "relationsSection": "Leggende delle relazioni",
+      "areasSection": "Leggende delle aree"
     }
   },
   "sessionZero": {

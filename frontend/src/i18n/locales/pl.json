@@ -1426,7 +1426,15 @@
       "placePane": "Miejsce otwarte obok mapy",
       "noNote": "Brak notatki",
       "placeNotFound": "Nie znaleziono miejsca",
-      "connections": "Połączenia"
+      "connections": "Połączenia",
+      "areaLabels": "Nazwy Dokumentów z kilkoma obszarami",
+      "areaLabelsHelp": "Gdzie wyświetlać nazwę Dokumentu, który ma kilka obszarów na tej mapie.",
+      "areaLabelsEvery": "Na każdym obszarze",
+      "areaLabelsLargest": "Tylko na największym obszarze",
+      "alreadyOnMap": "{{name}} (już na mapie)",
+      "sharedColor": "Kolor dotyczy wszystkich obszarów tego Dokumentu (razem: {{number}}).",
+      "addArea": "Dodaj obszar",
+      "areaOf": "Obszar {{index}} z {{total}} tego Dokumentu"
     },
     "kind": {
       "label": "Rodzaj mapy",
@@ -1450,7 +1458,8 @@
       "ambiguous": "Kilka Dokumentów o tej nazwie, zostaną zwykłymi etykietami:",
       "repeated": "Dokument jest już na mapie, zostaną zwykłymi etykietami:",
       "backgroundLater": "Obraz tła wgrasz później, przyciskiem Mapa nowej mapy.",
-      "submit": "Importuj"
+      "submit": "Importuj",
+      "recolored": "Obszary jednego Dokumentu w różnych kolorach, wszystkie przyjmą kolor pierwszego:"
     },
     "openPreview": "Otwórz w podglądzie",
     "legend": {
@@ -1508,7 +1517,16 @@
       "newPreset": "Nowy szablon",
       "addColor": "Dodaj kolor",
       "colorMeans": "Na tej mapie: {{meaning}}",
-      "colorMeansNothing": "Ten kolor nie ma jeszcze znaczenia w legendzie."
+      "colorMeansNothing": "Ten kolor nie ma jeszcze znaczenia w legendzie.",
+      "areasTitle": "Legenda obszarów",
+      "areasChip": "Legenda obszarów · {{number}}",
+      "areasDialogTitle": "Legenda kolorów obszarów",
+      "areasTapHint": "Dotknij znaczenia, aby wyróżnić jego obszary.",
+      "areasHighlightHint": "Kliknij ponownie wiersz lub naciśnij Esc, aby zobaczyć wszystkie obszary.",
+      "noAreas": "Ta mapa nie ma jeszcze obszarów.",
+      "areasVisibleHint": "Legenda pokazuje tylko kolory używane przez obszary, a każdy widzi tylko te z obszarów, które może zobaczyć.",
+      "relationsSection": "Legendy relacji",
+      "areasSection": "Legendy obszarów"
     }
   },
   "sessionZero": {

@@ -1358,7 +1358,15 @@
       "placePane": "Ort neben der Karte geöffnet",
       "noNote": "Keine Notiz",
       "placeNotFound": "Ort nicht gefunden",
-      "connections": "Verbindungen"
+      "connections": "Verbindungen",
+      "areaLabels": "Namen von Dokumenten mit mehreren Gebieten",
+      "areaLabelsHelp": "Wo der Name eines Dokuments mit mehreren Gebieten auf dieser Karte steht.",
+      "areaLabelsEvery": "Auf jedem Gebiet",
+      "areaLabelsLargest": "Nur auf dem größten Gebiet",
+      "alreadyOnMap": "{{name}} (schon auf der Karte)",
+      "sharedColor": "Die Farbe gilt für alle {{number}} Gebiete dieses Dokuments.",
+      "addArea": "Gebiet hinzufügen",
+      "areaOf": "Gebiet {{index}} von {{total}} dieses Dokuments"
     },
     "kind": {
       "label": "Art der Karte",
@@ -1382,7 +1390,8 @@
       "ambiguous": "Mehrere Dokumente mit diesem Namen, bleiben einfache Beschriftungen:",
       "repeated": "Dokument schon auf der Karte, bleiben einfache Beschriftungen:",
       "backgroundLater": "Das Hintergrundbild lädst du danach über die Schaltfläche Karte der neuen Karte hoch.",
-      "submit": "Importieren"
+      "submit": "Importieren",
+      "recolored": "Gebiete eines Dokuments in verschiedenen Farben, alle bekommen die Farbe des ersten:"
     },
     "openPreview": "In der Vorschau öffnen",
     "legend": {
@@ -1430,7 +1439,16 @@
       "newPreset": "Neue Vorlage",
       "addColor": "Farbe hinzufügen",
       "colorMeans": "Auf dieser Karte: {{meaning}}",
-      "colorMeansNothing": "Diese Farbe hat noch keine Bedeutung in der Legende."
+      "colorMeansNothing": "Diese Farbe hat noch keine Bedeutung in der Legende.",
+      "areasTitle": "Gebietslegende",
+      "areasChip": "Gebietslegende · {{number}}",
+      "areasDialogTitle": "Farblegende der Gebiete",
+      "areasTapHint": "Tippe auf eine Bedeutung, um ihre Gebiete hervorzuheben.",
+      "areasHighlightHint": "Klicke erneut auf die Zeile oder drücke Esc, um alle Gebiete zu sehen.",
+      "noAreas": "Diese Karte hat noch keine Gebiete.",
+      "areasVisibleHint": "Die Legende zeigt nur Farben, die Gebiete verwenden, und jeder sieht nur die der Gebiete, die er sehen kann.",
+      "relationsSection": "Beziehungslegenden",
+      "areasSection": "Gebietslegenden"
     }
   },
   "sessionZero": {

@@ -1360,7 +1360,15 @@
       "placePane": "Local aberto ao lado do mapa",
       "noNote": "Sem nota",
       "placeNotFound": "Local não encontrado",
-      "connections": "Ligações"
+      "connections": "Ligações",
+      "areaLabels": "Nomes dos Documentos com várias zonas",
+      "areaLabelsHelp": "Onde se escreve o nome de um Documento que tem várias zonas neste mapa.",
+      "areaLabelsEvery": "Em cada zona",
+      "areaLabelsLargest": "Só na zona maior",
+      "alreadyOnMap": "{{name}} (já no mapa)",
+      "sharedColor": "A cor vale para as {{number}} zonas deste Documento.",
+      "addArea": "Adicionar uma zona",
+      "areaOf": "Zona {{index}} de {{total}} deste Documento"
     },
     "kind": {
       "label": "Tipo de mapa",
@@ -1384,7 +1392,8 @@
       "ambiguous": "Vários Documentos com este nome, ficarão como etiquetas simples:",
       "repeated": "Documento já no mapa, ficarão como etiquetas simples:",
       "backgroundLater": "A imagem de fundo carrega-se depois, no botão Mapa do novo mapa.",
-      "submit": "Importar"
+      "submit": "Importar",
+      "recolored": "Zonas do mesmo Documento com cores diferentes, todas ficam com a cor da primeira:"
     },
     "openPreview": "Abrir na pré-visualização",
     "legend": {
@@ -1432,7 +1441,16 @@
       "newPreset": "Nova predefinição",
       "addColor": "Adicionar uma cor",
       "colorMeans": "Neste mapa: {{meaning}}",
-      "colorMeansNothing": "Esta cor ainda não tem significado na legenda."
+      "colorMeansNothing": "Esta cor ainda não tem significado na legenda.",
+      "areasTitle": "Legenda das zonas",
+      "areasChip": "Legenda das zonas · {{number}}",
+      "areasDialogTitle": "Legenda das cores das zonas",
+      "areasTapHint": "Toque num significado para destacar as suas zonas.",
+      "areasHighlightHint": "Clique de novo na linha ou prima Esc para ver todas as zonas.",
+      "noAreas": "Este mapa ainda não tem zonas.",
+      "areasVisibleHint": "A legenda mostra só as cores usadas pelas zonas, e cada um vê só as das zonas que pode ver.",
+      "relationsSection": "Legendas das relações",
+      "areasSection": "Legendas das zonas"
     }
   },
   "sessionZero": {
