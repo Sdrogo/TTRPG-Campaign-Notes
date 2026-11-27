@@ -314,3 +314,45 @@ async def test_duplicating_a_room_copies_the_glossary_onto_the_copy(
     assert copied[0]["tag_ids"] == [next(t["id"] for t in copy_tags if t["name"] == "Rule")]
     assert copy_docs[0]["id"] in copied[0]["definition"]
     assert castle["id"] not in copied[0]["definition"]
+
+
+async def test_the_room_export_carries_only_the_visible_glossary(
+    client: AsyncClient, make_token: Callable[..., str]
+) -> None:
+    """Spec 79 Decision 7 and VR-10: the JSON and Markdown exports hold the
+    entries the requester sees, with mentions by id and Documents by id."""
+    room = await _room(client, make_token)
+    castle = (
+        await client.post(
+            f"/rooms/{room.id}/documents", json={"name": "Castle"}, headers=room.master.headers
+        )
+    ).json()
+    await _define(
+        client,
+        room,
+        "Mist",
+        aliases=["Fog"],
+        definition=f"Around #[Castle](doc:{castle['id']}).",
+        document_ids=[castle["id"]],
+        visibility="room",
+    )
+    await _define(client, room, "Strahd", visibility="master")
+
+    as_player = (await client.get(f"/rooms/{room.id}/export", headers=room.player.headers)).json()
+    assert as_player["schema_version"] == 7
+    assert [e["term"] for e in as_player["glossary"]] == ["Mist"]
+    entry = as_player["glossary"][0]
+    assert entry["aliases"] == ["Fog"]
+    assert entry["document_ids"] == [castle["id"]]
+    assert entry["definition"][1]["type"] == "mention"
+    assert entry["definition"][1]["target_id"] == castle["id"]
+
+    as_master = (await client.get(f"/rooms/{room.id}/export", headers=room.master.headers)).json()
+    assert [e["term"] for e in as_master["glossary"]] == ["Mist", "Strahd"]
+
+    markdown = await client.get(
+        f"/rooms/{room.id}/export", params={"format": "md"}, headers=room.player.headers
+    )
+    assert "## Glossary" in markdown.text
+    assert "**Mist** (Fog)" in markdown.text
+    assert "Strahd" not in markdown.text
