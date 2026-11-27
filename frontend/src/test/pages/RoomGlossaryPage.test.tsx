@@ -243,7 +243,7 @@ describe('RoomGlossaryPage', () => {
   it('shows a plain message when saving fails for a reason the server did not give', async () => {
     const { user } = render();
     await screen.findAllByTestId('glossary-entry');
-    fetchMock.mockImplementation((path: string, init?: { method?: string }) =>
+    fetchMock.mockImplementation((_path: string, init?: { method?: string }) =>
       init?.method === 'PATCH' ? Promise.reject(new Error('boom')) : Promise.resolve([]),
     );
 
@@ -257,7 +257,7 @@ describe('RoomGlossaryPage', () => {
   it('closes the edit after the server answers that the entry is now hidden', async () => {
     const { user } = render();
     await screen.findAllByTestId('glossary-entry');
-    fetchMock.mockImplementation((path: string, init?: { method?: string }) =>
+    fetchMock.mockImplementation((_path: string, init?: { method?: string }) =>
       init?.method === 'PATCH' ? Promise.resolve(null) : Promise.resolve([]),
     );
 
@@ -271,7 +271,7 @@ describe('RoomGlossaryPage', () => {
   it('shows why a delete failed', async () => {
     const { user } = render();
     await screen.findAllByTestId('glossary-entry');
-    fetchMock.mockImplementation((path: string, init?: { method?: string }) =>
+    fetchMock.mockImplementation((_path: string, init?: { method?: string }) =>
       init?.method === 'DELETE' ? Promise.reject(new Error('boom')) : Promise.resolve([]),
     );
 
@@ -285,7 +285,7 @@ describe('RoomGlossaryPage', () => {
   it('defines a new term and closes the form', async () => {
     const { user } = render();
     await screen.findAllByTestId('glossary-entry');
-    fetchMock.mockImplementation((path: string, init?: { method?: string }) =>
+    fetchMock.mockImplementation((_path: string, init?: { method?: string }) =>
       init?.method === 'POST' ? Promise.resolve(rawEntry({ id: 'g3', term: 'Lupo' })) : Promise.resolve([]),
     );
 
