@@ -1307,7 +1307,15 @@
       "placePane": "지도 옆에 연 장소",
       "noNote": "메모 없음",
       "placeNotFound": "장소를 찾을 수 없습니다",
-      "connections": "연결"
+      "connections": "연결",
+      "areaLabels": "여러 구역이 있는 문서의 이름",
+      "areaLabelsHelp": "이 지도에서 여러 구역이 있는 문서의 이름을 쓰는 위치입니다.",
+      "areaLabelsEvery": "모든 구역에",
+      "areaLabelsLargest": "가장 큰 구역에만",
+      "alreadyOnMap": "{{name}} (이미 지도에 있음)",
+      "sharedColor": "색은 이 문서의 구역 {{number}}개 모두에 적용됩니다.",
+      "addArea": "구역 추가",
+      "areaOf": "이 문서의 구역 {{index}}/{{total}}"
     },
     "kind": {
       "label": "지도 종류",
@@ -1331,7 +1339,8 @@
       "ambiguous": "이 이름의 문서가 여러 개라 일반 라벨로 남습니다:",
       "repeated": "문서가 이미 지도에 있어 일반 라벨로 남습니다:",
       "backgroundLater": "배경 이미지는 나중에 새 지도의 지도 버튼에서 올립니다.",
-      "submit": "가져오기"
+      "submit": "가져오기",
+      "recolored": "같은 문서의 구역 색이 서로 달라 모두 첫 구역의 색을 따릅니다:"
     },
     "openPreview": "미리보기로 열기",
     "legend": {

@@ -1,12 +1,15 @@
 import { useState } from 'react';
-import { Button, Checkbox, Group, Modal, Stack, Textarea, TextInput } from '@mantine/core';
+import { Button, Checkbox, Group, Modal, Stack, Text, Textarea, TextInput } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { MAX_NOTE_LENGTH, MAX_PLACE_NAME_LENGTH } from '../../lib/geoMaps';
 import { toMapDocument } from '../../lib/maps';
 import type { Document } from '../../types/document';
 import type { GeoArea } from '../../types/geoMap';
+import type { MapColor } from '../../types/map';
 import { MapColorPicker } from './MapColorPicker';
 import { PlaceDocumentSelect } from './PlaceDocumentSelect';
+
+const NO_SIBLINGS = () => ({ count: 0, color: null });
 
 interface AreaDialogProps {
   area: GeoArea;
@@ -14,6 +17,13 @@ interface AreaDialogProps {
   isNew: boolean;
   documents: Document[];
   takenDocumentIds: Set<string>;
+  /** The Documents that already have areas, offered marked (spec 77). */
+  onMapDocumentIds?: Set<string>;
+  /**
+   * A Document's other areas on the map: how many, and the color they share
+   * (spec 77 Decision 4b), which this area takes when bound to it.
+   */
+  siblingsOf?: (documentId: string) => { count: number; color: MapColor | null };
   /** Only the Master marks a plain area Master only. */
   isMaster: boolean;
   onSave: (area: GeoArea) => void;
@@ -25,13 +35,17 @@ interface AreaDialogProps {
  * Edits an area (spec 38 Decision 3): bound to a Document, whose name and
  * subtitle it then shows, or plain, with its own name, subtitle and note;
  * its color, fill and dashed outline. Mounted per area, so it starts from
- * the area's values.
+ * the area's values. A Document's areas share one color: binding the area
+ * to a Document that has others takes theirs, and a new color recolors them
+ * all on save (spec 77 Decision 4b).
  */
 export function AreaDialog({
   area,
   isNew,
   documents,
   takenDocumentIds,
+  onMapDocumentIds,
+  siblingsOf = NO_SIBLINGS,
   isMaster,
   onSave,
   onDelete,
@@ -47,6 +61,13 @@ export function AreaDialog({
   const [dashed, setDashed] = useState(area.dashed);
   const [masterOnly, setMasterOnly] = useState(area.masterOnly);
   const plain = documentId === null;
+  const siblings = documentId ? siblingsOf(documentId) : { count: 0, color: null };
+
+  const chooseDocument = (next: string | null) => {
+    setDocumentId(next);
+    const shared = next ? siblingsOf(next).color : null;
+    if (shared) setColor(shared);
+  };
 
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
@@ -72,8 +93,9 @@ export function AreaDialog({
           <PlaceDocumentSelect
             documents={documents}
             takenDocumentIds={takenDocumentIds}
+            onMapDocumentIds={onMapDocumentIds}
             value={documentId}
-            onChange={setDocumentId}
+            onChange={chooseDocument}
           />
           {plain && (
             <>
@@ -105,6 +127,11 @@ export function AreaDialog({
             </>
           )}
           <MapColorPicker value={color} onChange={setColor} />
+          {siblings.count > 0 && (
+            <Text size="xs" c="dimmed">
+              {t('maps.geo.sharedColor', { number: siblings.count + 1 })}
+            </Text>
+          )}
           <Checkbox label={t('maps.geo.filled')} checked={filled} onChange={(event) => setFilled(event.currentTarget.checked)} />
           <Checkbox label={t('maps.geo.dashed')} checked={dashed} onChange={(event) => setDashed(event.currentTarget.checked)} />
           {isMaster && plain && (

@@ -143,6 +143,7 @@ describe('the wire shape', () => {
       revision: 3,
       canEdit: false,
       canManage: true,
+      areaLabels: null,
     });
     const detail = toMapDetail(rawMapDetail() as unknown as RawMapDetail);
     expect(detail.groups[0]).toMatchObject({

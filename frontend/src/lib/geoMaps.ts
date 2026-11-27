@@ -1,5 +1,6 @@
 import type { RawImage } from '../types/image';
 import type {
+  AreaLabels,
   Corner,
   GeoArea,
   GeoBoard,
@@ -249,11 +250,63 @@ export function placeSubtitle(area: GeoArea): string | null {
   return area.document ? area.document.subtitle : area.subtitle;
 }
 
-/** The Documents placed on the map, each at most once (Decision 4). */
+/** The Documents placed on the map, as areas or a pin. */
 export function placedDocumentIds(board: GeoBoard): Set<string> {
   return new Set(
     [...board.areas, ...board.pins].flatMap((item) => (item.documentId ? [item.documentId] : [])),
   );
+}
+
+/** The Documents placed as a pin, which can't also have an area (spec 77 Decision 2). */
+export function pinnedDocumentIds(board: GeoBoard): Set<string> {
+  return new Set(board.pins.flatMap((pin) => (pin.documentId ? [pin.documentId] : [])));
+}
+
+/** The Documents with at least one area (spec 77 Decision 1). */
+export function areaDocumentIds(board: GeoBoard): Set<string> {
+  return new Set(board.areas.flatMap((area) => (area.documentId ? [area.documentId] : [])));
+}
+
+/** A Document's areas on the map, in the map's order (spec 77). */
+export function areasOfDocument(board: GeoBoard, documentId: string): GeoArea[] {
+  return board.areas.filter((area) => area.documentId === documentId);
+}
+
+/**
+ * The color a Document's areas share, leaving out the area `exceptId` (the
+ * one being edited), or null when it has no other area (spec 77 Decision 4b).
+ */
+export function documentAreaColor(board: GeoBoard, documentId: string, exceptId?: string): MapColor | null {
+  return board.areas.find((area) => area.documentId === documentId && area.id !== exceptId)?.color ?? null;
+}
+
+/**
+ * The map with an area added or replaced, its Document's other areas taking
+ * its color, so a Document's areas always share one (spec 77 Decision 4b).
+ */
+export function saveArea(board: GeoBoard, area: GeoArea): GeoBoard {
+  const put = putArea(board, area);
+  if (!area.documentId) return put;
+  return {
+    ...put,
+    areas: put.areas.map((other) => (other.documentId === area.documentId ? { ...other, color: area.color } : other)),
+  };
+}
+
+/**
+ * The areas whose name is drawn (spec 77 Decision 5): every area, or, with
+ * `largest`, a Document's largest area only (by surface, the first one on a
+ * tie). Plain areas always have theirs.
+ */
+export function namedAreaIds(board: GeoBoard, areaLabels: AreaLabels | null | undefined): Set<string> {
+  if (areaLabels !== 'largest') return new Set(board.areas.map((area) => area.id));
+  const largest = new Map<string, GeoArea>();
+  for (const area of board.areas) {
+    if (!area.documentId) continue;
+    const best = largest.get(area.documentId);
+    if (!best || polygonSurface(area.points) > polygonSurface(best.points)) largest.set(area.documentId, area);
+  }
+  return new Set(board.areas.filter((area) => !area.documentId || largest.get(area.documentId) === area).map((area) => area.id));
 }
 
 /** The area or pin a reference names, if it is still on the map. */
@@ -263,7 +316,10 @@ export function findItem(board: GeoBoard, ref: GeoItemRef): GeoArea | GeoPin | u
     : board.pins.find((pin) => pin.id === ref.id);
 }
 
-/** Where a Document is placed on the map, if it is (each Document at most once, Decision 4). */
+/**
+ * Where a Document is placed on the map: its first area (it may have
+ * several, spec 77) or its pin, null when it isn't on the map.
+ */
 export function placeOfDocument(board: GeoBoard, documentId: string): GeoItemRef | null {
   const area = board.areas.find((item) => item.documentId === documentId);
   if (area) return { kind: 'area', id: area.id };
@@ -639,20 +695,23 @@ export function toPlane(view: View, at: Point): Point {
 
 // --- Editing a map ----------------------------------------------------------
 
-/** A new plain area through `points`, waiting for its name. */
-export function newArea(points: Corner[]): GeoArea {
+/**
+ * A new plain area through `points`, waiting for its name; `like` gives it
+ * another area's Document and look ("Add an area", spec 77 Decision 4).
+ */
+export function newArea(points: Corner[], like?: GeoArea): GeoArea {
   return {
     id: newId(),
-    documentId: null,
+    documentId: like?.documentId ?? null,
     name: null,
     subtitle: null,
     note: null,
     points,
-    color: 'default',
-    dashed: false,
-    filled: true,
+    color: like?.color ?? 'default',
+    dashed: like?.dashed ?? false,
+    filled: like?.filled ?? true,
     masterOnly: false,
-    document: null,
+    document: like?.document ?? null,
   };
 }
 

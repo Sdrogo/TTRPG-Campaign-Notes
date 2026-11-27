@@ -36,9 +36,10 @@ from app.domain.geographic_maps import (
     clean_plane,
     plan_geo_board_edit,
     polygon_surface,
+    share_document_colors,
 )
 from app.domain.models import Document, RoomRole
-from app.domain.relationship_maps import ArrowDirection, MapColor, MapLimitError
+from app.domain.relationship_maps import AreaLabels, ArrowDirection, MapColor, MapLimitError
 
 SCHEMA_VERSION = 1
 FILE_KIND = "geographic_map"
@@ -111,6 +112,7 @@ class MapFile:
     areas: Sequence[ImportedArea] = ()
     pins: Sequence[ImportedPin] = ()
     links: Sequence[ImportedLink] = ()
+    area_labels: AreaLabels | None = None
 
 
 @dataclass(frozen=True)
@@ -119,7 +121,11 @@ class ImportReport:
     many areas, pins and links, how many are bound to a Document, and the
     names kept as plain labels because they matched no Document the importer
     sees (`not_found`), matched several (`ambiguous`), or named a Document
-    already on the map (`repeated`). Every name comes from the file."""
+    already on the map as a pin, or a pin's Document already on it
+    (`repeated`; spec 77: a Document may have several areas, or one pin).
+    `recolored` lists the Documents whose areas came in different colors and
+    now all take the first one's (spec 77 Decision 4b). Every name comes
+    from the file."""
 
     areas: int
     pins: int
@@ -128,6 +134,7 @@ class ImportReport:
     not_found: Sequence[str] = ()
     ambiguous: Sequence[str] = ()
     repeated: Sequence[str] = ()
+    recolored: Sequence[str] = ()
 
 
 @dataclass(frozen=True)
@@ -148,6 +155,7 @@ class _Matches:
     labels, each listed once in the order the file gives them."""
 
     used: set[uuid.UUID] = field(default_factory=set)
+    pinned: set[uuid.UUID] = field(default_factory=set)
     not_found: list[str] = field(default_factory=list)
     ambiguous: list[str] = field(default_factory=list)
     repeated: list[str] = field(default_factory=list)
@@ -168,16 +176,23 @@ def document_index(documents: Iterable[Document]) -> dict[str, list[uuid.UUID]]:
 
 
 def _resolve(
-    name: str | None, index: Mapping[str, Sequence[uuid.UUID]], matches: _Matches
+    name: str | None,
+    index: Mapping[str, Sequence[uuid.UUID]],
+    matches: _Matches,
+    for_pin: bool = False,
 ) -> tuple[uuid.UUID | None, str | None]:
     """The Document `name` stands for, or None with the name a plain label
-    keeps instead (None when the item names no Document)."""
+    keeps instead (None when the item names no Document). Several areas may
+    name one Document; a pin may name only one not yet used (spec 77)."""
     if name is None or not name.strip():
         return None, None
     found = index.get(_name_key(name), ())
-    if len(found) == 1 and found[0] not in matches.used:
-        matches.used.add(found[0])
-        return found[0], None
+    if len(found) == 1 and found[0] not in matches.pinned:
+        if not for_pin or found[0] not in matches.used:
+            matches.used.add(found[0])
+            if for_pin:
+                matches.pinned.add(found[0])
+            return found[0], None
     label = name.strip()
     bucket = (
         matches.not_found
@@ -279,7 +294,7 @@ def plan_map_import(
         ends[imported_pin.key] = LinkEnd(pin_id=pin_id)
         if not _in_plane(imported_pin.x, imported_pin.y, plane_width, plane_height):
             raise MapImportError("errors.mapImport.pinOutsidePlane", item=imported_pin.key)
-        document_id, label = _resolve(imported_pin.document, index, matches)
+        document_id, label = _resolve(imported_pin.document, index, matches, for_pin=True)
         name = label if label is not None else imported_pin.name
         _check_texts(imported_pin.key, document_id, name)
         pins.append(
@@ -316,6 +331,16 @@ def plan_map_import(
             )
         )
 
+    recolored = list(
+        dict.fromkeys(
+            imported.document.strip()
+            for imported, area in zip(map_file.areas, areas, strict=True)
+            if imported.document
+            and area.document_id is not None
+            and area.color != next(a.color for a in areas if a.document_id == area.document_id)
+        )
+    )
+    areas = share_document_colors(areas, ())
     plan = plan_geo_board_edit(
         GeoBoard(),
         GeoBoard(),
@@ -337,6 +362,7 @@ def plan_map_import(
             not_found=tuple(matches.not_found),
             ambiguous=tuple(matches.ambiguous),
             repeated=tuple(matches.repeated),
+            recolored=tuple(recolored),
         ),
     )
 
@@ -392,11 +418,13 @@ def export_map_file(
     plane_height: int,
     shown: GeoBoard,
     document_names: Mapping[uuid.UUID, str],
+    area_labels: AreaLabels | None = None,
 ) -> dict[str, Any]:
     """The map as an import file (Decision 10), from `shown`, the map as the
     viewer sees it (`visible_geo_board`); `document_names` holds the names of
     the Documents on it. Keys are made from the names, so importing the file
-    again gives back the same map."""
+    again gives back the same map. `area_labels` is written only when it
+    isn't the default (spec 77 Decision 5)."""
     taken: set[str] = set()
     keys: dict[uuid.UUID, str] = {}
 
@@ -460,6 +488,7 @@ def export_map_file(
         "name": name,
         "description": description,
         "plane": {"width": plane_width, "height": plane_height},
+        **({"area_labels": area_labels.value} if area_labels == AreaLabels.LARGEST else {}),
         "areas": areas,
         "pins": pins,
         "links": links,

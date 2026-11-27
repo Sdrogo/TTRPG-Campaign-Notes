@@ -1341,7 +1341,15 @@
       "placePane": "Plaats geopend naast de kaart",
       "noNote": "Geen notitie",
       "placeNotFound": "Plaats niet gevonden",
-      "connections": "Verbindingen"
+      "connections": "Verbindingen",
+      "areaLabels": "Namen van Documenten met meerdere gebieden",
+      "areaLabelsHelp": "Waar de naam staat van een Document met meerdere gebieden op deze kaart.",
+      "areaLabelsEvery": "Op elk gebied",
+      "areaLabelsLargest": "Alleen op het grootste gebied",
+      "alreadyOnMap": "{{name}} (al op de kaart)",
+      "sharedColor": "De kleur geldt voor alle {{number}} gebieden van dit Document.",
+      "addArea": "Gebied toevoegen",
+      "areaOf": "Gebied {{index}} van {{total}} van dit Document"
     },
     "kind": {
       "label": "Soort kaart",
@@ -1365,7 +1373,8 @@
       "ambiguous": "Meerdere Documenten met deze naam, blijven gewone labels:",
       "repeated": "Document staat al op de kaart, blijven gewone labels:",
       "backgroundLater": "De achtergrondafbeelding upload je daarna via de knop Kaart van de nieuwe kaart.",
-      "submit": "Importeren"
+      "submit": "Importeren",
+      "recolored": "Gebieden van één Document in verschillende kleuren, krijgen allemaal de kleur van het eerste:"
     },
     "openPreview": "Openen in voorbeeld",
     "legend": {

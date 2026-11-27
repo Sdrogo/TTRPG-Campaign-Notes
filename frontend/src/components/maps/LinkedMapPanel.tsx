@@ -104,6 +104,7 @@ function LinkedGeoBoard({ roomId, mapId }: { roomId: string; mapId: string }) {
       planeWidth={geo.data.planeWidth}
       planeHeight={geo.data.planeHeight}
       backgroundUrl={geo.data.backgroundUrl}
+      areaLabels={geo.data.areaLabels}
       editable={false}
       isMaster={false}
       documents={[]}

@@ -1341,7 +1341,15 @@
       "placePane": "Place opened beside the map",
       "noNote": "No note",
       "placeNotFound": "Place not found",
-      "connections": "Links"
+      "connections": "Links",
+      "areaLabels": "Names of Documents with several areas",
+      "areaLabelsHelp": "Where the name of a Document that has several areas on this map is written.",
+      "areaLabelsEvery": "On every area",
+      "areaLabelsLargest": "Only on the largest area",
+      "alreadyOnMap": "{{name}} (already on the map)",
+      "sharedColor": "The color applies to all {{number}} areas of this Document.",
+      "addArea": "Add an area",
+      "areaOf": "Area {{index}} of {{total}} of this Document"
     },
     "kind": {
       "label": "Kind of map",
@@ -1365,7 +1373,8 @@
       "ambiguous": "Several Documents with this name, kept as plain labels:",
       "repeated": "Document already on the map, kept as plain labels:",
       "backgroundLater": "Upload the background image afterwards, from the new map's Map button.",
-      "submit": "Import"
+      "submit": "Import",
+      "recolored": "Areas of one Document in different colors, all taking the first one's color:"
     },
     "openPreview": "Open in preview",
     "legend": {

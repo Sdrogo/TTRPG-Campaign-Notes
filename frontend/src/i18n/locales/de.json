@@ -1341,7 +1341,15 @@
       "placePane": "Ort neben der Karte geöffnet",
       "noNote": "Keine Notiz",
       "placeNotFound": "Ort nicht gefunden",
-      "connections": "Verbindungen"
+      "connections": "Verbindungen",
+      "areaLabels": "Namen von Dokumenten mit mehreren Gebieten",
+      "areaLabelsHelp": "Wo der Name eines Dokuments mit mehreren Gebieten auf dieser Karte steht.",
+      "areaLabelsEvery": "Auf jedem Gebiet",
+      "areaLabelsLargest": "Nur auf dem größten Gebiet",
+      "alreadyOnMap": "{{name}} (schon auf der Karte)",
+      "sharedColor": "Die Farbe gilt für alle {{number}} Gebiete dieses Dokuments.",
+      "addArea": "Gebiet hinzufügen",
+      "areaOf": "Gebiet {{index}} von {{total}} dieses Dokuments"
     },
     "kind": {
       "label": "Art der Karte",
@@ -1365,7 +1373,8 @@
       "ambiguous": "Mehrere Dokumente mit diesem Namen, bleiben einfache Beschriftungen:",
       "repeated": "Dokument schon auf der Karte, bleiben einfache Beschriftungen:",
       "backgroundLater": "Das Hintergrundbild lädst du danach über die Schaltfläche Karte der neuen Karte hoch.",
-      "submit": "Importieren"
+      "submit": "Importieren",
+      "recolored": "Gebiete eines Dokuments in verschiedenen Farben, alle bekommen die Farbe des ersten:"
     },
     "openPreview": "In der Vorschau öffnen",
     "legend": {

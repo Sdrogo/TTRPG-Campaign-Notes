@@ -139,6 +139,7 @@ async def test_the_preview_reports_what_the_import_will_create(
         "not_found": ["Bar Senza Nome"],
         "ambiguous": [],
         "repeated": [],
+        "recolored": [],
     }
     # Nothing is written.
     maps = await client.get(room.maps_url, headers=room.master.headers)

@@ -29,6 +29,7 @@ from app.domain.geographic_maps import (
     plan_background_path,
     plan_geo_board_edit,
     polygon_surface,
+    share_document_colors,
     visible_geo_board,
 )
 from app.domain.models import RoomRole
@@ -288,14 +289,22 @@ def test_hidden_items_cant_be_overwritten_and_are_kept() -> None:
     assert plan.delete_link_ids == frozenset()
 
 
-def test_an_item_cant_change_document() -> None:
+def test_an_item_can_be_bound_to_another_document_it_sees() -> None:
     area = _area(uuid.uuid4())
     pin = _pin(uuid.uuid4())
     current = GeoBoard(areas=[area], pins=[pin])
-    with pytest.raises(InvalidBoardError):
-        _plan(GeoBoard(areas=[_area(uuid.uuid4(), id=area.id)], pins=[pin]), current)
-    with pytest.raises(InvalidBoardError):
-        _plan(GeoBoard(areas=[area], pins=[_pin(id=pin.id)]), current)
+    rebound = _area(uuid.uuid4(), id=area.id)
+    plan = _plan(GeoBoard(areas=[rebound], pins=[_pin(id=pin.id)]), current)
+    assert plan.areas == [rebound]
+    assert plan.pins[0].document_id is None
+    plain = _area()
+    with pytest.raises(BoardDocumentNotFoundError):
+        _plan(
+            GeoBoard(areas=[_area(uuid.uuid4(), id=plain.id)]),
+            GeoBoard(areas=[plain]),
+            RoomRole.PLAYER,
+            visible=set(),
+        )
 
 
 def test_documents_must_be_seen_and_appear_once() -> None:
@@ -304,6 +313,51 @@ def test_documents_must_be_seen_and_appear_once() -> None:
         _plan(GeoBoard(pins=[_pin(document_id)]), visible=set())
     with pytest.raises(InvalidBoardError):
         _plan(GeoBoard(areas=[_area(document_id)], pins=[_pin(document_id)]))
+    with pytest.raises(InvalidBoardError):
+        _plan(GeoBoard(pins=[_pin(document_id), _pin(document_id)]))
+
+
+def test_a_document_may_have_several_areas_of_one_color() -> None:
+    """Spec 77 Decisions 1 and 4b."""
+    faction = uuid.uuid4()
+    patches = [_area(faction), _area(faction), _area(faction, dashed=True)]
+    plan = _plan(GeoBoard(areas=patches))
+    assert [area.document_id for area in plan.areas] == [faction] * 3
+    assert placed_document_ids(plan.areas, []) == [faction]
+    assert geo_document_count(GeoBoard(areas=plan.areas), {faction}) == 1
+    with pytest.raises(InvalidBoardError):
+        _plan(GeoBoard(areas=[_area(faction), _area(faction, color=MapColor.RED)]))
+
+
+def test_hidden_areas_count_for_the_one_document_rules() -> None:
+    """A Player can't add a pin, or an area of another color, for a Document
+    whose areas they don't see; they can't name it anyway (404 first)."""
+    hidden = uuid.uuid4()
+    current = GeoBoard(areas=[_area(hidden)])
+    with pytest.raises(BoardDocumentNotFoundError):
+        _plan(GeoBoard(pins=[_pin(hidden)]), current, RoomRole.PLAYER, visible=set())
+    with pytest.raises(InvalidBoardError):
+        _plan(
+            GeoBoard(areas=current.areas, pins=[_pin(hidden)]),
+            current,
+            RoomRole.PLAYER,
+            visible={hidden},
+        )
+
+
+def test_share_document_colors_prefers_the_last_change() -> None:
+    faction = uuid.uuid4()
+    first, second = _area(faction), _area(faction, color=MapColor.RED)
+    plain = _area(color=MapColor.GOLD)
+    assert [a.color for a in share_document_colors([first, second, plain], ())] == [
+        MapColor.EMERALD,
+        MapColor.EMERALD,
+        MapColor.GOLD,
+    ]
+    assert [a.color for a in share_document_colors([first, second], {second.id})] == [
+        MapColor.RED,
+        MapColor.RED,
+    ]
 
 
 def test_only_masters_mark_master_only() -> None:

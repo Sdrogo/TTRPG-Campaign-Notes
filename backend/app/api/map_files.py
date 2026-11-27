@@ -6,6 +6,7 @@ matched among those the requester sees, and the export holds only what they
 see; both follow `X-View-As` like any read."""
 
 import uuid
+from dataclasses import replace
 from typing import Any, Literal
 
 from fastapi import APIRouter, status
@@ -19,7 +20,7 @@ from app.api.rate_limits import Group, limit
 from app.api.relationship_maps import get_visible_map, insert_map
 from app.api.validation import UniqueIds
 from app.auth.dependencies import CurrentUserDep
-from app.db import documents_repo, geographic_maps_repo, rooms_repo
+from app.db import documents_repo, geographic_maps_repo, relationship_maps_repo, rooms_repo
 from app.db.session import SessionDep
 from app.domain.errors import DomainError
 from app.domain.geographic_maps import (
@@ -42,6 +43,7 @@ from app.domain.map_import import (
 )
 from app.domain.models import DocumentVisibility, Membership
 from app.domain.relationship_maps import (
+    AreaLabels,
     ArrowDirection,
     InvalidBoardError,
     MapColor,
@@ -121,6 +123,7 @@ class MapFileBody(_FileModel):
     name: str
     description: str | None = None
     plane: FilePlane
+    area_labels: AreaLabels | None = None
     areas: list[FileArea] = []
     pins: list[FilePin] = []
     links: list[FileLink] = []
@@ -146,7 +149,8 @@ class ImportRequest(ImportPreviewRequest):
 class ImportReportResponse(BaseModel):
     """What the import will create (Decision 10): the map's name and plane,
     how many areas, pins and links, how many are bound to a Document, and the
-    names that will stay plain labels."""
+    names that will stay plain labels; `recolored` the Documents whose
+    areas all take their first area's color (spec 77 Decision 4b)."""
 
     name: str
     description: str
@@ -159,6 +163,7 @@ class ImportReportResponse(BaseModel):
     not_found: list[str]
     ambiguous: list[str]
     repeated: list[str]
+    recolored: list[str] = []
 
 
 _IMPORT_ERROR_STATUS: dict[type[DomainError], int] = {
@@ -208,6 +213,7 @@ def _map_file(body: MapFileBody) -> MapFile:
         ],
         pins=[ImportedPin(**pin.model_dump()) for pin in body.pins],
         links=[ImportedLink(**link.model_dump()) for link in body.links],
+        area_labels=body.area_labels,
     )
 
 
@@ -262,6 +268,7 @@ async def preview_map_import(
         not_found=list(report.not_found),
         ambiguous=list(report.ambiguous),
         repeated=list(report.repeated),
+        recolored=list(report.recolored),
     )
 
 
@@ -293,6 +300,10 @@ async def import_map(
         plane_width=planned.plane_width,
         plane_height=planned.plane_height,
     )
+    if map_file.area_labels is not None:
+        relationship_map = await relationship_maps_repo.update_map(
+            session, replace(relationship_map, area_labels=map_file.area_labels)
+        )
     await geographic_maps_repo.save_geo_board(session, relationship_map.id, planned.plan)
     return await geo_detail(session, relationship_map, grants, membership)
 
@@ -331,4 +342,5 @@ async def export_map(
         relationship_map.plane_height,
         shown,
         {document.id: document.name for document in documents},
+        relationship_map.area_labels,
     )

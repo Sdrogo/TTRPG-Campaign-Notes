@@ -4,7 +4,7 @@ import { toChangesBody } from '../lib/boardChanges';
 import { toGeoBody, toGeoMapDetail, type RawGeoMapDetail } from '../lib/geoMaps';
 import { mapExportFileName, toImportBody, toMapImportReport, type RawMapImportReport } from '../lib/mapImport';
 import { saveBlob } from '../lib/roomExport';
-import type { GeoBoard, GeoMapDetail } from '../types/geoMap';
+import type { AreaLabels, GeoBoard, GeoMapDetail } from '../types/geoMap';
 import type { MapFormValues } from '../types/map';
 import type { ChangesSave } from '../types/boardChanges';
 import { MAP_REFRESH_MS } from './useMaps';
@@ -73,6 +73,16 @@ export function useResizePlane(roomId: string, mapId: string) {
         method: 'PATCH',
         json: { plane_width: size.width, plane_height: size.height },
       }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['rooms', roomId, 'maps'] }),
+  });
+}
+
+/** Where a Document with several areas has its name (spec 77 Decision 5), saved at once. */
+export function useSetAreaLabels(roomId: string, mapId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (areaLabels: AreaLabels) =>
+      apiFetch<unknown>(mapPath(roomId, mapId), { method: 'PATCH', json: { area_labels: areaLabels } }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['rooms', roomId, 'maps'] }),
   });
 }

@@ -250,6 +250,7 @@ function GeoMapEditor({
         planeWidth={map.planeWidth}
         planeHeight={map.planeHeight}
         backgroundUrl={map.backgroundUrl}
+        areaLabels={map.areaLabels}
         editable={access.editable}
         isMaster={access.isMaster}
         documents={documents.data ?? []}

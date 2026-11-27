@@ -1341,7 +1341,15 @@
       "placePane": "Luogo aperto accanto alla mappa",
       "noNote": "Nessuna nota",
       "placeNotFound": "Luogo non trovato",
-      "connections": "Collegamenti"
+      "connections": "Collegamenti",
+      "areaLabels": "Nomi dei Documenti con più aree",
+      "areaLabelsHelp": "Dove si scrive il nome di un Documento che ha più aree su questa mappa.",
+      "areaLabelsEvery": "Su ogni area",
+      "areaLabelsLargest": "Solo sull'area più grande",
+      "alreadyOnMap": "{{name}} (già sulla mappa)",
+      "sharedColor": "Il colore vale per tutte le {{number}} aree di questo Documento.",
+      "addArea": "Aggiungi un'area",
+      "areaOf": "Area {{index}} di {{total}} di questo Documento"
     },
     "kind": {
       "label": "Tipo di mappa",
@@ -1365,7 +1373,8 @@
       "ambiguous": "Più Documenti con questo nome, resteranno etichette semplici:",
       "repeated": "Documento già sulla mappa, resteranno etichette semplici:",
       "backgroundLater": "L'immagine di sfondo si carica dopo, dal pulsante Mappa della nuova mappa.",
-      "submit": "Importa"
+      "submit": "Importa",
+      "recolored": "Aree dello stesso Documento con colori diversi, prendono tutte il colore della prima:"
     },
     "openPreview": "Apri in anteprima",
     "legend": {

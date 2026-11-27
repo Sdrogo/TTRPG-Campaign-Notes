@@ -57,6 +57,8 @@ export interface RelationshipMap {
   revision: number;
   /** May change the board: its managers, or anyone while `playersCanEdit`. */
   canEdit: boolean;
+  /** A geographic map's names setting for a Document with several areas (spec 77); null on a free map. */
+  areaLabels: 'every' | 'largest' | null;
   /** May change its settings or delete it: its creator and the Master. */
   canManage: boolean;
 }

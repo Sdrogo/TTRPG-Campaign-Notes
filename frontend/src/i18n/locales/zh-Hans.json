@@ -1307,7 +1307,15 @@
       "placePane": "在地图旁打开的地点",
       "noNote": "没有备注",
       "placeNotFound": "找不到地点",
-      "connections": "连接"
+      "connections": "连接",
+      "areaLabels": "有多个区域的文档的名称",
+      "areaLabelsHelp": "在此地图上有多个区域的文档，其名称写在哪里。",
+      "areaLabelsEvery": "每个区域上",
+      "areaLabelsLargest": "仅在最大的区域上",
+      "alreadyOnMap": "{{name}}（已在地图上）",
+      "sharedColor": "该颜色适用于此文档的全部 {{number}} 个区域。",
+      "addArea": "添加区域",
+      "areaOf": "此文档的区域 {{index}}/{{total}}"
     },
     "kind": {
       "label": "地图类型",
@@ -1331,7 +1339,8 @@
       "ambiguous": "有多个同名文档,将保留为普通标签:",
       "repeated": "该文档已在地图上,将保留为普通标签:",
       "backgroundLater": "背景图片之后在新地图的“地图”按钮中上传。",
-      "submit": "导入"
+      "submit": "导入",
+      "recolored": "同一文档的区域颜色不同，全部采用第一个区域的颜色："
     },
     "openPreview": "在预览中打开",
     "legend": {

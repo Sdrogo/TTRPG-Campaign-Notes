@@ -47,6 +47,7 @@ from app.domain.models import Document, DocumentImage, DocumentVisibility, Membe
 from app.domain.relationship_maps import (
     MAX_BEND,
     MAX_LABEL_OFFSET,
+    AreaLabels,
     ArrowDirection,
     ArrowEnd,
     Board,
@@ -96,7 +97,9 @@ class MapResponse(BaseModel):
     `can_manage` is whether they change its settings or delete it,
     `can_edit` whether they change its board (spec 42: also every member
     while `players_can_edit`); `revision` is what a board save sends back as
-    `base_revision`."""
+    `base_revision`. On a geographic map `area_labels` is where a Document
+    with several areas has its name (spec 77 Decision 5: `every`, the
+    default, or `largest`); null on a free map."""
 
     id: uuid.UUID
     room_id: uuid.UUID
@@ -115,6 +118,7 @@ class MapResponse(BaseModel):
     revision: int
     can_edit: bool
     can_manage: bool
+    area_labels: AreaLabels | None = None
 
 
 class MapDocumentResponse(BaseModel):
@@ -246,7 +250,8 @@ class CreateMapRequest(BaseModel):
 
 
 class UpdateMapRequest(BaseModel):
-    """A partial update: omitted fields are left as they are."""
+    """A partial update: omitted fields are left as they are. `area_labels`
+    only on a geographic map (spec 77 Decision 5; 409 on a free one)."""
 
     name: str | None = None
     description: str | None = None
@@ -255,6 +260,7 @@ class UpdateMapRequest(BaseModel):
     visibility: DocumentVisibility | None = None
     selective_user_ids: UniqueIds | None = None
     players_can_edit: bool | None = None
+    area_labels: AreaLabels | None = None
 
 
 class BoardRequest(BaseModel):
@@ -393,6 +399,11 @@ def map_summary(
         revision=relationship_map.revision,
         can_edit=can_edit_map(relationship_map, viewer.user_id, viewer.role),
         can_manage=can_manage,
+        area_labels=(
+            relationship_map.area_labels or AreaLabels.EVERY
+            if relationship_map.kind == MapKind.GEOGRAPHIC
+            else None
+        ),
     )
 
 
@@ -750,6 +761,10 @@ async def update_map(
             raise translated_error(status.HTTP_422_UNPROCESSABLE_CONTENT, exc, locale) from exc
         except WrongMapKindError as exc:
             raise translated_error(status.HTTP_409_CONFLICT, exc, locale) from exc
+    if body.area_labels is not None and relationship_map.kind != MapKind.GEOGRAPHIC:
+        raise translated_error(
+            status.HTTP_409_CONFLICT, WrongMapKindError("errors.map.notGeographic"), locale
+        )
     updated = replace(
         relationship_map,
         name=name,
@@ -762,6 +777,7 @@ async def update_map(
             if body.players_can_edit is None
             else body.players_can_edit
         ),
+        area_labels=body.area_labels or relationship_map.area_labels,
         updated_at=_now(),
     )
     updated = await relationship_maps_repo.update_map(session, updated)

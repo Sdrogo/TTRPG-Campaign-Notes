@@ -1,5 +1,8 @@
 import type { ArrowDirection, MapColor, MapDocument, RelationshipMap } from './map';
 
+/** Where a Document with several areas has its name (spec 77 Decision 5). */
+export type AreaLabels = 'every' | 'largest';
+
 /** Which side of its point a pin's name is written on (spec 38 Decision 4). */
 export type LabelSide = 'left' | 'right' | 'above' | 'below';
 

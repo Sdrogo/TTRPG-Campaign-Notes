@@ -41,6 +41,12 @@ import {
   placeName,
   placeSubtitle,
   placedDocumentIds,
+  pinnedDocumentIds,
+  areaDocumentIds,
+  areasOfDocument,
+  documentAreaColor,
+  namedAreaIds,
+  saveArea,
   labelOnCurve,
   pointOnCurve,
   putArea,
@@ -59,7 +65,7 @@ import {
 } from '../../lib/geoMaps';
 import { colorValue, type Point } from '../../lib/maps';
 import type { Document } from '../../types/document';
-import type { GeoArea, GeoBoard, GeoLink, GeoPin, LabelSide } from '../../types/geoMap';
+import type { AreaLabels, GeoArea, GeoBoard, GeoLink, GeoPin, LabelSide } from '../../types/geoMap';
 import type { Tag } from '../../types/tag';
 import { ArrowDialog } from './ArrowDialog';
 import { AreaDialog } from './AreaDialog';
@@ -134,6 +140,8 @@ export interface GeographicBoardProps {
    * opens filling it with no empty bands.
    */
   fitToPlane?: boolean;
+  /** Where a Document with several areas has its name (spec 77 Decision 5); every area by default. */
+  areaLabels?: AreaLabels | null;
 }
 
 /** The point halfway between two others. */
@@ -170,7 +178,9 @@ function labelPlacement(side: LabelSide): {
  * After "Modifica la mappa": draw an area corner by corner, place a pin, link
  * two items, drag pins, areas, corners and a link's curve, edit a place from
  * its card, Delete to remove what is selected. Every change goes out through
- * `onChange` as the whole map.
+ * `onChange` as the whole map. A Document may have several areas (spec 77):
+ * selecting one, or its Document in the pane, outlines them all, and its
+ * card adds one more.
  */
 export function GeographicBoard({
   roomId,
@@ -188,6 +198,7 @@ export function GeographicBoard({
   paneItem,
   height: heightProp,
   fitToPlane = false,
+  areaLabels = null,
 }: GeographicBoardProps) {
   const { t } = useTranslation();
   const backState = useBackState();
@@ -206,6 +217,8 @@ export function GeographicBoard({
   const canEdit = editable && editMode;
   const [tool, setTool] = useState<Tool>('select');
   const [draft, setDraft] = useState<AreaDraft | null>(null);
+  // "Add an area" (spec 77 Decision 4): the area the new one copies its Document and look from.
+  const [areaLike, setAreaLike] = useState<GeoArea | null>(null);
   const [linkStart, setLinkStart] = useState<GeoItemRef | null>(null);
   const [selected, setSelected] = useState<GeoItemRef | { kind: 'link'; id: string } | null>(paneItem ?? null);
   // A new place in the pane selects it, and closing the pane clears it, while reading.
@@ -277,6 +290,8 @@ export function GeographicBoard({
 
   const shaping = canEdit && tool === 'select';
   const taken = placedDocumentIds(board);
+  const pinned = pinnedDocumentIds(board);
+  const withAreas = areaDocumentIds(board);
 
   // --- Clicks ---------------------------------------------------------------
 
@@ -286,7 +301,8 @@ export function GeographicBoard({
       if (step.closed) {
         setDraft(null);
         setTool('select');
-        setEditing({ kind: 'area', area: newArea(step.closed), isNew: true });
+        setEditing({ kind: 'area', area: newArea(step.closed, areaLike ?? undefined), isNew: true });
+        setAreaLike(null);
       } else {
         setDraft(step.draft);
       }
@@ -427,6 +443,7 @@ export function GeographicBoard({
   const chooseTool = (next: Tool) => {
     setTool(next);
     setDraft(null);
+    setAreaLike(null);
     setLinkStart(null);
     setSelected(null);
   };
@@ -451,6 +468,7 @@ export function GeographicBoard({
   const isSelected = (kind: string, id: string) =>
     (selected?.kind === kind && selected.id === id) || (linkStart?.kind === kind && linkStart.id === id);
   const halo = { stroke: 'var(--bg-base)', strokeWidth: 3 * s, paintOrder: 'stroke' as const };
+  const named = useMemo(() => namedAreaIds(board, areaLabels), [board, areaLabels]);
 
   const linkShapes = shown.links.flatMap((link) => {
     const geometry = linkGeometry(shown, link, (PIN_RADIUS + 3) * s);
@@ -464,6 +482,10 @@ export function GeographicBoard({
   };
 
   const selectedItem = selected && selected.kind !== 'link' ? findItem(board, selected) : undefined;
+  // The selected place's Document, whose every area is outlined (spec 77 Decision 6).
+  const selectedDocumentId = selectedItem?.documentId ?? null;
+  const documentAreas = selectedDocumentId ? areasOfDocument(board, selectedDocumentId) : [];
+  const outlined = (area: GeoArea) => selectedDocumentId !== null && area.documentId === selectedDocumentId;
   // A place shows in the split pane while reading, a Document's (spec 38b)
   // and a plain one (spec 50); the card is for editing it, or where there is no pane.
   const showCard = canEdit || (selectedItem?.documentId ? !onSelectDocument : !onSelectPlace);
@@ -477,7 +499,7 @@ export function GeographicBoard({
   // a drag shows a change, an area's name moves with it and the others stay.
   // The zoom is deferred, so a full map's placement never holds up a wheel step.
   const labelZoom = useDeferredValue(s);
-  const placedLabels = useMemo(() => areaLabelPoints(board, labelZoom), [board, labelZoom]);
+  const placedLabels = useMemo(() => areaLabelPoints(board, labelZoom, named), [board, labelZoom, named]);
   const labelPoint = (area: GeoArea) => {
     const placed = placedLabels.get(area.id)!;
     const saved = board.areas.find((candidate) => candidate.id === area.id)!;
@@ -535,6 +557,21 @@ export function GeographicBoard({
               style={{ pointerEvents: 'none' }}
             />
           )}
+          {shown.areas.filter(outlined).map((area) => (
+            // A halo in the text color behind each of the selected Document's
+            // areas: not told apart by hue alone (spec 77, ticket 78).
+            <polygon
+              key={`halo-${area.id}`}
+              data-testid="area-halo"
+              points={area.points.map(([x, y]) => `${x},${y}`).join(' ')}
+              fill="none"
+              stroke="var(--text-primary)"
+              strokeOpacity={0.45}
+              strokeWidth={(isSelected('area', area.id) ? 9 : 7) * s}
+              strokeLinejoin="round"
+              style={{ pointerEvents: 'none' }}
+            />
+          ))}
           {shown.areas.map((area) => {
             const color = colorValue(area.color);
             return (
@@ -547,13 +584,15 @@ export function GeographicBoard({
                 fill={color}
                 fillOpacity={area.filled ? 0.22 : 0}
                 stroke={color}
-                strokeWidth={(isSelected('area', area.id) ? 4 : 2) * s}
+                strokeWidth={(isSelected('area', area.id) ? 4 : outlined(area) ? 3 : 2) * s}
                 strokeDasharray={area.dashed ? `${10 * s} ${7 * s}` : undefined}
                 strokeLinejoin="round"
                 opacity={itemOpacity(area)}
                 style={{ cursor: shaping ? 'move' : 'pointer' }}
                 onPointerDown={(event) => pressItem(event, { kind: 'area', id: area.id })}
-              />
+              >
+                {!named.has(area.id) && <title>{placeName(area)}</title>}
+              </polygon>
             );
           })}
           {linkShapes.map(({ link, curve, from, to }) => {
@@ -607,7 +646,7 @@ export function GeographicBoard({
               </g>
             );
           })}
-          {shown.areas.map((area) => {
+          {shown.areas.filter((area) => named.has(area.id)).map((area) => {
             const center = labelPoint(area);
             const subtitle = placeSubtitle(area);
             return (
@@ -828,6 +867,14 @@ export function GeographicBoard({
                   {selectedItem.note}
                 </Text>
               )}
+              {selected!.kind === 'area' && documentAreas.length > 1 && (
+                <Text size="xs" c="dimmed">
+                  {t('maps.geo.areaOf', {
+                    index: documentAreas.findIndex((area) => area.id === selectedItem.id) + 1,
+                    total: documentAreas.length,
+                  })}
+                </Text>
+              )}
               <Group gap="xs" mt={4}>
                 {selectedItem.documentId && !onSelectDocument && (
                   <Button
@@ -853,6 +900,19 @@ export function GeographicBoard({
                     }
                   >
                     {t('common.edit')}
+                  </Button>
+                )}
+                {canEdit && selected!.kind === 'area' && selectedItem.documentId && (
+                  <Button
+                    size="xs"
+                    variant="default"
+                    leftSection={<PlusIcon size={14} />}
+                    onClick={() => {
+                      chooseTool('area');
+                      setAreaLike(selectedItem as GeoArea);
+                    }}
+                  >
+                    {t('maps.geo.addArea')}
                   </Button>
                 )}
               </Group>
@@ -939,11 +999,16 @@ export function GeographicBoard({
           area={editing.area}
           isNew={editing.isNew}
           documents={documents}
-          takenDocumentIds={taken}
+          takenDocumentIds={pinned}
+          onMapDocumentIds={withAreas}
+          siblingsOf={(documentId) => ({
+            count: areasOfDocument(board, documentId).filter((area) => area.id !== editing.area.id).length,
+            color: documentAreaColor(board, documentId, editing.area.id),
+          })}
           isMaster={isMaster}
           onClose={close}
           onSave={(area) => {
-            onChange(putArea(board, area));
+            onChange(saveArea(board, area));
             setSelected({ kind: 'area', id: area.id });
             close();
           }}
@@ -1020,7 +1085,7 @@ function linkLabels(link: GeoLink, from: Point, to: Point, curve: Curve) {
  * pixels (spec 38b): clear of the pins, their names and the links' labels,
  * which keep their screen size.
  */
-function areaLabelPoints(board: GeoBoard, s: number): Map<string, Point> {
+function areaLabelPoints(board: GeoBoard, s: number, named: Set<string>): Map<string, Point> {
   const lineHeight = LABEL_FONT * 1.2 * s;
   const obstacles: LabelBox[] = [
     ...board.pins.flatMap((pin) => {
@@ -1049,7 +1114,7 @@ function areaLabelPoints(board: GeoBoard, s: number): Map<string, Point> {
     }),
   ];
   return placeAreaLabels(
-    board.areas.map((area) => {
+    board.areas.filter((area) => named.has(area.id)).map((area) => {
       const subtitle = placeSubtitle(area);
       const half = AREA_FONT * 0.65 * s;
       return {

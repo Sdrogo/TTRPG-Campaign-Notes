@@ -851,6 +851,10 @@ class RelationshipMapRow(Base):
             "legend_preset_id IS NULL OR color_legend IS NULL",
             name="ck_relationship_maps_legend",
         ),
+        CheckConstraint(
+            "area_labels IS NULL OR area_labels IN ('every', 'largest')",
+            name="ck_relationship_maps_area_labels",
+        ),
     )
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
@@ -895,16 +899,24 @@ class RelationshipMapRow(Base):
         ),
         index=True,
     )
+    # Spec 77 Decision 5: on a geographic map, where a Document with several
+    # areas has its name: `every` area (also when null) or the `largest`.
+    area_labels: Mapped[str | None] = mapped_column(String(8))
 
 
 class RelationshipMapLegendPresetRow(Base):
-    """A Room's ready-made relation color legend (spec 68 Decision 19): free
-    maps link to it and show its meanings live. Gone with the Room; a map
-    linked to a deleted preset keeps a copy of its meanings (Decision 23)."""
+    """A Room's ready-made color legend (spec 68 Decision 19): maps link to
+    it and show its meanings live. Gone with the Room; a map linked to a
+    deleted preset keeps a copy of its meanings (Decision 23). Its `kind`
+    (spec 77b Decision 8) is `relations`, for free maps, or `areas`, for
+    geographic ones; the name is unique per Room and kind."""
 
     __tablename__ = "relationship_map_legend_presets"
     __table_args__ = (
-        UniqueConstraint("room_id", "name", name="uq_relationship_map_legend_presets_name"),
+        UniqueConstraint("room_id", "kind", "name", name="uq_relationship_map_legend_presets_name"),
+        CheckConstraint(
+            "kind IN ('relations', 'areas')", name="ck_relationship_map_legend_presets_kind"
+        ),
     )
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
@@ -912,6 +924,7 @@ class RelationshipMapLegendPresetRow(Base):
         UUID(as_uuid=True), ForeignKey("rooms.id", ondelete="CASCADE"), index=True
     )
     name: Mapped[str] = mapped_column(String(60))
+    kind: Mapped[str] = mapped_column(String(10), default="relations", server_default="relations")
     entries: Mapped[dict[str, str]] = mapped_column(JSONB)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
@@ -1098,13 +1111,13 @@ class RelationshipMapArrowRow(Base):
 
 class RelationshipMapAreaRow(Base):
     """An area of a geographic map (spec 38 Decision 3): a closed shape of
-    `points` (a list of `[x, y]`), bound to a Document or plain. A Document is
-    on a map at most once, here or as a pin (checked by `plan_geo_board_edit`)
-    and its area goes with it (`ON DELETE CASCADE`)."""
+    `points` (a list of `[x, y]`), bound to a Document or plain. A Document
+    may have several areas on a map, all of one color, but never also a pin
+    (spec 77, checked by `plan_geo_board_edit`); its areas go with it
+    (`ON DELETE CASCADE`)."""
 
     __tablename__ = "relationship_map_areas"
     __table_args__ = (
-        UniqueConstraint("map_id", "document_id", name="uq_relationship_map_areas_document"),
         CheckConstraint(
             "(document_id IS NULL) = (name IS NOT NULL)", name="ck_relationship_map_areas_kind"
         ),

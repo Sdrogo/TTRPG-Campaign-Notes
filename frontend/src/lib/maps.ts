@@ -42,6 +42,7 @@ export interface RawMap {
   revision: number;
   can_edit: boolean;
   can_manage: boolean;
+  area_labels?: 'every' | 'largest' | null;
 }
 
 export interface RawMapGroup {
@@ -125,6 +126,7 @@ export function toMap(raw: RawMap): RelationshipMap {
     revision: raw.revision,
     canEdit: raw.can_edit,
     canManage: raw.can_manage,
+    areaLabels: raw.area_labels ?? null,
   };
 }
 
