@@ -340,6 +340,23 @@
       "try": "Probar",
       "sample": "Así suena esta voz mientras lee tus apuntes."
     },
+    "palette": {
+      "title": "Colores de los mapas",
+      "description": "La paleta con la que ves mapas, leyendas, relojes y la Sesión 0. Si te cuesta distinguir algunos colores, elige la adecuada: los colores guardados no cambian.",
+      "note": "Cada persona ve su propia paleta, pero cada color conserva su nombre: el \"rojo\" de una relación es rojo para todos. En la leyenda, un clic en un significado resalta las relaciones de ese color.",
+      "names": {
+        "standard": "Estándar",
+        "protan": "Protanopía (rojo)",
+        "deutan": "Deuteranopía (verde)",
+        "tritan": "Tritanopía (azul)"
+      },
+      "hints": {
+        "standard": "Los colores de siempre",
+        "protan": "Para quien ve poco el rojo",
+        "deutan": "Para quien ve poco el verde, el caso más común",
+        "tritan": "Para quien ve poco el azul"
+      }
+    },
     "privacy": {
       "title": "Tus datos",
       "description": "Descarga una copia de todo lo que la app guarda sobre ti, o elimina tu cuenta.",

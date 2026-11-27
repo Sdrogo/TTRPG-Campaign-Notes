@@ -8,6 +8,8 @@
  * to expire is renewed ahead of time.
  */
 
+import { applyPalette } from './palette';
+
 /** The signed-in user, as `POST /auth/refresh` describes them. */
 export interface AuthUser {
   id: string;
@@ -113,11 +115,14 @@ export async function signOut(): Promise<void> {
   if (!response.ok) {
     throw new Error(`Sign-out failed (${response.status})`);
   }
+  // The map palette was this user's (spec 78): the next person starts on standard.
+  applyPalette('standard');
   publish(null);
 }
 
 /** Forgets the session on this page only, e.g. once the account itself is gone. */
 export function forgetSession(): void {
+  applyPalette('standard');
   publish(null);
 }
 

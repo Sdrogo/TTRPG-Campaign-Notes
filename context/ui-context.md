@@ -61,9 +61,12 @@ Notes:
   component code. **One exception: country flags** (the language
   selector, spec 09) keep their official colors. They're content, not
   theme, so they are SVG files in `src/assets/flags/`, not components.
-  **Second exception: the 11 relationship-map palette colors** added
-  2026-10-13 (spec 28), whose exact hexes the product owner chose; they
-  live in one table, `COLOR_VALUES` in `src/lib/maps.ts`.
+  **Second exception: the map palette colors** (spec 28, 2026-10-13),
+  whose standard hexes the product owner chose; since spec 78 (2026-11-27)
+  they live in one table with the three color-blind palettes, `PALETTES` in
+  `src/lib/palette.ts`, and components only ever use `colorValue(name)`
+  (`var(--palette-<name>)`, filled in for the viewer's palette). Standard
+  midnight is #5566c8 (3.9:1 on the board) since spec 78.
 
 ## Typography
 
@@ -749,6 +752,11 @@ a grid of as many columns as fit. Rows highlight `--bg-raised` on hover.
   and one `PageCard` per section; a section's text in the locale files is
   split on blank lines, and a block of "- " lines renders as a `List`. The
   sign-in screen links to it under the provider buttons (dimmed, `sm`).
+- **Account page, "Colori delle mappe"** (spec 78, after "Lettura ad alta
+  voce"): four `Radio.Card`s (`palette-card`, one column on a phone, two
+  from `sm`), each with the palette name, a hint and 16 swatches of 14 px in
+  its own shades; the checked card has the accent border (no fading, so the
+  swatches stay true). The pick is drawn at once and saved on the account.
 - **Account page**: "Inviti alle Stanze" (only while some wait) comes
   right after the page title, "Amici" after "Profilo". Each person is a
   `FriendRow`: `md` avatar, name, pronouns or a detail line, the email only

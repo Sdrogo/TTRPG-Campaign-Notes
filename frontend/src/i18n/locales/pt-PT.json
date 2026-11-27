@@ -340,6 +340,23 @@
       "try": "Experimentar",
       "sample": "Assim soa esta voz a ler os teus apontamentos."
     },
+    "palette": {
+      "title": "Cores dos mapas",
+      "description": "A paleta em que vês mapas, legendas, relógios e a Sessão 0. Se tens dificuldade em distinguir algumas cores, escolhe a adequada: as cores guardadas não mudam.",
+      "note": "Cada pessoa vê a sua própria paleta, mas cada cor mantém o nome: o \"vermelho\" de uma relação é vermelho para todos. Na legenda, um clique num significado destaca as relações dessa cor.",
+      "names": {
+        "standard": "Padrão",
+        "protan": "Protanopia (vermelho)",
+        "deutan": "Deuteranopia (verde)",
+        "tritan": "Tritanopia (azul)"
+      },
+      "hints": {
+        "standard": "As cores de sempre",
+        "protan": "Para quem vê mal o vermelho",
+        "deutan": "Para quem vê mal o verde, o caso mais comum",
+        "tritan": "Para quem vê mal o azul"
+      }
+    },
     "privacy": {
       "title": "Os teus dados",
       "description": "Transfere uma cópia de tudo o que a app guarda sobre ti, ou elimina a tua conta.",

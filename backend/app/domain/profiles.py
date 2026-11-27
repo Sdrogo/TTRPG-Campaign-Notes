@@ -15,6 +15,10 @@ MAX_DISPLAY_NAME_LENGTH = 60
 MAX_PRONOUNS_LENGTH = 40
 MAX_BIO_LENGTH = 1000
 
+# The map palettes a user can pick besides the standard one (spec 78): one
+# per kind of color blindness. The frontend holds the colors themselves.
+COLOR_PALETTES = frozenset({"protan", "deutan", "tritan"})
+
 # Avatars share the images bucket, under their own prefix so they can never
 # collide with a Document image path ({room_id}/{document_id}/...).
 AVATAR_PATH_PREFIX = "avatars"
@@ -39,6 +43,13 @@ class ProfileFieldTooLongError(DomainError):
         self.field = field
 
 
+class UnknownColorPaletteError(DomainError):
+    """A palette id that isn't one of `COLOR_PALETTES`."""
+
+    def __init__(self) -> None:
+        super().__init__("errors.account.unknownPalette")
+
+
 @dataclass(frozen=True)
 class ProfileChanges:
     """Only the fields the user sent; `None` inside a sent field clears it."""
@@ -47,6 +58,7 @@ class ProfileChanges:
     display_name: str | None = None
     pronouns: str | None = None
     bio: str | None = None
+    color_palette: str | None = None
 
 
 def _single_line(value: str | None, field: str, max_length: int) -> str | None:
@@ -88,6 +100,11 @@ def plan_profile_update(current: UserProfile, changes: ProfileChanges) -> UserPr
         )
     if "bio" in changes.fields:
         updated = replace(updated, bio=_multi_line(changes.bio, "bio", MAX_BIO_LENGTH))
+    if "color_palette" in changes.fields:
+        palette = changes.color_palette or None
+        if palette is not None and palette not in COLOR_PALETTES:
+            raise UnknownColorPaletteError()
+        updated = replace(updated, color_palette=palette)
     return updated
 
 

@@ -9,7 +9,7 @@ null, or `largest`). Spec `77b - Area color legend.md`: a legend preset has a
 per Room and kind. Additive for existing data.
 
 Revision ID: f3a7c1e9b5d2
-Revises: c6f1a9d3e7b2
+Revises: f2a7c4e9b1d3
 Create Date: 2026-11-27 15:00:00.000000
 
 """
@@ -22,7 +22,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision: str = "f3a7c1e9b5d2"
-down_revision: Union[str, Sequence[str], None] = "c6f1a9d3e7b2"
+down_revision: Union[str, Sequence[str], None] = "f2a7c4e9b1d3"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

@@ -57,6 +57,7 @@ class ExportedProfile(BaseModel):
     pronouns: str | None
     bio: str | None
     avatar_url: str | None
+    color_palette: str | None
     created_at: datetime | None
 
 
@@ -308,6 +309,7 @@ async def export_personal_data(
             pronouns=profile.pronouns,
             bio=profile.bio,
             avatar_url=avatar_urls.get(profile.avatar_path) if profile.avatar_path else None,
+            color_palette=profile.color_palette,
             created_at=row.created_at if row else None,
         ),
         rooms=[

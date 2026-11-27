@@ -340,6 +340,23 @@
       "try": "Try it",
       "sample": "This is how this voice sounds reading your notes."
     },
+    "palette": {
+      "title": "Map colors",
+      "description": "The palette you see maps, legends, Clocks and Session 0 in. If some colors are hard to tell apart, pick the one that suits you: saved colors don't change.",
+      "note": "Everyone sees their own palette, but each color keeps its name: a relation's \"red\" is red for everyone. In the legend, clicking a meaning highlights the relations of that color.",
+      "names": {
+        "standard": "Standard",
+        "protan": "Protanopia (red)",
+        "deutan": "Deuteranopia (green)",
+        "tritan": "Tritanopia (blue)"
+      },
+      "hints": {
+        "standard": "The usual colors",
+        "protan": "For weak red vision",
+        "deutan": "For weak green vision, the most common kind",
+        "tritan": "For weak blue vision"
+      }
+    },
     "privacy": {
       "title": "Your data",
       "description": "Download a copy of everything the app keeps about you, or delete your account.",
