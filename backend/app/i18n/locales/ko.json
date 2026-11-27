@@ -136,6 +136,7 @@
         "bio": "소개"
       },
       "fieldTooLong": "{field}은(는) 최대 {max}자까지 가능합니다",
+      "unknownPalette": "알 수 없는 색상 팔레트입니다",
       "deletionNotConfirmed": "계정 삭제를 확인하려면 DELETE를 입력하세요",
       "successorNeeded": "계정을 삭제하기 전에 다음 룸에서 다른 사람을 Master 또는 Admin으로 지정하세요: {rooms}"
     },

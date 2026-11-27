@@ -1,18 +1,19 @@
 import { useState } from 'react';
-import { Alert, Button, FileButton, Group, Image, Input, Modal, NumberInput, Stack, Text } from '@mantine/core';
+import { Alert, Button, FileButton, Group, Image, Input, Modal, NumberInput, Radio, Stack, Text } from '@mantine/core';
 import { ImageIcon, LinkIcon, TrashIcon } from '@phosphor-icons/react';
 import { useTranslation } from 'react-i18next';
-import { useChangeBackground, useResizePlane } from '../../hooks/useGeoMap';
+import { useChangeBackground, useResizePlane, useSetAreaLabels } from '../../hooks/useGeoMap';
 import { MAX_PLANE_SIZE, MIN_PLANE_SIZE } from '../../lib/geoMaps';
 import { ACCEPTED_IMAGE_TYPES } from '../../lib/images';
-import type { GeoMapDetail } from '../../types/geoMap';
+import type { AreaLabels, GeoMapDetail } from '../../types/geoMap';
 import { ImageUrlPopover } from '../ImageUrlPopover';
 
 /**
  * A geographic map's plane (spec 38 Decisions 2, 9): its size in map units,
  * which can't cut off an area or pin (the backend refuses, and says so), and
  * its background image, uploaded or taken from a URL, stretched over the
- * whole plane. Each change is saved on its own.
+ * whole plane; and where a Document with several areas has its name (spec
+ * 77 Decision 5). Each change is saved on its own.
  */
 export function GeoMapDialog({
   roomId,
@@ -26,6 +27,7 @@ export function GeoMapDialog({
   const { t } = useTranslation();
   const resize = useResizePlane(roomId, map.id);
   const background = useChangeBackground(roomId, map.id);
+  const areaLabels = useSetAreaLabels(roomId, map.id);
   const [width, setWidth] = useState<number | string>(map.planeWidth);
   const [height, setHeight] = useState<number | string>(map.planeHeight);
   const sizeValid = [width, height].every(
@@ -72,6 +74,18 @@ export function GeoMapDialog({
             </Group>
           </Stack>
         </form>
+        <Radio.Group
+          label={t('maps.geo.areaLabels')}
+          description={t('maps.geo.areaLabelsHelp')}
+          value={(!areaLabels.isError && areaLabels.variables) || map.areaLabels || 'every'}
+          onChange={(value) => areaLabels.mutate(value as AreaLabels)}
+        >
+          <Stack gap={6} mt={6}>
+            <Radio value="every" label={t('maps.geo.areaLabelsEvery')} />
+            <Radio value="largest" label={t('maps.geo.areaLabelsLargest')} />
+          </Stack>
+        </Radio.Group>
+        {areaLabels.error && <Alert color="danger">{areaLabels.error.message}</Alert>}
         <Input.Wrapper label={t('maps.geo.background')} description={t('maps.geo.backgroundHelp')}>
           <Stack gap="xs" mt={6}>
             {map.backgroundUrl ? (

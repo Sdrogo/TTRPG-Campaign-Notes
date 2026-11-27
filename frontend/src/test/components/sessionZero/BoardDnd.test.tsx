@@ -31,7 +31,7 @@ describe('DragPreview', () => {
   it('lifts a post-it with its text, in its column colour', () => {
     renderBoard(<DragPreview dragged={{ kind: 'card', id: 'card-1' }} />, { board });
     const preview = screen.getByText('Niente ragni').closest('.sz-drag-overlay') as HTMLElement;
-    expect(preview.style.getPropertyValue('--sz-color')).toBe('var(--mantine-color-green-5)');
+    expect(preview.style.getPropertyValue('--sz-color')).toBe('var(--palette-green)');
   });
 
   it('lifts a group with its title and count, and a column with its title', () => {

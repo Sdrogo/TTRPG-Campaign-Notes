@@ -5,8 +5,8 @@ import { ApiError, apiFetch } from '../../../lib/apiClient';
 import { MapLegend, legendOf } from '../../../components/maps/MapLegend';
 import { MapLegendDialog } from '../../../components/maps/MapLegendDialog';
 import { legendFoldKey, toMapDetail, type RawMapDetail } from '../../../lib/maps';
-import type { ColorMeanings, LegendPresetRef, MapArrow, MapColor } from '../../../types/map';
-import { rawMapDetail } from '../../fixtures';
+import type { ColorMeanings, LegendKind, LegendPresetRef, MapArrow, MapColor } from '../../../types/map';
+import { rawGeoMapDetail, rawMapDetail } from '../../fixtures';
 import { renderWithProviders } from '../../utils';
 
 vi.mock('../../../lib/apiClient', async (original) => ({
@@ -38,8 +38,8 @@ function arrow(id: string, color: MapColor): MapArrow {
 const arrows = [arrow('1', 'red'), arrow('2', 'green'), arrow('3', 'blue')];
 const meanings: ColorMeanings = { red: 'Avversario', green: 'Alleato', pink: 'Amore' };
 
-function rawPreset(id: string, name: string, entries: ColorMeanings, mapCount = 2) {
-  return { id, name, entries, map_count: mapCount };
+function rawPreset(id: string, name: string, entries: ColorMeanings, mapCount = 2, kind = 'relations') {
+  return { id, name, kind, entries, map_count: mapCount };
 }
 
 let presets = [rawPreset('preset-1', 'Corte', { red: 'Nemico', violet: 'Spia' })];
@@ -73,7 +73,7 @@ describe('legendOf', () => {
 });
 
 describe('MapLegend', () => {
-  const base = { mapId: 'map-1', meanings, presetName: null, arrows, highlight: null, onHighlight: () => {} };
+  const base = { mapId: 'map-1', meanings, presetName: null, colored: arrows, highlight: null, onHighlight: () => {} };
 
   it('shows nothing to a viewer, and to an editor on a phone, when no color has a meaning', () => {
     const { rerender } = renderWithProviders(<MapLegend {...base} meanings={{}} />);
@@ -146,7 +146,13 @@ describe('MapLegend', () => {
 });
 
 function renderDialog(
-  overrides: { meanings?: ColorMeanings; preset?: LegendPresetRef | null; isMaster?: boolean; arrows?: MapArrow[] } = {},
+  overrides: {
+    meanings?: ColorMeanings;
+    preset?: LegendPresetRef | null;
+    isMaster?: boolean;
+    arrows?: { color: MapColor }[];
+    kind?: LegendKind;
+  } = {},
 ) {
   const onClose = vi.fn();
   renderWithProviders(
@@ -155,13 +161,18 @@ function renderDialog(
       mapId="map-1"
       meanings={overrides.meanings ?? meanings}
       preset={overrides.preset ?? null}
-      arrows={overrides.arrows ?? arrows}
+      colored={overrides.arrows ?? arrows}
+      kind={overrides.kind}
       isMaster={overrides.isMaster ?? true}
       onClose={onClose}
     />,
   );
   return { user: userEvent.setup(), onClose };
 }
+
+/** The "Nuovo preset" button of one section of "Gestisci preset" (spec 77b Decision 8). */
+const newPresetIn = (section: string) =>
+  within(screen.getByRole('region', { name: section })).getByRole('button', { name: 'Nuovo preset' });
 
 const boardCall = (json: unknown) =>
   expect(fetchMock).toHaveBeenCalledWith('/rooms/room-1/maps/map-1/board', { method: 'PATCH', json });
@@ -284,7 +295,7 @@ describe('MapLegendDialog', () => {
     await vi.waitFor(() => expect(onClose).toHaveBeenCalled());
     expect(fetchMock).toHaveBeenCalledWith('/rooms/room-1/map-legend-presets', {
       method: 'POST',
-      json: { name: 'Gilde', entries: { red: 'Avversario', green: 'Alleato', pink: 'Amore' } },
+      json: { name: 'Gilde', kind: 'relations', entries: { red: 'Avversario', green: 'Alleato', pink: 'Amore' } },
     });
     boardCall({ legend: { preset_id: 'preset-new' } });
   });
@@ -322,7 +333,7 @@ describe('MapLegendDialog', () => {
     expect(await screen.findByRole('dialog', { name: 'Preset della Room' })).toBeInTheDocument();
 
     // Create: a name and one meaning at least.
-    await user.click(screen.getByRole('button', { name: 'Nuovo preset' }));
+    await user.click(newPresetIn('Leggende delle relazioni'));
     expect(await screen.findByRole('dialog', { name: 'Nuovo preset' })).toBeInTheDocument();
     const save = screen.getByRole('button', { name: 'Salva' });
     await user.type(screen.getByRole('textbox', { name: 'Nome del preset' }), 'Clan');
@@ -334,7 +345,7 @@ describe('MapLegendDialog', () => {
     await vi.waitFor(() =>
       expect(fetchMock).toHaveBeenCalledWith('/rooms/room-1/map-legend-presets', {
         method: 'POST',
-        json: { name: 'Clan', entries: { red: 'Sangue' } },
+        json: { name: 'Clan', kind: 'relations', entries: { red: 'Sangue' } },
       }),
     );
 
@@ -348,7 +359,7 @@ describe('MapLegendDialog', () => {
     );
 
     // Back out of a preset, then out of the list.
-    await user.click(screen.getByRole('button', { name: 'Nuovo preset' }));
+    await user.click(newPresetIn('Leggende delle relazioni'));
     await user.click(await screen.findByRole('button', { name: 'Indietro' }));
     await user.click(await screen.findByRole('button', { name: 'Indietro' }));
     expect(await screen.findByRole('dialog', { name: 'Legenda dei colori' })).toBeInTheDocument();
@@ -358,8 +369,8 @@ describe('MapLegendDialog', () => {
     presets = [];
     const { user } = renderDialog();
     await user.click(await screen.findByRole('button', { name: 'Gestisci preset' }));
-    expect(await screen.findByText('Questa Room non ha ancora preset.')).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Nuovo preset' }));
+    expect(await screen.findAllByText('Questa Room non ha ancora preset.')).toHaveLength(2);
+    await user.click(newPresetIn('Leggende delle aree'));
     const add = await screen.findByPlaceholderText('Aggiungi un colore');
     for (let left = 17; left > 0; left -= 1) {
       await user.click(screen.getByPlaceholderText('Aggiungi un colore'));
@@ -368,5 +379,113 @@ describe('MapLegendDialog', () => {
       await user.click(options[0]);
     }
     expect(add).not.toBeInTheDocument();
+  });
+});
+
+describe('area legend (spec 77b)', () => {
+  const areas: { color: MapColor }[] = [{ color: 'red' }, { color: 'red' }, { color: 'blue' }];
+
+  it('shows area swatches under its own title and highlights by color', async () => {
+    const onHighlight = vi.fn();
+    renderWithProviders(
+      <MapLegend
+        mapId="map-1"
+        meanings={{ red: 'Yakuza', blue: 'Polizia', green: 'Nessuno' }}
+        presetName={null}
+        colored={areas}
+        kind="areas"
+        highlight={null}
+        onHighlight={onHighlight}
+      />,
+    );
+    expect(screen.getByText('Legenda aree')).toBeInTheDocument();
+    // Only the colors the areas use, each with an area swatch.
+    const rows = screen.getAllByRole('listitem');
+    expect(rows.map((row) => row.getAttribute('aria-label'))).toEqual(['Rosso: Yakuza', 'Azzurro: Polizia']);
+    expect(screen.getAllByTestId('area-sample')).toHaveLength(2);
+    await userEvent.setup().click(rows[0]);
+    expect(onHighlight).toHaveBeenCalledWith('red');
+  });
+
+  it('folds to a chip naming the area legend', async () => {
+    localStorage.setItem(legendFoldKey('map-1'), '1');
+    renderWithProviders(
+      <MapLegend
+        mapId="map-1"
+        meanings={{ red: 'Yakuza' }}
+        presetName={null}
+        colored={areas}
+        kind="areas"
+        highlight={null}
+        onHighlight={() => {}}
+      />,
+    );
+    expect(screen.getByRole('button', { name: /Legenda aree · 1/ })).toBeInTheDocument();
+  });
+
+  it('opens a drawer of area rows on a phone', async () => {
+    renderWithProviders(
+      <MapLegend
+        mapId="map-1"
+        meanings={{ red: 'Yakuza' }}
+        presetName={null}
+        colored={areas}
+        kind="areas"
+        compact
+        highlight={null}
+        onHighlight={() => {}}
+      />,
+    );
+    await userEvent.setup().click(screen.getByRole('button', { name: /Legenda aree · 1/ }));
+    expect(await screen.findByText('Tocca un significato per evidenziare le sue aree.')).toBeInTheDocument();
+  });
+
+  it('saves through the geographic map and offers only area presets', async () => {
+    presets = [
+      rawPreset('preset-1', 'Corte', { red: 'Nemico' }),
+      rawPreset('preset-2', 'Territori', { red: 'Yakuza' }, 1, 'areas'),
+    ];
+    fetchMock.mockImplementation((path: string, init?: Init) => {
+      if (path === '/rooms/room-1/map-legend-presets' && init?.method === 'POST') {
+        return Promise.resolve({ id: 'preset-new', map_count: 0, ...(init.json as object) });
+      }
+      if (path === '/rooms/room-1/map-legend-presets') return Promise.resolve(presets);
+      return Promise.resolve(rawGeoMapDetail());
+    });
+    const { user, onClose } = renderDialog({ meanings: { red: 'Yakuza' }, arrows: areas, kind: 'areas' });
+    expect(await screen.findByRole('dialog', { name: 'Legenda dei colori delle aree' })).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Applica preset' }));
+    expect(await screen.findByRole('radio', { name: /Territori/ })).toBeInTheDocument();
+    expect(screen.queryByRole('radio', { name: /Corte/ })).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Applica' }));
+    await vi.waitFor(() => expect(onClose).toHaveBeenCalled());
+    expect(fetchMock).toHaveBeenCalledWith('/rooms/room-1/maps/map-1/geo', {
+      method: 'PATCH',
+      json: { legend: { preset_id: 'preset-2' } },
+    });
+  });
+
+  it('saves an area preset of its kind', async () => {
+    fetchMock.mockImplementation((path: string, init?: Init) => {
+      if (path === '/rooms/room-1/map-legend-presets' && init?.method === 'POST') {
+        return Promise.resolve({ id: 'preset-new', map_count: 0, ...(init.json as object) });
+      }
+      if (path === '/rooms/room-1/map-legend-presets') return Promise.resolve([]);
+      return Promise.resolve(rawGeoMapDetail());
+    });
+    const { user, onClose } = renderDialog({ meanings: { red: 'Yakuza' }, arrows: areas, kind: 'areas' });
+    await user.click(await screen.findByRole('button', { name: 'Salva come preset' }));
+    await user.type(screen.getByRole('textbox', { name: 'Nome del preset' }), 'Territori');
+    await user.click(screen.getByRole('button', { name: 'Salva' }));
+    await vi.waitFor(() => expect(onClose).toHaveBeenCalled());
+    expect(fetchMock).toHaveBeenCalledWith('/rooms/room-1/map-legend-presets', {
+      method: 'POST',
+      json: { name: 'Territori', kind: 'areas', entries: { red: 'Yakuza' } },
+    });
+  });
+
+  it('says when the map has no areas', async () => {
+    renderDialog({ meanings: {}, arrows: [], kind: 'areas' });
+    expect(await screen.findByText('Questa mappa non ha ancora aree.')).toBeInTheDocument();
   });
 });

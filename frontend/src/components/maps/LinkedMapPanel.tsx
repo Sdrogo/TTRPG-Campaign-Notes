@@ -104,6 +104,9 @@ function LinkedGeoBoard({ roomId, mapId }: { roomId: string; mapId: string }) {
       planeWidth={geo.data.planeWidth}
       planeHeight={geo.data.planeHeight}
       backgroundUrl={geo.data.backgroundUrl}
+      areaLabels={geo.data.areaLabels}
+      // A small board: the area legend is a chip (spec 77b Decision 5).
+      legend={{ ...legendOf(geo.data), compact: true }}
       editable={false}
       isMaster={false}
       documents={[]}

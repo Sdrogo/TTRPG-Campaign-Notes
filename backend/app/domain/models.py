@@ -288,6 +288,8 @@ class UserProfile:
     pronouns: str | None = None
     bio: str | None = None
     avatar_path: str | None = None
+    # The map palette this user sees (spec 78); None is the standard one.
+    color_palette: str | None = None
     # Whether the Google name/picture were already offered as defaults. They
     # are copied once; after that the profile is entirely the user's.
     google_prefilled: bool = False

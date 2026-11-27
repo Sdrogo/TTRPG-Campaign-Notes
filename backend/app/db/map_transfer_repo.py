@@ -84,6 +84,7 @@ async def insert_maps(
                 "background_path": m.map.background_path,
                 "color_legend": relationship_maps_repo.legend_to_json(m.map.color_legend),
                 "legend_preset_id": m.map.legend_preset_id,
+                "area_labels": relationship_maps_repo.area_labels_value(m.map),
             }
             for m in maps
         ],

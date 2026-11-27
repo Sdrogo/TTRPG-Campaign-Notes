@@ -9,8 +9,8 @@
 
 1. **A kind of map, not a new feature**: `relationship_maps.kind` = `free` (today) | `geographic`. A geographic map is created from the same "New map" dialog (a "Free board / Geographic map" choice), appears in the same Maps list, has the same name, description, visibility, creator and managers (spec 28 Decisions 1-3), and can be linked to a Document (spec 36 Decision 15). A map's kind never changes.
 2. **The plane**: a geographic map has a flat plane, `width` × `height` in map units (default 2000 × 1400). It may have a **background image** (the street map, a city plan, a hand-drawn fantasy map), uploaded or picked with image search (spec 29), ≤ 20 MB, PNG, JPEG, WebP or GIF (the App's image rules; stored as WebP, at most 4096 px on its longest side), stretched over the whole plane. An SVG is converted to PNG before upload (see the walkthrough). Without one the plane is the board's plain background. No tiles from an outside map service (the App never calls a third-party map server, and a fictional setting has no real tiles).
-3. **Areas** (the zones): a closed shape of 3 to 60 points, with a **name** (default the bound Document's name), an optional **subtitle**, a **color** from the spec 28 palette, a **dashed outline** flag ("proposed zone", like Meiji Jingū in the example) and an optional **Document**. Bound to a Document, the area's name and subtitle follow it, a click opens it (split pane when open, spec 37), and a Document appears at most once per map as an area. Without a Document the area is a plain label. An area can be **filled** or **outline only**.
-4. **Pins** (the places): a point drawn as a diamond when bound to a Document and as a circle when plain, with a **label side** (left, right, above, below), a color and an optional **Document**, same binding rules as areas. A Document is at most one pin **or** one area on a map, never both. A pin may sit inside an area; it does not belong to it.
+3. **Areas** (the zones): a closed shape of 3 to 60 points, with a **name** (default the bound Document's name), an optional **subtitle**, a **color** from the spec 28 palette, a **dashed outline** flag ("proposed zone", like Meiji Jingū in the example) and an optional **Document**. Bound to a Document, the area's name and subtitle follow it, a click opens it (split pane when open, spec 37). A Document may have **several areas** on one map, all of one color (ticket 77, a patchwork territory); before ticket 77 it was at most one. Without a Document the area is a plain label. An area can be **filled** or **outline only**.
+4. **Pins** (the places): a point drawn as a diamond when bound to a Document and as a circle when plain, with a **label side** (left, right, above, below), a color and an optional **Document**, same binding rules as areas. A Document is at most one pin on a map, **or** any number of areas (ticket 77), never a pin and areas together. A pin may sit inside an area; it does not belong to it.
 5. **Links**: the arrows of spec 28 Decision 5, stored in their own table (direction, label, reverse label, color, Master only, draggable label) between **pins and areas**, drawn as a dashed curve with a bend the editor can drag. Several line-only links between the same two ends are drawn side by side (spec 28 Decision 5).
 6. **Visibility (Invariant 1, VR-07)**: exactly spec 28 Decisions 3-4. An area or pin bound to a Document the viewer doesn't see is absent, **with every link touching it**; a Master-only plain pin or area follows the link rule. A hidden Document's name, subtitle and text never reach a Player (not in the response, the search, the split pane or the export). The Master's "View as" (spec 22b) shows it as that Player.
 7. **Side panel (the example's right column)**: the split view of spec 37 already shows the clicked Document next to the map; a plain (Document-less) area or pin shows its own short **note** (≤ 500 characters, plain text), for the "zone summary" text of the example. No new panel.
@@ -47,13 +47,13 @@ A note for the product owner (2026-10-17): a map like "Shibuya di notte" is mean
 
 ### The file (`schema_version` 1)
 
-- **Top level**: `schema_version` (1), `kind` (`"geographic_map"`), `name` (≤ 100), `description` (optional), `plane` (`width`, `height`, 100 to 20,000 each).
+- **Top level**: `schema_version` (1), `kind` (`"geographic_map"`), `name` (≤ 100), `description` (optional), `plane` (`width`, `height`, 100 to 20,000 each), optional `area_labels` (`every`, the default, or `largest`: where a Document with several areas has its name, ticket 77 Decision 5), optional `color_legend` (`{"red": "Yakuza", ...}`, what each area color means, at most 40 characters each, ticket 77b).
 - **Coordinates**: plane units, origin at the **top left**, `x` to the right, `y` **down**. Every point must be inside the plane. For a real city, project longitude/latitude yourself (a simple equirectangular projection is enough) and scale so the whole map fits the plane; the background image must be drawn on the **same extent**, edge to edge.
 - **`areas`** (≤ 60): `key` (unique in the file), `points` (3 to 60 `[x, y]` pairs in order, a real surface), `color`, `filled` (default true), `dashed` (default false); and either `document` (the exact name of a Document of the Room) **or**, for a plain area (`document` left out or `null`), `name` (≤ 80), optional `subtitle` (≤ 80), optional `note` (≤ 500), optional `master_only`.
 - **`pins`** (≤ 300): `key`, `x`, `y`, `label_side` (`left`, `right`, `above`, `below`), `color`; and `document`, or `name` + optional `note` + optional `master_only`, as for an area.
 - **`links`** (≤ 400): `from` and `to` (the `key` of an area or a pin, different), `direction` (`forward`, `both` or `none`), `label`, `reverse_label` (only with `both`), `color`, optional `bend` (how far the curve leaves the straight line, in plane units, negative to the other side), optional `master_only`.
 - **Colors**: `default`, `red`, `green`, `purple`, `blue`, `gold`, `orange`, `midnight`, `silver`, `champagne`, `rose`, `pink`, `cobalt`, `violet`, `emerald`, `brown`, `lime`.
-- **Documents by name**: a `document` is matched to a Document of the Room by exact name, ignoring case. A name that matches no Document the importer sees (or matches only a hidden one) becomes a plain area or pin with that name, and the report says "not found" (Decision 10). A Document may appear once on the map, as an area or a pin.
+- **Documents by name**: a `document` is matched to a Document of the Room by exact name, ignoring case. A name that matches no Document the importer sees (or matches only a hidden one) becomes a plain area or pin with that name, and the report says "not found" (Decision 10). A Document may have several areas (same `document` on each; they all take the first one's color, and the report says so), or one pin; a second pin, or a pin and an area for the same Document, keeps the later one as a plain label and the report lists it as "repeated" (ticket 77).
 
 ### Walkthrough
 
@@ -77,7 +77,8 @@ background image.
    no zones, no pins) as an SVG exactly as large as the plane, edge to edge,
    and, if you can run code, render it to a PNG of the same size.
 3. Write the JSON with this shape: schema_version 1, kind "geographic_map",
-   name, description, plane {width, height}, areas, pins, links.
+   name, description, plane {width, height}, areas, pins, links, and
+   optionally color_legend {color: meaning} for the area colors.
    - areas: key, points (3-60 [x, y]), color, filled, dashed, and either
      "document" (exact Document name from the export) or name/subtitle/note.
    - pins: key, x, y, label_side (left|right|above|below), color, and either
@@ -86,7 +87,8 @@ background image.
      reverse_label (only with both), color, bend.
    - colors: default, red, green, purple, blue, gold, orange, midnight, silver,
      champagne, rose, pink, cobalt, violet, emerald, brown, lime.
-   - limits: 60 areas, 300 pins, 400 links; a Document at most once.
+   - limits: 60 areas, 300 pins, 400 links. A Document may be several
+     areas (same color for all), or one pin, never both.
 4. Use "document" only when the name exists in the export; otherwise give a
    plain name. Put secrets only in notes marked "master_only": true.
 5. Check before answering: every point is inside the plane, every link key

@@ -340,6 +340,23 @@
       "try": "Proberen",
       "sample": "Zo klinkt deze stem terwijl hij je aantekeningen voorleest."
     },
+    "palette": {
+      "title": "Kaartkleuren",
+      "description": "Het palet waarin je kaarten, legenda's, klokken en Sessie 0 ziet. Kun je sommige kleuren slecht onderscheiden, kies dan het passende: opgeslagen kleuren veranderen niet.",
+      "note": "Iedereen ziet zijn eigen palet, maar elke kleur houdt zijn naam: het \"rood\" van een relatie is voor iedereen rood. In de legenda markeert een klik op een betekenis de relaties in die kleur.",
+      "names": {
+        "standard": "Standaard",
+        "protan": "Protanopie (rood)",
+        "deutan": "Deuteranopie (groen)",
+        "tritan": "Tritanopie (blauw)"
+      },
+      "hints": {
+        "standard": "De gewone kleuren",
+        "protan": "Bij zwak roodzien",
+        "deutan": "Bij zwak groenzien, de meest voorkomende vorm",
+        "tritan": "Bij zwak blauwzien"
+      }
+    },
     "privacy": {
       "title": "Jouw gegevens",
       "description": "Download een kopie van alles wat de app over je bewaart, of verwijder je account.",
@@ -1341,7 +1358,15 @@
       "placePane": "Plaats geopend naast de kaart",
       "noNote": "Geen notitie",
       "placeNotFound": "Plaats niet gevonden",
-      "connections": "Verbindingen"
+      "connections": "Verbindingen",
+      "areaLabels": "Namen van Documenten met meerdere gebieden",
+      "areaLabelsHelp": "Waar de naam staat van een Document met meerdere gebieden op deze kaart.",
+      "areaLabelsEvery": "Op elk gebied",
+      "areaLabelsLargest": "Alleen op het grootste gebied",
+      "alreadyOnMap": "{{name}} (al op de kaart)",
+      "sharedColor": "De kleur geldt voor alle {{number}} gebieden van dit Document.",
+      "addArea": "Gebied toevoegen",
+      "areaOf": "Gebied {{index}} van {{total}} van dit Document"
     },
     "kind": {
       "label": "Soort kaart",
@@ -1365,7 +1390,8 @@
       "ambiguous": "Meerdere Documenten met deze naam, blijven gewone labels:",
       "repeated": "Document staat al op de kaart, blijven gewone labels:",
       "backgroundLater": "De achtergrondafbeelding upload je daarna via de knop Kaart van de nieuwe kaart.",
-      "submit": "Importeren"
+      "submit": "Importeren",
+      "recolored": "Gebieden van één Document in verschillende kleuren, krijgen allemaal de kleur van het eerste:"
     },
     "openPreview": "Openen in voorbeeld",
     "legend": {
@@ -1413,7 +1439,16 @@
       "newPreset": "Nieuwe voorinstelling",
       "addColor": "Kleur toevoegen",
       "colorMeans": "Op deze kaart: {{meaning}}",
-      "colorMeansNothing": "Deze kleur heeft nog geen betekenis in de legenda."
+      "colorMeansNothing": "Deze kleur heeft nog geen betekenis in de legenda.",
+      "areasTitle": "Gebiedenlegenda",
+      "areasChip": "Gebiedenlegenda · {{number}}",
+      "areasDialogTitle": "Kleurenlegenda van de gebieden",
+      "areasTapHint": "Tik op een betekenis om de gebieden ervan te markeren.",
+      "areasHighlightHint": "Klik nogmaals op de rij of druk op Esc om alle gebieden te zien.",
+      "noAreas": "Deze kaart heeft nog geen gebieden.",
+      "areasVisibleHint": "De legenda toont alleen kleuren die gebieden gebruiken, en iedereen ziet alleen die van de gebieden die hij kan zien.",
+      "relationsSection": "Relatielegenda’s",
+      "areasSection": "Gebiedenlegenda’s"
     }
   },
   "sessionZero": {

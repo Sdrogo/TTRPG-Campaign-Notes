@@ -136,6 +136,7 @@
         "bio": "Biografie"
       },
       "fieldTooLong": "{field} mag maximaal {max} tekens hebben",
+      "unknownPalette": "Onbekend kleurenpalet",
       "deletionNotConfirmed": "Typ DELETE om het verwijderen van het account te bevestigen",
       "successorNeeded": "Benoem eerst een andere Master of Admin voordat je het account verwijdert in: {rooms}"
     },

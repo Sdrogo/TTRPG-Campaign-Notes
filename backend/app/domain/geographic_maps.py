@@ -14,12 +14,15 @@ Who may see what (Invariant 1, VR-07), the same rules as a free board:
 Editing (spec 28 Decision 12, spec 38 Decision 9): an editor sends only what
 they changed (spec 43, `merge_geo_changes`), laid over the stored map, then
 checked as the whole map they see; whatever they don't see is left exactly as
-it is (`plan_geo_board_edit`)."""
+it is (`plan_geo_board_edit`).
+
+A Document is on a map as one pin or as any number of areas, never both,
+and all its areas have one color (spec 77 Decisions 1, 2 and 4b)."""
 
 import math
 import uuid
 from collections.abc import Collection, Iterable, Mapping, Sequence
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from enum import StrEnum
 
 from app.domain.errors import DomainError
@@ -277,19 +280,55 @@ def visible_geo_board(
 
 
 def placed_document_ids(areas: Iterable[Area], pins: Iterable[Pin]) -> list[uuid.UUID]:
-    """The Documents these areas and pins are bound to, in order."""
+    """The Documents these areas and pins are bound to, in order, each once
+    (a Document may have several areas, spec 77)."""
     placed: list[Area | Pin] = [*areas, *pins]
-    return [item.document_id for item in placed if item.document_id is not None]
+    return list(dict.fromkeys(item.document_id for item in placed if item.document_id))
 
 
 def geo_document_count(board: GeoBoard, visible_document_ids: Collection[uuid.UUID]) -> int:
     """For the list of maps: how many Documents the map shows the viewer
-    (areas and pins), never counting one they can't see (VR-07)."""
+    (areas and pins), each once however many areas it has (spec 77
+    Decision 8), never counting one they can't see (VR-07)."""
     return sum(
         1
         for document_id in placed_document_ids(board.areas, board.pins)
         if document_id in visible_document_ids
     )
+
+
+def ensure_document_places(areas: Sequence[Area], pins: Sequence[Pin]) -> None:
+    """Spec 77 Decisions 1, 2 and 4b, over everything on the map: a Document
+    has at most one pin, never a pin and an area, and all its areas share
+    one color. `InvalidBoardError` otherwise."""
+    pinned = [pin.document_id for pin in pins if pin.document_id is not None]
+    if len(pinned) != len(set(pinned)):
+        raise InvalidBoardError("errors.map.invalidBoard")
+    colors: dict[uuid.UUID, MapColor] = {}
+    for area in areas:
+        if area.document_id is None:
+            continue
+        if area.document_id in pinned:
+            raise InvalidBoardError("errors.map.invalidBoard")
+        if colors.setdefault(area.document_id, area.color) != area.color:
+            raise InvalidBoardError("errors.map.invalidBoard")
+
+
+def share_document_colors(areas: Sequence[Area], preferred: Collection[uuid.UUID]) -> list[Area]:
+    """Spec 77 Decision 4b: the areas with each Document's areas in one
+    color, the color of its first area among `preferred` (the ones just
+    changed, the editor's latest choice), else of its first area. Plain
+    areas are kept as they are."""
+    colors: dict[uuid.UUID, MapColor] = {}
+    for area in sorted(areas, key=lambda item: item.id not in preferred):
+        if area.document_id is not None:
+            colors.setdefault(area.document_id, area.color)
+    return [
+        area
+        if area.document_id is None or area.color == colors[area.document_id]
+        else replace(area, color=colors[area.document_id])
+        for area in areas
+    ]
 
 
 # --- Cleaning what is sent ----------------------------------------------------
@@ -429,11 +468,14 @@ def plan_geo_board_edit(
     another map. What the editor sees and didn't send is deleted; what they
     don't see is never touched, read or counted as theirs.
 
+    An area or pin the editor sees may be bound to another Document they see,
+    or made plain (spec 77 Decision 4).
+
     Refused: an id of something hidden from the editor or of another map
-    (422, so a hidden item can't be overwritten by guessing its id); an area
-    or pin that changes Document; a Document twice on the map, as an area or
-    a pin; a Document the editor doesn't see or of another Room (404); a
-    corner or point outside the plane, an area with fewer than 3 or more than
+    (422, so a hidden item can't be overwritten by guessing its id); a
+    Document on two pins, on a pin and an area, or on areas of different
+    colors (spec 77, 422); a Document the editor doesn't see or of another
+    Room (404); a corner or point outside the plane, an area with fewer than 3 or more than
     60 corners or no surface, a plain area or pin with no name, a link end
     not on the resulting map or a link from an end to itself (422);
     Master-only content from anyone but a Master (403); more than the caps,
@@ -479,25 +521,14 @@ def plan_geo_board_edit(
     hidden_pins = [pin for pin in current.pins if pin.id not in shown_pins]
     hidden_links = [link for link in current.links if link.id not in shown_links]
 
-    documents_on_map = placed_document_ids(hidden_areas, hidden_pins)
-    for area in areas:
-        before = shown_areas.get(area.id)
-        if before is not None and before.document_id != area.document_id:
-            raise InvalidBoardError("errors.map.invalidBoard")
-    for pin in pins:
-        before_pin = shown_pins.get(pin.id)
-        if before_pin is not None and before_pin.document_id != pin.document_id:
-            raise InvalidBoardError("errors.map.invalidBoard")
     placed: list[Area | Pin] = [*areas, *pins]
     for item in placed:
         if item.document_id is not None:
             if item.document_id not in editor_visible_document_ids:
                 raise BoardDocumentNotFoundError("errors.document.notFound")
-            documents_on_map.append(item.document_id)
         if item.master_only and not is_master:
             raise MasterOnlyNotAllowedError("errors.map.masterOnly")
-    if len(documents_on_map) != len(set(documents_on_map)):
-        raise InvalidBoardError("errors.map.invalidBoard")
+    ensure_document_places([*hidden_areas, *areas], [*hidden_pins, *pins])
 
     area_ids = {area.id for area in areas}
     pin_ids = {pin.id for pin in pins}
@@ -550,7 +581,9 @@ def merge_geo_changes(
     `plan_geo_board_edit`. A change that can no longer apply is dropped
     (Decision 2): an update or deletion of something no longer on the map or
     hidden from the editor, a new area or pin for a Document already on the
-    map, a link whose end is gone. 422 when the same id is sent twice."""
+    map as a pin (or, for a new pin, as anything), a link whose end is gone.
+    A Document's areas come out in one color, the one just sent (spec 77
+    Decision 4b). 422 when the same id is sent twice."""
     for items in (changed.areas, changed.pins, changed.links):
         _ensure_unique_ids(items)
 
@@ -563,25 +596,40 @@ def merge_geo_changes(
     areas = merge_items(shown.areas, changed.areas, created_ids, deleted_ids, every_id)
     pins = merge_items(shown.pins, changed.pins, created_ids, deleted_ids, every_id)
 
-    # Places already on the map (hidden ones included) keep their Document; a
-    # new place for one of them, or a second new one, is dropped.
+    # Places already on the map (hidden ones included) keep their Document. A
+    # new area is dropped when its Document is a pin, a new pin when its
+    # Document is already on the map in any way (spec 77 Decisions 1-2).
     hidden_areas = [area for area in current.areas if area.id not in shown_ids]
     hidden_pins = [pin for pin in current.pins if pin.id not in shown_ids]
-    on_map = set(placed_document_ids(hidden_areas, hidden_pins))
-    placed: list[Area | Pin] = [*areas, *pins]
-    on_map |= {item.document_id for item in placed if item.id in shown_ids and item.document_id}
+    kept_areas = [*hidden_areas, *(area for area in areas if area.id in shown_ids)]
+    kept_pins = [*hidden_pins, *(pin for pin in pins if pin.id in shown_ids)]
+    with_area = {area.document_id for area in kept_areas if area.document_id}
+    with_pin = {pin.document_id for pin in kept_pins if pin.document_id}
 
-    def claims(item: Area | Pin) -> bool:
-        """False for a new place whose Document is already on the map."""
-        if item.id in shown_ids or item.document_id is None:
+    def claims_area(area: Area) -> bool:
+        """False for a new area whose Document is a pin."""
+        if area.id in shown_ids or area.document_id is None:
             return True
-        if item.document_id in on_map:
+        if area.document_id in with_pin:
             return False
-        on_map.add(item.document_id)
+        with_area.add(area.document_id)
         return True
 
-    areas = [area for area in areas if claims(area)]
-    pins = [pin for pin in pins if claims(pin)]
+    def claims_pin(pin: Pin) -> bool:
+        """False for a new pin whose Document is already on the map."""
+        if pin.id in shown_ids or pin.document_id is None:
+            return True
+        if pin.document_id in with_pin or pin.document_id in with_area:
+            return False
+        with_pin.add(pin.document_id)
+        return True
+
+    areas = [area for area in areas if claims_area(area)]
+    pins = [pin for pin in pins if claims_pin(pin)]
+    # An existing area just recolored wins; a new one joins the others' color.
+    areas = share_document_colors(
+        areas, {area.id for area in changed.areas if area.id not in created_ids}
+    )
     ends = {area.id for area in areas} | {pin.id for pin in pins}
     links = [
         link

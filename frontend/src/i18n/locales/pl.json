@@ -340,6 +340,23 @@
       "try": "Wypróbuj",
       "sample": "Tak brzmi ten głos podczas czytania twoich notatek."
     },
+    "palette": {
+      "title": "Kolory map",
+      "description": "Paleta, w której widzisz mapy, legendy, zegary i Sesję 0. Jeśli trudno ci odróżnić niektóre kolory, wybierz odpowiednią: zapisane kolory się nie zmieniają.",
+      "note": "Każdy widzi własną paletę, ale każdy kolor zachowuje nazwę: „czerwony” relacji jest czerwony dla wszystkich. W legendzie kliknięcie znaczenia wyróżnia relacje w tym kolorze.",
+      "names": {
+        "standard": "Standardowa",
+        "protan": "Protanopia (czerwony)",
+        "deutan": "Deuteranopia (zielony)",
+        "tritan": "Tritanopia (niebieski)"
+      },
+      "hints": {
+        "standard": "Zwykłe kolory",
+        "protan": "Przy słabym widzeniu czerwieni",
+        "deutan": "Przy słabym widzeniu zieleni, najczęstszy przypadek",
+        "tritan": "Przy słabym widzeniu błękitu"
+      }
+    },
     "privacy": {
       "title": "Twoje dane",
       "description": "Pobierz kopię wszystkiego, co aplikacja przechowuje o tobie, albo usuń swoje konto.",
@@ -1409,7 +1426,15 @@
       "placePane": "Miejsce otwarte obok mapy",
       "noNote": "Brak notatki",
       "placeNotFound": "Nie znaleziono miejsca",
-      "connections": "Połączenia"
+      "connections": "Połączenia",
+      "areaLabels": "Nazwy Dokumentów z kilkoma obszarami",
+      "areaLabelsHelp": "Gdzie wyświetlać nazwę Dokumentu, który ma kilka obszarów na tej mapie.",
+      "areaLabelsEvery": "Na każdym obszarze",
+      "areaLabelsLargest": "Tylko na największym obszarze",
+      "alreadyOnMap": "{{name}} (już na mapie)",
+      "sharedColor": "Kolor dotyczy wszystkich obszarów tego Dokumentu (razem: {{number}}).",
+      "addArea": "Dodaj obszar",
+      "areaOf": "Obszar {{index}} z {{total}} tego Dokumentu"
     },
     "kind": {
       "label": "Rodzaj mapy",
@@ -1433,7 +1458,8 @@
       "ambiguous": "Kilka Dokumentów o tej nazwie, zostaną zwykłymi etykietami:",
       "repeated": "Dokument jest już na mapie, zostaną zwykłymi etykietami:",
       "backgroundLater": "Obraz tła wgrasz później, przyciskiem Mapa nowej mapy.",
-      "submit": "Importuj"
+      "submit": "Importuj",
+      "recolored": "Obszary jednego Dokumentu w różnych kolorach, wszystkie przyjmą kolor pierwszego:"
     },
     "openPreview": "Otwórz w podglądzie",
     "legend": {
@@ -1491,7 +1517,16 @@
       "newPreset": "Nowy szablon",
       "addColor": "Dodaj kolor",
       "colorMeans": "Na tej mapie: {{meaning}}",
-      "colorMeansNothing": "Ten kolor nie ma jeszcze znaczenia w legendzie."
+      "colorMeansNothing": "Ten kolor nie ma jeszcze znaczenia w legendzie.",
+      "areasTitle": "Legenda obszarów",
+      "areasChip": "Legenda obszarów · {{number}}",
+      "areasDialogTitle": "Legenda kolorów obszarów",
+      "areasTapHint": "Dotknij znaczenia, aby wyróżnić jego obszary.",
+      "areasHighlightHint": "Kliknij ponownie wiersz lub naciśnij Esc, aby zobaczyć wszystkie obszary.",
+      "noAreas": "Ta mapa nie ma jeszcze obszarów.",
+      "areasVisibleHint": "Legenda pokazuje tylko kolory używane przez obszary, a każdy widzi tylko te z obszarów, które może zobaczyć.",
+      "relationsSection": "Legendy relacji",
+      "areasSection": "Legendy obszarów"
     }
   },
   "sessionZero": {

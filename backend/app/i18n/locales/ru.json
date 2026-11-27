@@ -136,6 +136,7 @@
         "bio": "О себе"
       },
       "fieldTooLong": "Поле «{field}» может содержать не более {max} символов",
+      "unknownPalette": "Неизвестная цветовая палитра",
       "deletionNotConfirmed": "Введите DELETE, чтобы подтвердить удаление аккаунта",
       "successorNeeded": "Перед удалением аккаунта назначьте другого Master или Admin в: {rooms}"
     },

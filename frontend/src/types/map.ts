@@ -57,6 +57,8 @@ export interface RelationshipMap {
   revision: number;
   /** May change the board: its managers, or anyone while `playersCanEdit`. */
   canEdit: boolean;
+  /** A geographic map's names setting for a Document with several areas (spec 77); null on a free map. */
+  areaLabels: 'every' | 'largest' | null;
   /** May change its settings or delete it: its creator and the Master. */
   canManage: boolean;
 }
@@ -157,8 +159,12 @@ export interface LegendPresetRef {
   name: string;
 }
 
-/** A Room's named set of relation color meanings (spec 68 Decision 19). */
+/** What a legend's colors color: a free map's relations or a geographic map's areas (spec 77b Decision 8). */
+export type LegendKind = 'relations' | 'areas';
+
+/** A Room's named set of color meanings (spec 68 Decision 19), for relations or for areas (spec 77b). */
 export interface LegendPreset extends LegendPresetRef {
+  kind: LegendKind;
   entries: ColorMeanings;
   /** How many maps link to it. */
   mapCount: number;

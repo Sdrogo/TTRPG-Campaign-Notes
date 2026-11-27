@@ -41,12 +41,21 @@ from app.domain.geographic_maps import (
     ensure_board_in_plane,
     geo_document_counts,
     placed_document_ids,
+    visible_geo_board,
 )
-from app.domain.map_legends import clean_meanings, effective_meanings
+from app.domain.map_legends import (
+    clean_meanings,
+    effective_meanings,
+    hidden_colors,
+    keep_hidden_meanings,
+    legend_kind,
+    meanings_for_viewer,
+)
 from app.domain.models import Document, DocumentImage, DocumentVisibility, Membership
 from app.domain.relationship_maps import (
     MAX_BEND,
     MAX_LABEL_OFFSET,
+    AreaLabels,
     ArrowDirection,
     ArrowEnd,
     Board,
@@ -96,7 +105,9 @@ class MapResponse(BaseModel):
     `can_manage` is whether they change its settings or delete it,
     `can_edit` whether they change its board (spec 42: also every member
     while `players_can_edit`); `revision` is what a board save sends back as
-    `base_revision`."""
+    `base_revision`. On a geographic map `area_labels` is where a Document
+    with several areas has its name (spec 77 Decision 5: `every`, the
+    default, or `largest`); null on a free map."""
 
     id: uuid.UUID
     room_id: uuid.UUID
@@ -115,6 +126,7 @@ class MapResponse(BaseModel):
     revision: int
     can_edit: bool
     can_manage: bool
+    area_labels: AreaLabels | None = None
 
 
 class MapDocumentResponse(BaseModel):
@@ -206,11 +218,13 @@ class LegendPresetRef(BaseModel):
 
 
 class LegendBody(BaseModel):
-    """A map's relation color legend as an editor sets it (spec 68): linked
-    to the Room preset `preset_id` (its meanings then come from the preset,
-    live, and `meanings` is ignored), or, without it, the map's own
-    `meanings` (an empty one clears them). Either way it replaces what the
-    map had (Decisions 10, 21, 22)."""
+    """A map's color legend as an editor sets it (spec 68; area colors on a
+    geographic map, spec 77b): linked to the Room preset `preset_id` of the
+    map's kind (its meanings then come from the preset, live, and `meanings`
+    is ignored), or, without it, the map's own `meanings` (an empty one
+    clears them). Either way it replaces what the map had (Decisions 10, 21,
+    22), except on a geographic map the meanings of colors used only by
+    areas hidden from the editor, which stay (spec 77b Decision 3)."""
 
     preset_id: uuid.UUID | None = None
     meanings: dict[MapColor, str] = {}
@@ -218,10 +232,11 @@ class LegendBody(BaseModel):
 
 class MapDetailResponse(MapResponse):
     """A map with its board as the requester sees it (Invariant 1).
-    `color_legend` is what its relation colors mean right now (spec 68: the
-    linked preset's meanings, else its own; unused colors included, the
-    client shows only the colors in use), `legend_preset` the preset it is
-    linked to, if any."""
+    `color_legend` is what its relation colors (area colors on a geographic
+    map, spec 77b) mean right now (spec 68: the linked preset's meanings,
+    else its own; unused colors included, the client shows only the colors
+    in use; never a color used only by areas hidden from the requester),
+    `legend_preset` the preset it is linked to, if any."""
 
     groups: list[GroupBody]
     cards: list[CardResponse]
@@ -246,7 +261,8 @@ class CreateMapRequest(BaseModel):
 
 
 class UpdateMapRequest(BaseModel):
-    """A partial update: omitted fields are left as they are."""
+    """A partial update: omitted fields are left as they are. `area_labels`
+    only on a geographic map (spec 77 Decision 5; 409 on a free one)."""
 
     name: str | None = None
     description: str | None = None
@@ -255,6 +271,7 @@ class UpdateMapRequest(BaseModel):
     visibility: DocumentVisibility | None = None
     selective_user_ids: UniqueIds | None = None
     players_can_edit: bool | None = None
+    area_labels: AreaLabels | None = None
 
 
 class BoardRequest(BaseModel):
@@ -367,6 +384,41 @@ async def visible_document_ids(
     return {document.id for document in await visible_documents(session, documents, viewer)}
 
 
+async def hidden_area_colors(
+    session: AsyncSession, relationship_map: RelationshipMap, viewer: Membership
+) -> set[MapColor]:
+    """The colors of a geographic map whose meaning `viewer` must not read:
+    used by areas on the map, but by none they see (spec 77b Decision 3).
+    None on a free map, whose legend describes relations."""
+    if relationship_map.kind != MapKind.GEOGRAPHIC:
+        return set()
+    geo = (await geographic_maps_repo.get_geo_boards(session, [relationship_map.id]))[
+        relationship_map.id
+    ]
+    visible = await visible_document_ids(session, placed_document_ids(geo.areas, geo.pins), viewer)
+    shown = visible_geo_board(geo, visible, viewer.role)
+    return hidden_colors({a.color for a in geo.areas}, {a.color for a in shown.areas})
+
+
+async def legend_for_viewer(
+    session: AsyncSession, relationship_map: RelationshipMap, hidden: Collection[MapColor]
+) -> tuple[dict[MapColor, str], LegendPresetRef | None]:
+    """The map's meanings right now (`effective_meanings`) without those of
+    the `hidden` colors, and the preset it is linked to, if any."""
+    preset = (
+        await map_legends_repo.get_preset(session, relationship_map.legend_preset_id)
+        if relationship_map.legend_preset_id is not None
+        else None
+    )
+    meanings = effective_meanings(
+        relationship_map, {preset.id: preset} if preset is not None else {}
+    )
+    return (
+        meanings_for_viewer(meanings, hidden),
+        LegendPresetRef(id=preset.id, name=preset.name) if preset else None,
+    )
+
+
 def map_summary(
     relationship_map: RelationshipMap,
     grants: Collection[uuid.UUID],
@@ -393,6 +445,11 @@ def map_summary(
         revision=relationship_map.revision,
         can_edit=can_edit_map(relationship_map, viewer.user_id, viewer.role),
         can_manage=can_manage,
+        area_labels=(
+            relationship_map.area_labels or AreaLabels.EVERY
+            if relationship_map.kind == MapKind.GEOGRAPHIC
+            else None
+        ),
     )
 
 
@@ -497,20 +554,16 @@ async def _detail(
     shown = visible_board(board, visible.keys(), viewer.role)
     shown_count = sum(1 for card in shown.cards if card.document_id is not None)
     summary = map_summary(relationship_map, grants, viewer, shown_count)
-    preset = (
-        await map_legends_repo.get_preset(session, relationship_map.legend_preset_id)
-        if relationship_map.legend_preset_id is not None
-        else None
+    meanings, preset_ref = await legend_for_viewer(
+        session, relationship_map, await hidden_area_colors(session, relationship_map, viewer)
     )
     return MapDetailResponse(
         **summary.model_dump(),
         groups=[GroupBody(**vars(group)) for group in shown.groups],
         cards=await card_responses(session, shown.cards, visible, viewer),
         arrows=[arrow_body(arrow) for arrow in shown.arrows],
-        color_legend=effective_meanings(
-            relationship_map, {preset.id: preset} if preset is not None else {}
-        ),
-        legend_preset=LegendPresetRef(id=preset.id, name=preset.name) if preset else None,
+        color_legend=meanings,
+        legend_preset=preset_ref,
     )
 
 
@@ -527,12 +580,16 @@ async def insert_map(
     kind: MapKind = MapKind.FREE,
     plane_width: int | None = None,
     plane_height: int | None = None,
+    area_labels: AreaLabels | None = None,
+    color_legend: Mapping[MapColor, str] | None = None,
 ) -> tuple[RelationshipMap, list[uuid.UUID]]:
     """Decision 2: a new, empty map and its Selective grants, a Player's only
     while the Room lets Players create Documents (403 otherwise); at most 100
     per Room (409, Decision 11). Without `visibility` it starts at the Room's
     default (VR-05). A `geographic` map (spec 38) gets its plane, 422 when the
-    size is out of range; a free map takes none (422)."""
+    size is out of range; a free map takes none (422). An imported map
+    (spec 38_3) starts with its file's `area_labels` and `color_legend`
+    (already cleaned)."""
     room = await rooms_repo.get_room(session, room_id)
     if room is None:  # pragma: no cover - only a concurrent Room deletion
         raise http_error(status.HTTP_404_NOT_FOUND, "errors.room.notFound", locale)
@@ -573,6 +630,8 @@ async def insert_map(
         kind=kind,
         plane_width=plane[0] if plane else None,
         plane_height=plane[1] if plane else None,
+        area_labels=area_labels,
+        color_legend=dict(color_legend or {}),
     )
     await relationship_maps_repo.insert_map(session, relationship_map, grants)
     return relationship_map, grants
@@ -750,6 +809,10 @@ async def update_map(
             raise translated_error(status.HTTP_422_UNPROCESSABLE_CONTENT, exc, locale) from exc
         except WrongMapKindError as exc:
             raise translated_error(status.HTTP_409_CONFLICT, exc, locale) from exc
+    if body.area_labels is not None and relationship_map.kind != MapKind.GEOGRAPHIC:
+        raise translated_error(
+            status.HTTP_409_CONFLICT, WrongMapKindError("errors.map.notGeographic"), locale
+        )
     updated = replace(
         relationship_map,
         name=name,
@@ -762,6 +825,7 @@ async def update_map(
             if body.players_can_edit is None
             else body.players_can_edit
         ),
+        area_labels=body.area_labels or relationship_map.area_labels,
         updated_at=_now(),
     )
     updated = await relationship_maps_repo.update_map(session, updated)
@@ -904,37 +968,49 @@ async def _with_legend(
     session: AsyncSession,
     relationship_map: RelationshipMap,
     legend: LegendBody | None,
+    editor: Membership,
     locale: str,
 ) -> RelationshipMap:
     """The map as a board save leaves it: `updated_at` now and, when the
-    save sends `legend`, its new relation color legend (spec 68): linked to
-    a preset of the same Room (else 404), or its own meanings cleaned (422
-    past 40 characters)."""
+    save sends `legend`, its new color legend (spec 68): linked to a preset
+    of the same Room and of the map's kind (else 404, spec 77b Decision 8),
+    or its own meanings cleaned (422 past 40 characters). On a geographic
+    map the meanings of colors hidden from `editor` stay as they were
+    (`keep_hidden_meanings`, spec 77b Decision 3)."""
     updated = replace(relationship_map, updated_at=_now())
     if legend is None:
         return updated
     if legend.preset_id is not None:
         preset = await map_legends_repo.get_preset(session, legend.preset_id)
-        if preset is None or preset.room_id != relationship_map.room_id:
+        if (
+            preset is None
+            or preset.room_id != relationship_map.room_id
+            or preset.kind != legend_kind(relationship_map.kind)
+        ):
             raise http_error(status.HTTP_404_NOT_FOUND, "errors.map.presetNotFound", locale)
         return replace(updated, legend_preset_id=preset.id, color_legend={})
     try:
         meanings = clean_meanings(legend.meanings)
     except MapTextTooLongError as exc:
         raise translated_error(status.HTTP_422_UNPROCESSABLE_CONTENT, exc, locale) from exc
+    hidden = await hidden_area_colors(session, relationship_map, editor)
+    if hidden:
+        current, _ = await legend_for_viewer(session, relationship_map, ())
+        meanings = keep_hidden_meanings(meanings, current, hidden)
     return replace(updated, legend_preset_id=None, color_legend=meanings)
 
 
-async def _store_with_legend(
+async def store_with_legend(
     session: AsyncSession,
     relationship_map: RelationshipMap,
     legend: LegendBody | None,
+    editor: Membership,
     locale: str,
 ) -> RelationshipMap:
     """`_with_legend`, stored. A preset deleted between the check and the
     write breaks the link's foreign key: that is the preset not found (404),
     the request rolled back."""
-    changed = await _with_legend(session, relationship_map, legend, locale)
+    changed = await _with_legend(session, relationship_map, legend, editor, locale)
     try:
         return await relationship_maps_repo.update_map(session, changed)
     except IntegrityError as exc:
@@ -964,7 +1040,7 @@ async def save_board(
     if relationship_map.kind != MapKind.FREE:
         raise http_error(status.HTTP_409_CONFLICT, "errors.map.notFree", locale)
     await _apply_board(session, map_id, membership, body, locale)
-    updated = await _store_with_legend(session, relationship_map, body.legend, locale)
+    updated = await store_with_legend(session, relationship_map, body.legend, membership, locale)
     await push_map(session, updated, grants)
     return await _detail(session, updated, grants, membership)
 
@@ -991,7 +1067,7 @@ async def save_board_changes(
     if relationship_map.kind != MapKind.FREE:
         raise http_error(status.HTTP_409_CONFLICT, "errors.map.notFree", locale)
     await _apply_board(session, map_id, membership, body, locale)
-    updated = await _store_with_legend(session, relationship_map, body.legend, locale)
+    updated = await store_with_legend(session, relationship_map, body.legend, membership, locale)
     await push_map(session, updated, grants)
     return await _detail(session, updated, grants, membership)
 

@@ -340,6 +340,23 @@
       "try": "Try it",
       "sample": "This is how this voice sounds reading your notes."
     },
+    "palette": {
+      "title": "Map colors",
+      "description": "The palette you see maps, legends, Clocks and Session 0 in. If some colors are hard to tell apart, pick the one that suits you: saved colors don't change.",
+      "note": "Everyone sees their own palette, but each color keeps its name: a relation's \"red\" is red for everyone. In the legend, clicking a meaning highlights the relations of that color.",
+      "names": {
+        "standard": "Standard",
+        "protan": "Protanopia (red)",
+        "deutan": "Deuteranopia (green)",
+        "tritan": "Tritanopia (blue)"
+      },
+      "hints": {
+        "standard": "The usual colors",
+        "protan": "For weak red vision",
+        "deutan": "For weak green vision, the most common kind",
+        "tritan": "For weak blue vision"
+      }
+    },
     "privacy": {
       "title": "Your data",
       "description": "Download a copy of everything the app keeps about you, or delete your account.",
@@ -1341,7 +1358,15 @@
       "placePane": "Place opened beside the map",
       "noNote": "No note",
       "placeNotFound": "Place not found",
-      "connections": "Links"
+      "connections": "Links",
+      "areaLabels": "Names of Documents with several areas",
+      "areaLabelsHelp": "Where the name of a Document that has several areas on this map is written.",
+      "areaLabelsEvery": "On every area",
+      "areaLabelsLargest": "Only on the largest area",
+      "alreadyOnMap": "{{name}} (already on the map)",
+      "sharedColor": "The color applies to all {{number}} areas of this Document.",
+      "addArea": "Add an area",
+      "areaOf": "Area {{index}} of {{total}} of this Document"
     },
     "kind": {
       "label": "Kind of map",
@@ -1365,7 +1390,8 @@
       "ambiguous": "Several Documents with this name, kept as plain labels:",
       "repeated": "Document already on the map, kept as plain labels:",
       "backgroundLater": "Upload the background image afterwards, from the new map's Map button.",
-      "submit": "Import"
+      "submit": "Import",
+      "recolored": "Areas of one Document in different colors, all taking the first one's color:"
     },
     "openPreview": "Open in preview",
     "legend": {
@@ -1413,7 +1439,16 @@
       "newPreset": "New preset",
       "addColor": "Add a color",
       "colorMeans": "On this map: {{meaning}}",
-      "colorMeansNothing": "This color has no meaning in the legend yet."
+      "colorMeansNothing": "This color has no meaning in the legend yet.",
+      "areasTitle": "Area legend",
+      "areasChip": "Area legend · {{number}}",
+      "areasDialogTitle": "Area color legend",
+      "areasTapHint": "Tap a meaning to highlight its areas.",
+      "areasHighlightHint": "Click the row again or press Esc to show every area.",
+      "noAreas": "This map has no areas yet.",
+      "areasVisibleHint": "The legend shows only colors used by areas, and each viewer sees only those of the areas they can see.",
+      "relationsSection": "Relation legends",
+      "areasSection": "Area legends"
     }
   },
   "sessionZero": {

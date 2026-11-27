@@ -1,3 +1,4 @@
+import { paletteVariable } from './palette';
 import type { Document, DocumentVisibility } from '../types/document';
 import type { RawImage, StoredImage } from '../types/image';
 import type {
@@ -42,6 +43,7 @@ export interface RawMap {
   revision: number;
   can_edit: boolean;
   can_manage: boolean;
+  area_labels?: 'every' | 'largest' | null;
 }
 
 export interface RawMapGroup {
@@ -125,6 +127,7 @@ export function toMap(raw: RawMap): RelationshipMap {
     revision: raw.revision,
     canEdit: raw.can_edit,
     canManage: raw.can_manage,
+    areaLabels: raw.area_labels ?? null,
   };
 }
 
@@ -187,18 +190,18 @@ export function toMapDetail(raw: RawMapDetail): RelationshipMapDetail {
 
 // --- Color legend (spec 68) ----------------------------------------------------
 
-/** The colors the relations use, in palette order. */
-export function usedColors(arrows: MapArrow[]): MapColor[] {
-  const used = new Set(arrows.map((arrow) => arrow.color));
+/** The colors the relations (or a geographic map's areas, spec 77b) use, in palette order. */
+export function usedColors(items: readonly { color: MapColor }[]): MapColor[] {
+  const used = new Set(items.map((item) => item.color));
   return MAP_COLORS.filter((color) => used.has(color));
 }
 
 /**
- * The legend's rows (Decision 4): each color a relation the viewer sees uses
- * and that has a meaning, in palette order.
+ * The legend's rows (Decision 4): each color a relation (or an area, spec
+ * 77b) the viewer sees uses and that has a meaning, in palette order.
  */
-export function legendRows(meanings: ColorMeanings, arrows: MapArrow[]): [MapColor, string][] {
-  return usedColors(arrows).flatMap((color) => {
+export function legendRows(meanings: ColorMeanings, items: readonly { color: MapColor }[]): [MapColor, string][] {
+  return usedColors(items).flatMap((color) => {
     const meaning = meanings[color];
     return meaning ? [[color, meaning] as [MapColor, string]] : [];
   });
@@ -403,29 +406,13 @@ export const MAP_COLORS: MapColor[] = [
 /** How many colors the picker shows before "more colors" (one row). */
 export const MAP_COLORS_VISIBLE = 6;
 
-const COLOR_VALUES: Record<MapColor, string> = {
-  default: 'var(--text-primary)',
-  red: 'var(--accent-strong)',
-  green: 'var(--mantine-color-green-5)',
-  purple: 'var(--mantine-color-grape-5)',
-  blue: 'var(--mantine-color-blue-5)',
-  gold: 'var(--mantine-color-yellow-5)',
-  orange: '#FF9500',
-  midnight: '#4251B0',
-  silver: '#B5B5AC',
-  champagne: '#C1A470',
-  rose: '#EE86A7',
-  pink: '#E85298',
-  cobalt: '#0079C2',
-  violet: '#8F76D6',
-  emerald: '#00AC9B',
-  brown: '#9C5E31',
-  lime: '#9ACD32',
-};
-
-/** The CSS color a map color stands for, from the theme. */
+/**
+ * The CSS color a map color is drawn with: a variable that the viewer's
+ * palette fills in (spec 78, `applyPalette` in `lib/palette.ts`), so the
+ * same stored name draws in each viewer's own shade.
+ */
 export function colorValue(color: MapColor): string {
-  return COLOR_VALUES[color];
+  return `var(${paletteVariable(color)})`;
 }
 
 /** A card's width on the board; its height follows its content. */

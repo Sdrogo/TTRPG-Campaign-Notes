@@ -34,6 +34,12 @@ import {
   placeName,
   placeSubtitle,
   placedDocumentIds,
+  pinnedDocumentIds,
+  areaDocumentIds,
+  areasOfDocument,
+  documentAreaColor,
+  namedAreaIds,
+  saveArea,
   pointOnCurve,
   polygonSurface,
   putArea,
@@ -388,5 +394,42 @@ describe('keepMiddle (spec 58)', () => {
     const next = keepMiddle(view, { width: 1000, height: 600 }, { width: 500, height: 600 });
     expect(next.k).toBe(2);
     expect(toPlane(next, { x: 250, y: 300 })).toEqual(toPlane(view, { x: 500, y: 300 }));
+  });
+});
+
+describe('several areas for one Document (spec 77)', () => {
+  const base = detail();
+  const [crossing, wood] = base.areas;
+  const small = { ...crossing, id: 'area-3', points: [[0, 0], [10, 0], [10, 10]] as Corner[] };
+  const board = { areas: [crossing, wood, small], pins: base.pins, links: [] };
+
+  it('tells the Documents with areas from the pinned ones, and their shared color', () => {
+    expect([...areaDocumentIds(board)]).toEqual(['doc-1']);
+    expect([...pinnedDocumentIds(board)]).toEqual(base.pins.flatMap((pin) => (pin.documentId ? [pin.documentId] : [])));
+    expect(areasOfDocument(board, 'doc-1').map((area) => area.id)).toEqual(['area-1', 'area-3']);
+    expect(documentAreaColor(board, 'doc-1', 'area-1')).toBe(crossing.color);
+    expect(documentAreaColor(board, 'doc-9')).toBeNull();
+  });
+
+  it('saves an area with its Document\'s other areas taking its color', () => {
+    const saved = saveArea(board, { ...small, color: 'red' });
+    expect(saved.areas.map((area) => area.color)).toEqual(['red', wood.color, 'red']);
+    const plain = saveArea(board, { ...wood, color: 'gold' });
+    expect(plain.areas.map((area) => area.color)).toEqual([crossing.color, 'gold', crossing.color]);
+  });
+
+  it('names every area, or only the largest of each Document', () => {
+    expect([...namedAreaIds(board, 'every')]).toEqual(['area-1', 'area-2', 'area-3']);
+    expect([...namedAreaIds(board, null)]).toHaveLength(3);
+    expect([...namedAreaIds(board, 'largest')]).toEqual(['area-1', 'area-2']);
+    // On a tie the first one keeps the name.
+    const twin = { ...crossing, id: 'area-4' };
+    expect([...namedAreaIds({ ...board, areas: [crossing, twin] }, 'largest')]).toEqual(['area-1']);
+  });
+
+  it('starts a new area like another one', () => {
+    const added = newArea(square, crossing);
+    expect(added).toMatchObject({ documentId: 'doc-1', color: crossing.color, filled: crossing.filled, name: null });
+    expect(added.id).not.toBe(crossing.id);
   });
 });

@@ -1,3 +1,5 @@
+import type { ColorPalette } from '../lib/palette';
+
 /**
  * How a user is shown to others: every response that names a user carries these
  * fields (backend app/api/profiles.py). All optional. `email` is set only on
@@ -16,6 +18,8 @@ export interface AccountProfile extends UserIdentity {
   userId: string;
   /** May open the Admin page (ticket 75); not the Room Administrator role. */
   appAdmin?: boolean;
+  /** The map palette this user sees (spec 78); 'standard' when none was picked. */
+  colorPalette: ColorPalette;
 }
 
 /** The Account page form's values. Blank strings stand for unset fields (see `toProfilePatch`). */

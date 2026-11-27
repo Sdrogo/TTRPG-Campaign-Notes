@@ -340,6 +340,23 @@
       "try": "试听",
       "sample": "这就是这个声音朗读你笔记时的效果。"
     },
+    "palette": {
+      "title": "地图颜色",
+      "description": "你查看地图、图例、进度钟和第 0 次会话时使用的调色板。如果有些颜色难以分辨，请选择适合你的调色板：已保存的颜色不会改变。",
+      "note": "每个人看到自己的调色板，但每种颜色的名称不变：关系的“红色”对所有人都是红色。在图例中点击某个含义，会突出显示该颜色的关系。",
+      "names": {
+        "standard": "标准",
+        "protan": "红色盲（红）",
+        "deutan": "绿色盲（绿）",
+        "tritan": "蓝色盲（蓝）"
+      },
+      "hints": {
+        "standard": "常用颜色",
+        "protan": "适合难以分辨红色的人",
+        "deutan": "适合难以分辨绿色的人，最常见的类型",
+        "tritan": "适合难以分辨蓝色的人"
+      }
+    },
     "privacy": {
       "title": "你的数据",
       "description": "下载应用保存的有关你的全部数据副本，或删除你的账户。",
@@ -1307,7 +1324,15 @@
       "placePane": "在地图旁打开的地点",
       "noNote": "没有备注",
       "placeNotFound": "找不到地点",
-      "connections": "连接"
+      "connections": "连接",
+      "areaLabels": "有多个区域的文档的名称",
+      "areaLabelsHelp": "在此地图上有多个区域的文档，其名称写在哪里。",
+      "areaLabelsEvery": "每个区域上",
+      "areaLabelsLargest": "仅在最大的区域上",
+      "alreadyOnMap": "{{name}}（已在地图上）",
+      "sharedColor": "该颜色适用于此文档的全部 {{number}} 个区域。",
+      "addArea": "添加区域",
+      "areaOf": "此文档的区域 {{index}}/{{total}}"
     },
     "kind": {
       "label": "地图类型",
@@ -1331,7 +1356,8 @@
       "ambiguous": "有多个同名文档,将保留为普通标签:",
       "repeated": "该文档已在地图上,将保留为普通标签:",
       "backgroundLater": "背景图片之后在新地图的“地图”按钮中上传。",
-      "submit": "导入"
+      "submit": "导入",
+      "recolored": "同一文档的区域颜色不同，全部采用第一个区域的颜色："
     },
     "openPreview": "在预览中打开",
     "legend": {
@@ -1374,7 +1400,16 @@
       "newPreset": "新建预设",
       "addColor": "添加颜色",
       "colorMeans": "在此地图上：{{meaning}}",
-      "colorMeansNothing": "此颜色在图例中还没有含义。"
+      "colorMeansNothing": "此颜色在图例中还没有含义。",
+      "areasTitle": "区域图例",
+      "areasChip": "区域图例 · {{number}}",
+      "areasDialogTitle": "区域颜色图例",
+      "areasTapHint": "点按某个含义以突出显示其区域。",
+      "areasHighlightHint": "再次点击该行或按 Esc 以显示所有区域。",
+      "noAreas": "此地图还没有区域。",
+      "areasVisibleHint": "图例只显示区域使用的颜色，每位查看者只能看到自己可见区域的颜色。",
+      "relationsSection": "关系图例",
+      "areasSection": "区域图例"
     }
   },
   "sessionZero": {

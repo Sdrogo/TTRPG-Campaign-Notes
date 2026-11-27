@@ -3,7 +3,8 @@ import { ActionIcon, Box, Drawer, Group, Paper, Stack, Text, UnstyledButton } fr
 import { CaretDownIcon, CaretUpIcon, PencilSimpleIcon, PlusIcon } from '@phosphor-icons/react';
 import { useTranslation } from 'react-i18next';
 import { colorValue, legendRows, storeLegendFolded, storedLegendFolded } from '../../lib/maps';
-import type { ColorMeanings, MapArrow, MapColor, RelationshipMapDetail } from '../../types/map';
+import type { GeoMapDetail } from '../../types/geoMap';
+import type { ColorMeanings, LegendKind, MapColor, RelationshipMapDetail } from '../../types/map';
 
 /** What a board needs to show a map's color legend (spec 68). */
 export interface LegendSetup {
@@ -19,14 +20,46 @@ export interface LegendSetup {
 }
 
 interface MapLegendProps extends LegendSetup {
-  /** The relations the viewer sees: only their colors show (Decision 4). */
-  arrows: MapArrow[];
+  /** The relations (or areas, spec 77b) the viewer sees: only their colors show (Decision 4). */
+  colored: readonly { color: MapColor }[];
+  /** `areas` on a geographic map: an area swatch per row and its own title (spec 77b Decisions 4, 8). */
+  kind?: LegendKind;
   highlight: MapColor | null;
   onHighlight: (color: MapColor | null) => void;
 }
 
-/** A short line in a relation's color, drawn like one (Decision 7). */
-export function LegendSample({ color, width = 28 }: { color: MapColor; width?: number }) {
+/**
+ * A short line in a relation's color, drawn like one (Decision 7), or for an
+ * area (spec 77b Decision 4) a small filled square with the area's outline.
+ * The color goes through `colorValue` and the fill is an opacity, so a
+ * color-blind palette (ticket 78) recolors it too.
+ */
+export function LegendSample({
+  color,
+  width = 28,
+  kind = 'relations',
+}: {
+  color: MapColor;
+  width?: number;
+  kind?: LegendKind;
+}) {
+  if (kind === 'areas') {
+    return (
+      <svg width={16} height={16} viewBox="0 0 16 16" aria-hidden style={{ flex: 'none' }} data-testid="area-sample">
+        <rect
+          x={1.5}
+          y={1.5}
+          width={13}
+          height={13}
+          rx={2}
+          fill={colorValue(color)}
+          fillOpacity={0.35}
+          stroke={colorValue(color)}
+          strokeWidth={2}
+        />
+      </svg>
+    );
+  }
   return (
     <svg width={width} height={10} viewBox={`0 0 ${width} 10`} aria-hidden style={{ flex: 'none' }}>
       <path
@@ -53,12 +86,18 @@ export function MapLegend({
   presetName,
   onEdit,
   compact = false,
-  arrows,
+  colored,
+  kind = 'relations',
   highlight,
   onHighlight,
 }: MapLegendProps) {
   const { t } = useTranslation();
-  const rows = legendRows(meanings, arrows);
+  const rows = legendRows(meanings, colored);
+  const areas = kind === 'areas';
+  const title = areas ? t('maps.legend.areasTitle') : t('maps.legend.title');
+  const chip = areas
+    ? t('maps.legend.areasChip', { number: rows.length })
+    : t('maps.legend.chip', { count: rows.length });
   const [folded, setFolded] = useState(() => storedLegendFolded(mapId));
   const [drawerOpen, setDrawerOpen] = useState(false);
 
@@ -69,13 +108,11 @@ export function MapLegend({
 
   if (rows.length === 0) {
     if (!onEdit || compact) return null;
-    return (
-      <Chip onClick={onEdit} label={t('maps.legend.title')} icon={<PlusIcon size={14} />} />
-    );
+    return <Chip onClick={onEdit} label={title} icon={<PlusIcon size={14} />} />;
   }
 
   const list = (large: boolean) => (
-    <Stack gap={2} role="list" aria-label={t('maps.legend.title')}>
+    <Stack gap={2} role="list" aria-label={title}>
       {rows.map(([color, meaning]) => {
         const on = highlight === color;
         return (
@@ -97,7 +134,7 @@ export function MapLegend({
               opacity: highlight && !on ? 0.45 : 1,
             }}
           >
-            <LegendSample color={color} width={large ? 32 : 28} />
+            <LegendSample color={color} width={large ? 32 : 28} kind={kind} />
             <Text size={large ? 'md' : 'sm'} style={{ flex: 1 }}>
               {meaning}
             </Text>
@@ -122,7 +159,7 @@ export function MapLegend({
       <>
         <Chip
           onClick={() => setDrawerOpen(true)}
-          label={t('maps.legend.chip', { count: rows.length })}
+          label={chip}
           icon={<Dots colors={rows.map(([color]) => color)} />}
         />
         <Drawer
@@ -130,13 +167,13 @@ export function MapLegend({
           onClose={() => setDrawerOpen(false)}
           position="bottom"
           size="auto"
-          title={t('maps.legend.title')}
+          title={title}
         >
           <Stack gap="xs" pb="md">
             {preset}
             {list(true)}
             <Text size="xs" c="dimmed">
-              {t('maps.legend.tapHint')}
+              {areas ? t('maps.legend.areasTapHint') : t('maps.legend.tapHint')}
             </Text>
           </Stack>
         </Drawer>
@@ -148,7 +185,7 @@ export function MapLegend({
     return (
       <Chip
         onClick={() => fold(false)}
-        label={t('maps.legend.chip', { count: rows.length })}
+        label={chip}
         icon={<Dots colors={rows.map(([color]) => color)} />}
         trailing={<CaretUpIcon size={14} />}
       />
@@ -161,12 +198,12 @@ export function MapLegend({
       shadow="md"
       p={0}
       w={250}
-      aria-label={t('maps.legend.title')}
+      aria-label={title}
       style={{ background: 'var(--bg-raised)' }}
     >
       <Group gap={4} px="sm" py={6} wrap="nowrap" style={{ borderBottom: '1px solid var(--border-default)' }}>
         <Text fw={600} size="sm" style={{ flex: 1 }}>
-          {t('maps.legend.title')}
+          {title}
         </Text>
         {onEdit && (
           <ActionIcon variant="subtle" color="gray" size="sm" aria-label={t('maps.legend.edit')} onClick={onEdit}>
@@ -186,7 +223,7 @@ export function MapLegend({
         {list(false)}
         {highlight && (
           <Text size="xs" c="dimmed" px={6} pt={4}>
-            {t('maps.legend.highlightHint')}
+            {areas ? t('maps.legend.areasHighlightHint') : t('maps.legend.highlightHint')}
           </Text>
         )}
       </Box>
@@ -241,6 +278,8 @@ function Chip({
 
 /** What a map's detail gives its legend: its meanings and its preset's name. */
 // oxlint-disable-next-line react/only-export-components
-export function legendOf(map: RelationshipMapDetail): Pick<LegendSetup, 'mapId' | 'meanings' | 'presetName'> {
+export function legendOf(
+  map: RelationshipMapDetail | GeoMapDetail,
+): Pick<LegendSetup, 'mapId' | 'meanings' | 'presetName'> {
   return { mapId: map.id, meanings: map.colorLegend, presetName: map.legendPreset?.name ?? null };
 }

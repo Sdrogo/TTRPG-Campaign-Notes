@@ -1,4 +1,4 @@
-"""Relation color legend presets of a Room (spec 68) and the maps linked to
+"""Color legend presets of a Room (spec 68) and the maps linked to
 them. Nothing here checks who asks: the routes do, through
 `app.domain.map_legends`."""
 
@@ -11,7 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.models import RelationshipMapLegendPresetRow, RelationshipMapRow
 from app.db.relationship_maps_repo import legend_from_json, legend_to_json, map_from_row
-from app.domain.map_legends import LegendPreset
+from app.domain.map_legends import LegendKind, LegendPreset
 from app.domain.relationship_maps import RelationshipMap
 
 
@@ -24,6 +24,7 @@ def _preset_from_row(row: RelationshipMapLegendPresetRow) -> LegendPreset:
         entries=legend_from_json(row.entries),
         created_at=row.created_at,
         updated_at=row.updated_at,
+        kind=LegendKind(row.kind),
     )
 
 
@@ -53,11 +54,13 @@ async def count_presets(session: AsyncSession, room_id: uuid.UUID) -> int:
     return result.scalar_one()
 
 
-async def preset_names(session: AsyncSession, room_id: uuid.UUID) -> set[str]:
-    """The names the Room's presets already use."""
+async def preset_names(session: AsyncSession, room_id: uuid.UUID, kind: LegendKind) -> set[str]:
+    """The names the Room's presets of `kind` already use (unique per kind,
+    spec 77b Decision 8)."""
     result = await session.execute(
         select(RelationshipMapLegendPresetRow.name).where(
-            RelationshipMapLegendPresetRow.room_id == room_id
+            RelationshipMapLegendPresetRow.room_id == room_id,
+            RelationshipMapLegendPresetRow.kind == kind.value,
         )
     )
     return set(result.scalars())
@@ -71,6 +74,7 @@ async def insert_presets(session: AsyncSession, presets: Collection[LegendPreset
                 id=preset.id,
                 room_id=preset.room_id,
                 name=preset.name,
+                kind=preset.kind.value,
                 entries=legend_to_json(preset.entries) or {},
                 created_at=preset.created_at,
                 updated_at=preset.updated_at,

@@ -30,6 +30,7 @@ from app.domain.map_legends import clean_meanings
 from app.domain.models import DocumentVisibility, RoomRole
 from app.domain.relationship_maps import (
     MAX_MAPS_PER_ROOM,
+    AreaLabels,
     ArrowDirection,
     ArrowEnd,
     Board,
@@ -86,12 +87,19 @@ def map_to_json(
     Documents of the file that show it on their page, and its content as the
     requester sees it, already filtered by the caller. A free map has
     `groups`, `cards` and `arrows`, a geographic one `areas`, `pins` and
-    `links`; both lists are always present. A free map with relation color
-    meanings (spec 68, the linked preset's when it has one) writes them as
-    `color_legend`, unused colors included."""
+    `links`; both lists are always present. A map with color meanings
+    (spec 68 for relations, 77b for areas; the linked preset's when it has
+    one, already filtered for the requester) writes them as `color_legend`.
+    A geographic map whose Documents are named only on their largest area
+    writes `area_labels` (spec 77 Decision 5)."""
     legend = {color.value: meaning for color, meaning in (color_legend or {}).items()}
     return {
         **({"color_legend": legend} if legend else {}),
+        **(
+            {"area_labels": relationship_map.area_labels.value}
+            if relationship_map.area_labels == AreaLabels.LARGEST
+            else {}
+        ),
         "id": str(relationship_map.id),
         "name": relationship_map.name,
         "description": relationship_map.description,
@@ -228,6 +236,7 @@ class FileMap:
     board: Board
     geo: GeoBoard
     color_legend: Mapping[MapColor, str] = field(default_factory=dict)
+    area_labels: AreaLabels | None = None
 
 
 def _unreadable() -> UnreadableMapError:
@@ -436,6 +445,11 @@ def read_map(raw: Any) -> FileMap:
         board=Board(groups=groups, cards=cards, arrows=arrows),
         geo=GeoBoard(areas=areas, pins=pins, links=links),
         color_legend=_legend(data.get("color_legend")),
+        area_labels=(
+            _choice(AreaLabels, data.get("area_labels"), AreaLabels.EVERY)
+            if data.get("area_labels") is not None
+            else None
+        ),
     )
 
 
@@ -499,14 +513,16 @@ class PlannedMap:
     master_only_dropped: int
     skipped: MapSkipReason | None = None
     color_legend: Mapping[MapColor, str] = field(default_factory=dict)
+    area_labels: AreaLabels | None = None
 
     @property
     def document_count(self) -> int:
-        """How many Documents the new map places."""
+        """How many Documents the new map places, each once however many
+        areas it has (spec 77 Decision 8)."""
         cards = [card.document_id for card in self.board.cards]
         places = [area.document_id for area in self.geo.areas]
         places += [pin.document_id for pin in self.geo.pins]
-        return sum(1 for document_id in (*cards, *places) if document_id is not None)
+        return len({document_id for document_id in (*cards, *places) if document_id})
 
 
 def map_key(file_index: int, map_index: int) -> str:
@@ -697,6 +713,8 @@ def plan_map(
                 background_url=file_map.background_url,
                 geo=GeoBoard(areas=geo_plan.areas, pins=geo_plan.pins, links=geo_plan.links),
                 card_images=(),
+                color_legend=clean_meanings(file_map.color_legend),
+                area_labels=file_map.area_labels,
             )
         groups = [replace(group, id=group_ids[group.id]) for group in file_map.board.groups]
         board_plan = plan_board_edit(
@@ -737,6 +755,7 @@ def to_source_map(
             plane_width=planned.plane_width,
             plane_height=planned.plane_height,
             color_legend=planned.color_legend,
+            area_labels=planned.area_labels,
         ),
         board=planned.board,
         geo=planned.geo,

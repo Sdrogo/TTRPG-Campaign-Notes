@@ -136,6 +136,7 @@
         "bio": "Biogram"
       },
       "fieldTooLong": "Pole {field} może mieć najwyżej {max} znaków",
+      "unknownPalette": "Nieznana paleta kolorów",
       "deletionNotConfirmed": "Wpisz DELETE, aby potwierdzić usunięcie konta",
       "successorNeeded": "Przed usunięciem konta wskaż innego Mastera lub Administratora w: {rooms}"
     },

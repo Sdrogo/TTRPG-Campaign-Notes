@@ -22,6 +22,7 @@ from app.db.models import (
 )
 from app.domain.models import DocumentVisibility
 from app.domain.relationship_maps import (
+    AreaLabels,
     ArrowDirection,
     ArrowEnd,
     Board,
@@ -57,7 +58,15 @@ def map_from_row(row: RelationshipMapRow) -> RelationshipMap:
         revision=row.revision,
         color_legend=legend_from_json(row.color_legend),
         legend_preset_id=row.legend_preset_id,
+        area_labels=AreaLabels(row.area_labels) if row.area_labels else None,
     )
+
+
+def area_labels_value(relationship_map: RelationshipMap) -> str | None:
+    """Spec 77 Decision 5 as stored: set on a geographic map only."""
+    if relationship_map.kind != MapKind.GEOGRAPHIC or relationship_map.area_labels is None:
+        return None
+    return relationship_map.area_labels.value
 
 
 def legend_from_json(data: dict[str, str] | None) -> dict[MapColor, str]:
@@ -148,6 +157,7 @@ async def insert_map(
             background_path=relationship_map.background_path,
             color_legend=legend_to_json(relationship_map.color_legend),
             legend_preset_id=relationship_map.legend_preset_id,
+            area_labels=area_labels_value(relationship_map),
         )
     )
     await session.flush()
@@ -278,7 +288,7 @@ async def count_maps_for_room(session: AsyncSession, room_id: uuid.UUID) -> int:
 async def update_map(session: AsyncSession, relationship_map: RelationshipMap) -> RelationshipMap:
     """Writes a map's name, description, visibility, mention depth, plane
     size (spec 38), Players' switch (spec 42), relation color meanings or
-    preset link (spec 68) and `updated_at`, and raises
+    preset link (spec 68), area names setting (spec 77) and `updated_at`, and raises
     its revision by one (spec 42 Decision 7: every write counts). Returns
     `relationship_map` with that revision. Raises `LookupError` if it no longer exists."""
     row = await session.get(RelationshipMapRow, relationship_map.id)
@@ -293,6 +303,7 @@ async def update_map(session: AsyncSession, relationship_map: RelationshipMap) -
     row.players_can_edit = relationship_map.players_can_edit
     row.color_legend = legend_to_json(relationship_map.color_legend)
     row.legend_preset_id = relationship_map.legend_preset_id
+    row.area_labels = area_labels_value(relationship_map)
     row.updated_at = relationship_map.updated_at
     row.revision = row.revision + 1
     await session.flush()

@@ -55,6 +55,7 @@ function ImportSummary({ report }: { report: MapImportReport }) {
       <NameList title={t('maps.import.notFound')} names={report.notFound} />
       <NameList title={t('maps.import.ambiguous')} names={report.ambiguous} />
       <NameList title={t('maps.import.repeated')} names={report.repeated} />
+      <NameList title={t('maps.import.recolored')} names={report.recolored} />
     </Stack>
   );
 }

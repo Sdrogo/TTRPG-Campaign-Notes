@@ -16,6 +16,7 @@ const profile: AccountProfile = {
   pronouns: 'they/them',
   bio: null,
   avatarUrl: 'https://cdn.example.com/a.webp',
+  colorPalette: 'standard',
 };
 
 describe('profile form', () => {

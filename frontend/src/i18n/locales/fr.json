@@ -340,6 +340,23 @@
       "try": "Essayer",
       "sample": "Voici comment sonne cette voix quand elle lit tes notes."
     },
+    "palette": {
+      "title": "Couleurs des cartes",
+      "description": "La palette dans laquelle tu vois les cartes, les légendes, les horloges et la Session 0. Si tu distingues mal certaines couleurs, choisis celle qui te convient : les couleurs enregistrées ne changent pas.",
+      "note": "Chacun voit sa propre palette, mais chaque couleur garde son nom : le « rouge » d'une relation est rouge pour tout le monde. Dans la légende, un clic sur une signification met en évidence les relations de cette couleur.",
+      "names": {
+        "standard": "Standard",
+        "protan": "Protanopie (rouge)",
+        "deutan": "Deutéranopie (vert)",
+        "tritan": "Tritanopie (bleu)"
+      },
+      "hints": {
+        "standard": "Les couleurs habituelles",
+        "protan": "Si tu perçois mal le rouge",
+        "deutan": "Si tu perçois mal le vert, le cas le plus courant",
+        "tritan": "Si tu perçois mal le bleu"
+      }
+    },
     "privacy": {
       "title": "Tes données",
       "description": "Télécharge une copie de tout ce que l'app conserve sur toi, ou supprime ton compte.",
@@ -1343,7 +1360,15 @@
       "placePane": "Lieu ouvert à côté de la carte",
       "noNote": "Aucune note",
       "placeNotFound": "Lieu introuvable",
-      "connections": "Liens"
+      "connections": "Liens",
+      "areaLabels": "Noms des Documents à plusieurs zones",
+      "areaLabelsHelp": "Où s'écrit le nom d'un Document qui a plusieurs zones sur cette carte.",
+      "areaLabelsEvery": "Sur chaque zone",
+      "areaLabelsLargest": "Seulement sur la plus grande zone",
+      "alreadyOnMap": "{{name}} (déjà sur la carte)",
+      "sharedColor": "La couleur s'applique aux {{number}} zones de ce Document.",
+      "addArea": "Ajouter une zone",
+      "areaOf": "Zone {{index}} sur {{total}} de ce Document"
     },
     "kind": {
       "label": "Type de carte",
@@ -1367,7 +1392,8 @@
       "ambiguous": "Plusieurs Documents avec ce nom, ils resteront de simples étiquettes :",
       "repeated": "Document déjà sur la carte, ils resteront de simples étiquettes :",
       "backgroundLater": "L'image de fond s'ajoute ensuite, depuis le bouton Carte de la nouvelle carte.",
-      "submit": "Importer"
+      "submit": "Importer",
+      "recolored": "Zones d'un même Document de couleurs différentes, toutes prennent la couleur de la première :"
     },
     "openPreview": "Ouvrir dans l'aperçu",
     "legend": {
@@ -1415,7 +1441,16 @@
       "newPreset": "Nouveau préréglage",
       "addColor": "Ajouter une couleur",
       "colorMeans": "Sur cette carte : {{meaning}}",
-      "colorMeansNothing": "Cette couleur n’a pas encore de sens dans la légende."
+      "colorMeansNothing": "Cette couleur n’a pas encore de sens dans la légende.",
+      "areasTitle": "Légende des zones",
+      "areasChip": "Légende des zones · {{number}}",
+      "areasDialogTitle": "Légende des couleurs des zones",
+      "areasTapHint": "Touchez une signification pour mettre en évidence ses zones.",
+      "areasHighlightHint": "Cliquez à nouveau sur la ligne ou appuyez sur Échap pour voir toutes les zones.",
+      "noAreas": "Cette carte n'a pas encore de zones.",
+      "areasVisibleHint": "La légende ne montre que les couleurs utilisées par les zones, et chacun ne voit que celles des zones qu'il peut voir.",
+      "relationsSection": "Légendes des relations",
+      "areasSection": "Légendes des zones"
     }
   },
   "sessionZero": {
