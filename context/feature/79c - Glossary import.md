@@ -1,11 +1,11 @@
-# 79b - Glossary import
+# 79c - Glossary import
 
 ## Goals
 
 - Product owner's request (2026-11-27, same thread as ticket 79): "voglio
   anche l'import". Ticket 79 put the Glossary in the Room's JSON export
   (`schema_version` 7, list `glossary`) but the import reads the file and
-  ignores that list (79, "Not built"). An exported Room imported again loses
+  ignores that list (79, "Built" section, "Left out for now"). An exported Room imported again loses
   its terms.
 - Goal: the JSON import (spec 27, with Maps of spec 40, Sections of spec 56
   and Clocks of spec 61) also brings the Glossary entries, with a preview
@@ -24,14 +24,14 @@
 ## Decisions (proposed)
 
 1. **Who.** Only someone who manages the Glossary (Administrator or Master,
-   79 Decision 2) imports entries. For anyone else the file's `glossary`
+   79 Decision 3) imports entries. For anyone else the file's `glossary`
    list is ignored, and the preview says so in one line ("Il glossario del
    file non viene importato: solo Master e Amministratori").
 2. **Preview.** A "Glossario" group in the import preview lists every entry
    of the file (term, aliases), all ticked. The importer can untick any.
    Same look as the custom Sections group (spec 56).
 3. **A word already defined in the Room (open question 1).** Words are
-   unique per Room (79 Decision 4). Proposal: when the file's **term**
+   unique per Room (79 Decision 1). Proposal: when the file's **term**
    matches an existing entry (same word ignoring case and accents), the
    preview shows "esiste già" with a choice between **Salta** (the default)
    and **Sostituisci** (the existing entry takes the file's term, aliases,
@@ -48,15 +48,16 @@
    description.
 5. **Visibility.** The file's level is kept. A Selective entry becomes
    Private (the export doesn't carry who was chosen), like a Selective Note
-   in spec 27 and like the Room copy (79 Decision 7). An unknown level takes
+   in spec 27 and like the Room copy (79 Decision 8). An unknown level takes
    the Room's default.
-6. **Limits.** At most 2,000 entries per Room (79). Entries past the limit
+6. **Limits.** At most 2,000 entries per Room, the cap the build of 79 put in
+   `MAX_ENTRIES_PER_ROOM` (`domain/glossary.py`). Entries past the limit
    are skipped and counted in the report. Field limits (term 120, 10
    aliases, definition 10,000, 20 Documents) are enforced; an entry that
    breaks one is skipped with a warning.
 7. **Markdown and Obsidian (open question 2).** Proposal: not in this
    ticket. The Markdown export's Glossary section is for reading. An
-   Obsidian import of terms is a separate idea (79, "Not built").
+   Obsidian import of terms is a separate idea (79, "Left out for now").
 8. **Files from older exports** (schema 1 to 6) have no `glossary`: nothing
    changes for them. The import still accepts schema up to 7.
 

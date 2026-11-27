@@ -255,7 +255,7 @@ image search, read aloud, GDPR (10-01 → 10-10). See the older archives.
   ignores it), a Glossary card on the landing page, a Glossary section in
   the PDF, a server-side Account switch (the highlight switch is per
   device), Reveal for entries.
-- **79b, Glossary import** (ticket written 2026-11-27, awaiting the
+- **79c, Glossary import** (ticket written 2026-11-27, awaiting the
   product owner's answers): the JSON import brings the `glossary` list.
 - **77, Several areas for one Document** (ticket confirmed 2026-11-27,
   **built 2026-11-27**, PR #377 into staging, migration pending): a
