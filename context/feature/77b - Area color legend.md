@@ -11,8 +11,9 @@
 - Spec 68 Decision 15 left geographic maps out "for now" and put the
   meanings on `relationship_maps`: the columns `color_legend` and
   `legend_preset_id` and the presets table already exist and are used for
-  geographic maps too. The only schema change is a `kind` on presets
-  (Decision 8), in ticket 77's migration.
+  geographic maps too. The only schema change is a `kind` on presets,
+  with the unique name constraint moved from `(room_id, name)` to
+  `(room_id, kind, name)` (Decision 8), in ticket 77's migration.
 - Goes with ticket 77 (several areas per Document): with patchwork
   territories, a color legend is what tells the reader which patches belong
   together. Built on the same branch and PR, after 77.

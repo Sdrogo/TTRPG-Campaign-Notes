@@ -108,7 +108,9 @@ same day (see Answered). Confirmed.*
 
 - **Migration** (reversible, one revision for 77 and 77b): drop
   `uq_relationship_map_areas_document`; add `relationship_maps.area_labels`
-  (Decision 5); add `relationship_map_legend_presets.kind` (ticket 77b).
+  (Decision 5); add `relationship_map_legend_presets.kind` and move its unique name
+  constraint from `(room_id, name)` to `(room_id, kind, name)` (ticket 77b;
+  downgrade fails clearly if two presets of different kinds share a name).
   The `document_id` index stays. Downgrade recreates the constraint and
   **fails with a clear message** if a map already has a Document twice as
   an area (it never deletes areas on its own). Applied through the
