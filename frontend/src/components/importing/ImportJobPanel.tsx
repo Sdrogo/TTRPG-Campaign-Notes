@@ -2,6 +2,7 @@ import { Alert, Anchor, Button, Group, Loader, Progress, Stack, Text } from '@ma
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { isActiveImportJob, type ImportJob } from '../../lib/documentImport';
+import { glossaryEntryHref } from '../../lib/glossary';
 import { sectionHref } from '../../lib/landing';
 import { sectionName } from '../../lib/landingText';
 
@@ -17,7 +18,8 @@ interface ImportJobPanelProps {
  * Where the import is (spec 27 Decision 9): running in the background (the
  * dialog can be closed meanwhile), done with the Documents it created or
  * replaced, the maps it created (spec 40) and the Sections of the Room home it
- * wrote (spec 56) as links, and every image, map or Section it skipped, or
+ * wrote (spec 56) and its Glossary entries (spec 79c) as links, and every
+ * image, map, Section or entry it skipped, or
  * failed. While its images arrive in blocks it shows how far they got, and at
  * the end how many came across (spec 59).
  */
@@ -72,8 +74,18 @@ export function ImportJobPanel({ roomId, job, onNew }: ImportJobPanelProps) {
     );
   }
 
-  const { created, replaced, skipped, maps, skippedMaps, sections, skippedSections, images } =
-    job.result;
+  const {
+    created,
+    replaced,
+    skipped,
+    maps,
+    skippedMaps,
+    sections,
+    skippedSections,
+    glossary,
+    skippedGlossary,
+    images,
+  } = job.result;
   const documentLinks = (documents: { id: string; name: string }[]) => (
     <Stack gap={2}>
       {documents.map((document) => (
@@ -201,6 +213,43 @@ export function ImportJobPanel({ roomId, job, onNew }: ImportJobPanelProps) {
                 {t('documentImport.skipped', {
                   document: sectionName(item),
                   reason: t(`documentImport.sections.skipReason.${item.reason}`),
+                })}
+              </Text>
+            ))}
+          </Stack>
+        </>
+      )}
+      {glossary.length > 0 && (
+        <>
+          <Text size="xs" c="dimmed">
+            {t('documentImport.glossary.written')}
+          </Text>
+          <Stack gap={2}>
+            {glossary.map((entry) => (
+              <Anchor
+                key={entry.id}
+                component={Link}
+                to={glossaryEntryHref(roomId, entry.id)}
+                size="sm"
+                style={{ overflowWrap: 'anywhere' }}
+              >
+                {entry.term}
+              </Anchor>
+            ))}
+          </Stack>
+        </>
+      )}
+      {skippedGlossary.length > 0 && (
+        <>
+          <Text size="xs" c="yellow">
+            {t('documentImport.glossary.skippedTitle')}
+          </Text>
+          <Stack gap={2}>
+            {skippedGlossary.map((item, index) => (
+              <Text key={`${item.term}-${index}`} size="xs" c="dimmed">
+                {t('documentImport.skipped', {
+                  document: item.term,
+                  reason: t(`documentImport.glossary.skipReason.${item.reason}`),
                 })}
               </Text>
             ))}

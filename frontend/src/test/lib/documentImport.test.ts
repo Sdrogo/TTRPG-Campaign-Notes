@@ -157,6 +157,8 @@ describe('toImportJob', () => {
       skippedMaps: [{ name: 'La Corte', reason: 'invalid' }],
       sections: [{ id: 'section-1', kind: 'custom', title: 'Tokyo' }],
       skippedSections: [{ kind: 'page_maps', title: null, reason: 'image' }],
+      glossary: [],
+      skippedGlossary: [],
       images: { total: 2, stored: 1, done: 0 },
     });
   });
@@ -213,6 +215,8 @@ describe('the uploads', () => {
       maps: ['0:map:0'],
       sections: ['0:section:3'],
       page_cards: [],
+      glossary: [],
+      glossary_replace: [],
     });
   });
 });

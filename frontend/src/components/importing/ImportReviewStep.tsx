@@ -1,10 +1,11 @@
-import { Badge, Checkbox, Group, Stack, Text } from '@mantine/core';
+import { Badge, Checkbox, Group, SegmentedControl, Stack, Text } from '@mantine/core';
 import type { TFunction } from 'i18next';
 import { useTranslation } from 'react-i18next';
 import {
   isPageCard,
   type ImportPreview,
   type ImportPreviewDocument,
+  type ImportPreviewGlossaryEntry,
   type ImportPreviewMap,
   type ImportPreviewSection,
 } from '../../lib/documentImport';
@@ -21,6 +22,84 @@ interface ImportReviewStepProps {
   /** The keys of the Sections ticked (spec 56): custom ones to add, page cards to apply. */
   selectedSections: Set<string>;
   onToggleSection: (key: string) => void;
+  /** The keys of the Glossary entries ticked (spec 79c). */
+  selectedGlossary: Set<string>;
+  onToggleGlossary: (key: string) => void;
+  /** The keys of the entries chosen to replace the Room's entry with the same term. */
+  glossaryReplace: Set<string>;
+  onChooseGlossary: (key: string, replace: boolean) => void;
+}
+
+/**
+ * One Glossary entry of the files (spec 79c): its tick, its aliases, and why
+ * it can't come; one whose term is already in the Room offers Skip or Replace.
+ */
+function GlossaryEntryLine({
+  entry,
+  checked,
+  onToggle,
+  replace,
+  onChoose,
+}: {
+  entry: ImportPreviewGlossaryEntry;
+  checked: boolean;
+  onToggle: () => void;
+  replace: boolean;
+  onChoose: (replace: boolean) => void;
+}) {
+  const { t } = useTranslation();
+  const exists = entry.skipped === 'exists';
+  return (
+    <Group gap="xs" wrap="nowrap" align="flex-start">
+      <Checkbox
+        checked={exists ? replace : entry.skipped === null && checked}
+        disabled={entry.skipped !== null}
+        onChange={onToggle}
+        aria-label={t('documentImport.glossary.select', { term: entry.term })}
+        mt={2}
+      />
+      <Stack gap={2} style={{ minWidth: 0 }}>
+        <Text size="sm" fw={500} style={{ overflowWrap: 'anywhere' }}>
+          {entry.term}
+        </Text>
+        {entry.aliases.length > 0 && (
+          <Text size="xs" c="dimmed">
+            {t('documentImport.glossary.aliases', { names: entry.aliases.join(', ') })}
+          </Text>
+        )}
+        {exists ? (
+          <Group gap="xs">
+            <Text size="xs" c="yellow">
+              {t('documentImport.glossary.skipReason.exists')}
+            </Text>
+            <SegmentedControl
+              size="xs"
+              value={replace ? 'replace' : 'skip'}
+              onChange={(value) => onChoose(value === 'replace')}
+              aria-label={t('documentImport.glossary.choice', { term: entry.term })}
+              data={[
+                { value: 'skip', label: t('documentImport.glossary.skip') },
+                { value: 'replace', label: t('documentImport.glossary.replace') },
+              ]}
+            />
+          </Group>
+        ) : (
+          entry.skipped !== null && (
+            <Text size="xs" c="yellow">
+              {t(`documentImport.glossary.skipReason.${entry.skipped}`)}
+            </Text>
+          )
+        )}
+        {entry.warnings.map((warning) => (
+          <Text key={warning.code} size="xs" c="yellow">
+            {t(`documentImport.glossary.warning.${warning.code}`, {
+              names: warning.names.join(', '),
+            })}
+          </Text>
+        ))}
+      </Stack>
+    </Group>
+  );
 }
 
 /** One line of what a Document would bring: Notes and images, then its Tags. */
@@ -64,7 +143,9 @@ function sectionDetail(found: ImportPreviewSection, t: TFunction): string {
  * and the maps of the files (spec 40), each with a tick, what it leaves out, or
  * why it can't be created (no tick then), and for the Master the Sections of
  * the Room home (spec 56): custom ones ticked, page cards unticked (ticking one
- * overwrites this Room's card). The wording of each warning is here;
+ * overwrites this Room's card). Then, for an Administrator or the Master, the
+ * Glossary entries (spec 79c): new ones ticked, one whose term is already in
+ * the Room skipped unless Replace is chosen. The wording of each warning is here;
  * whether it applies is the backend's.
  */
 export function ImportReviewStep({
@@ -75,6 +156,10 @@ export function ImportReviewStep({
   onToggleMap,
   selectedSections,
   onToggleSection,
+  selectedGlossary,
+  onToggleGlossary,
+  glossaryReplace,
+  onChooseGlossary,
 }: ImportReviewStepProps) {
   const { t } = useTranslation();
   return (
@@ -220,6 +305,30 @@ export function ImportReviewStep({
             ))}
           </Stack>
         </>
+      )}
+      {preview.glossary.length > 0 && (
+        <>
+          <Text size="sm" fw={500}>
+            {t('documentImport.glossary.found')}
+          </Text>
+          <Stack gap="xs" mah={200} style={{ overflowY: 'auto' }}>
+            {preview.glossary.map((entry) => (
+              <GlossaryEntryLine
+                key={entry.key}
+                entry={entry}
+                checked={selectedGlossary.has(entry.key)}
+                onToggle={() => onToggleGlossary(entry.key)}
+                replace={glossaryReplace.has(entry.key)}
+                onChoose={(replace) => onChooseGlossary(entry.key, replace)}
+              />
+            ))}
+          </Stack>
+        </>
+      )}
+      {preview.glossaryLeftOut > 0 && (
+        <Text size="xs" c="dimmed">
+          {t('documentImport.glossary.leftOut')}
+        </Text>
       )}
     </Stack>
   );
