@@ -603,6 +603,39 @@ describe('ImportDocumentsModal (spec 27)', () => {
     });
   });
 
+  it('imports a file of Glossary terms alone, with no Document (spec 79c)', async () => {
+    api.preview = rawImportPreview({
+      documents: [],
+      glossary: [
+        {
+          key: '0:glossary:0',
+          file_name: 'glossario.json',
+          term: 'Kyōdai',
+          aliases: [],
+          existing_entry_id: null,
+          skipped: null,
+          warnings: [],
+        },
+      ],
+    });
+    api.job = doneJob({ created: [], glossary: [{ id: 'entry-new', term: 'Kyōdai' }] });
+    const { user } = render();
+    await pickAndPreview(user);
+
+    const term = await screen.findByRole('checkbox', { name: 'Importa il termine Kyōdai' });
+    expect(screen.queryByText(/Documenti? trovat/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/selezionat/)).not.toBeInTheDocument();
+    await user.click(term);
+    expect(screen.getByRole('button', { name: 'Importa' })).toBeDisabled();
+    await user.click(term);
+    await user.click(screen.getByRole('button', { name: 'Importa' }));
+
+    expect(await screen.findByRole('link', { name: 'Kyōdai' })).toHaveAttribute(
+      'href',
+      '/rooms/room-1/glossary?entry=entry-new',
+    );
+  });
+
   it('shows a failed import and starts over with "Importa altri file"', async () => {
     api.job = rawImportJob({ status: 'failed', finished_at: '2026-10-08T12:01:00Z' });
     const { user } = render();

@@ -96,3 +96,21 @@ About 1.5 hours of Claude's build time, tests included. No migration.
   hold entries the importer may not bring), the written entries as links
   to the Glossary page, the skipped ones with their reason; 12 languages.
 - No migration.
+
+## Glossary-only files (product owner, 2026-11-28)
+
+The product owner's own glossary file (a JSON with `schema_version` and
+`glossary` only) was refused. Agreed fix:
+
+- A JSON file may bring Glossary entries alone: the `documents` list may be
+  left out when `glossary` is there, and a file with entries but no
+  Document is read. Starting needs at least one Document or entry chosen
+  (else `errors.import.nothingSelected`).
+- A Document mention in a definition that points at no Document of the
+  file links to the Room's Document with that id when the importer sees it,
+  as the linked Documents already do; any other stays plain `#Name`.
+- Hand-written spans are read leniently: a mention's shown word may be in
+  `text` (the export writes `name`), and its kind may be `document` (the
+  export writes `doc`).
+- The review hides the Documents count when the files hold none.
+

@@ -164,9 +164,11 @@ export function ImportReviewStep({
   const { t } = useTranslation();
   return (
     <Stack gap="sm">
-      <Text size="sm" fw={500}>
-        {t('documentImport.found', { count: preview.documents.length })}
-      </Text>
+      {preview.documents.length > 0 && (
+        <Text size="sm" fw={500}>
+          {t('documentImport.found', { count: preview.documents.length })}
+        </Text>
+      )}
       <Stack gap="xs" mah={320} style={{ overflowY: 'auto' }}>
         {preview.documents.map((document) => (
           <Stack key={document.key} gap={2}>

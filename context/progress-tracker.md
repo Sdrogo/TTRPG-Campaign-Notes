@@ -257,7 +257,7 @@ image search, read aloud, GDPR (10-01 → 10-10). See the older archives.
   device), Reveal for entries.
 - **79c, Glossary import** (ticket confirmed 2026-11-27, **built
   2026-11-27**, PR #384 into staging, no migration): the JSON import brings
-  the `glossary` list, Salta / Sostituisci for a term already in the Room.
+  the `glossary` list, Salta / Sostituisci for a term already in the Room. Follow-up 2026-11-28: glossary-only JSON files, mentions linked to Room Documents.
 - **77, Several areas for one Document** (ticket confirmed 2026-11-27,
   **built 2026-11-27**, PR #377 into staging, migration pending): a
   Document may have several areas on a geographic map (patchwork faction
