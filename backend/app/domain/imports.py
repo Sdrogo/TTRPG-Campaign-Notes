@@ -549,7 +549,13 @@ def plan_import(
         for di, document in enumerate(file.documents)
         if choices.selected is None or document_key(fi, di) in choices.selected
     ]
-    if not chosen:
+    # Spec 79c: Glossary entries alone are something to import too.
+    glossary_chosen = context.can_manage_glossary and any(
+        choices.glossary is None or glossary_key(fi, gi) in choices.glossary
+        for fi, file in enumerate(files)
+        for gi in range(len(file.glossary))
+    )
+    if not chosen and not glossary_chosen:
         raise ImportRefusedError("errors.import.nothingSelected")
 
     categories = {
@@ -699,7 +705,14 @@ def _plan_glossary_entry(
     def resolve(ref: MentionRef) -> tuple[MentionKind, uuid.UUID, str] | None:
         if ref.kind is MentionKind.DOCUMENT:
             target = targets.get((file_index, ref.key))
-            return None if target is None else (MentionKind.DOCUMENT, target[0], target[1])
+            if target is not None:
+                return (MentionKind.DOCUMENT, target[0], target[1])
+            # A Room Document the importer sees, by its id, as for the
+            # linked Documents below.
+            room_id = _room_document(context, ref.key)
+            if room_id is None:
+                return None
+            return (MentionKind.DOCUMENT, room_id, context.existing[room_id].name or ref.name)
         if ref.kind is MentionKind.TAG:
             tag = file.tags.get(ref.key)
             found = book.lookup(tag.name if tag else ref.name)

@@ -3119,3 +3119,75 @@ async def test_the_room_changing_while_a_glossary_import_waits(
         {"term": "Bat", "reason": "limit"},
         {"term": "Owl", "reason": "limit"},
     ]
+
+
+async def test_a_file_of_glossary_entries_alone_imports_and_links_room_documents(
+    db_session: AsyncSession,
+    make_token: Callable[..., str],
+    client: AsyncClient,
+    inline_jobs: None,
+) -> None:
+    """Spec 79c, glossary-only files: no `documents` list is needed, and a
+    mention of a Room Document the importer sees, by its id, stays a link
+    (its shown word may be in `text`); any other mention is plain text."""
+    room = await _room(client, make_token)
+    inn = await _post(client, f"{room.url}/documents", room.master, name="Inn")
+    body = {
+        "schema_version": 7,
+        "glossary": [
+            {
+                "term": "Mist",
+                "definition": [
+                    {"type": "text", "text": "Rises at the "},
+                    {"type": "mention", "kind": "document", "target_id": inn["id"], "text": "Inn"},
+                    {"type": "text", "text": " and the "},
+                    {
+                        "type": "mention",
+                        "kind": "document",
+                        "target_id": str(uuid.uuid4()),
+                        "text": "Lost",
+                    },
+                    {"type": "text", "text": "."},
+                ],
+                "document_ids": [inn["id"]],
+            }
+        ],
+    }
+    file = ("glossario.json", json.dumps(body).encode())
+
+    preview = await _preview(client, room, room.master, file)
+    assert preview.status_code == 200, preview.text
+    found = preview.json()
+    assert found["documents"] == []
+    key = found["glossary"][0]["key"]
+    started = await _start_with(client, room, room.master, file, glossary=[key])
+    job = await _job(client, room, room.master, started)
+
+    assert [g["term"] for g in job["result"]["glossary"]] == ["Mist"]
+    mist = (await _glossary(client, room))["Mist"]
+    assert f"doc:{inn['id']}" in mist["definition"]
+    assert "#Lost" in mist["definition"]
+    assert [d["id"] for d in mist["documents"]] == [inn["id"]]
+    assert set(await _documents(client, room)) == {"Inn"}
+
+
+async def test_a_glossary_only_file_with_nothing_chosen_is_refused(
+    db_session: AsyncSession,
+    make_token: Callable[..., str],
+    client: AsyncClient,
+) -> None:
+    """With no Document and no entry chosen there is nothing to import; a
+    file with neither a Documents list nor a Glossary is still unreadable."""
+    room = await _room(client, make_token)
+    file = ("glossario.json", json.dumps({"glossary": [{"term": "Mist"}]}).encode())
+
+    started = await client.post(
+        f"{room.url}/imports",
+        files=_upload(file),
+        data={"choices": json.dumps({"selected": [], "glossary": []})},
+        headers=room.master,
+    )
+    empty = await _preview(client, room, room.master, ("x.json", b'{"schema_version": 7}'))
+
+    assert started.status_code == 422, started.text
+    assert empty.status_code == 422

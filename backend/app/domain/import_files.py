@@ -166,7 +166,8 @@ def parse_file(name: str, data: bytes) -> ImportFile:
         not lowered.endswith((".md", ".markdown", ".txt")) and text.lstrip().startswith(("{", "["))
     )
     parsed = _parse_json(name, text) if is_json else _parse_markdown(name, text)
-    if not parsed.documents:
+    # Spec 79c: a file may bring only Glossary entries.
+    if not parsed.documents and not parsed.glossary:
         raise ImportRefusedError("errors.import.noDocuments", name=name)
     return parsed
 
@@ -233,7 +234,8 @@ def _parse_json(name: str, text: str) -> ImportFile:
             raise ImportRefusedError(
                 "errors.import.unsupportedSchema", name=name, version=version, max=SCHEMA_VERSION
             )
-        raw_documents = data.get("documents")
+        # A file of Glossary entries alone (spec 79c) needs no Documents list.
+        raw_documents = data.get("documents", [] if "glossary" in data else None)
         raw_tags = data.get("tags", [])
         raw_maps = data.get("maps") or []
         raw_sections = data.get("sections") or []
@@ -322,7 +324,11 @@ def _json_text(value: Any, name: str) -> Text:
         span = _object(raw, name)
         if span.get("type") == "mention":
             kind = _mention_kind(span.get("kind"))
-            label = _optional_str(span.get("name"), name) or ""
+            # The export writes the shown word as `name`; a hand-written
+            # file may put it in `text`, as a text span does.
+            label = (
+                _optional_str(span.get("name"), name) or _optional_str(span.get("text"), name) or ""
+            )
             key = _optional_str(span.get("target_id"), name)
             if kind is None or key is None:
                 pieces.append(label)
@@ -334,7 +340,10 @@ def _json_text(value: Any, name: str) -> Text:
 
 
 def _mention_kind(value: Any) -> MentionKind | None:
-    """The kind a span names, or None for one this app doesn't know."""
+    """The kind a span names, or None for one this app doesn't know. The
+    export writes `doc`; a hand-written file may spell it `document`."""
+    if value == "document":
+        return MentionKind.DOCUMENT
     try:
         return MentionKind(value)
     except ValueError:
