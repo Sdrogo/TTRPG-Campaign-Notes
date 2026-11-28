@@ -111,6 +111,10 @@ export function ImportDocumentsModal({ opened, onClose, roomId }: ImportDocument
   // Spec 59 Decision 1: the cap counts the ticked Documents' images only.
   const tickedImages = ticked.reduce((sum, document) => sum + document.imagesCount, 0);
   const overImages = tickedImages > MAX_IMPORT_IMAGES;
+  // Spec 79c: a file may bring Glossary entries alone.
+  const hasDocuments = (preview?.documents.length ?? 0) > 0;
+  const nothingChosen =
+    ticked.length === 0 && selectedGlossary.size === 0 && glossaryReplace.size === 0;
   const chosenSections =
     preview?.sections.filter((section) => selectedSections.has(section.key)) ?? [];
 
@@ -285,19 +289,19 @@ export function ImportDocumentsModal({ opened, onClose, roomId }: ImportDocument
                       count: tickedImages,
                       max: MAX_IMPORT_IMAGES,
                     })
-                  : t('documentImport.selectedCount', { count: ticked.length })}
+                  : hasDocuments && t('documentImport.selectedCount', { count: ticked.length })}
               </Text>
               {existing.length > 0 ? (
                 <Button
                   onClick={() => setStep('existing')}
-                  disabled={ticked.length === 0 || overImages}
+                  disabled={nothingChosen || overImages}
                 >
                   {t('documentImport.next')}
                 </Button>
               ) : (
                 <Button
                   onClick={handleStart}
-                  disabled={ticked.length === 0 || overImages}
+                  disabled={nothingChosen || overImages}
                   loading={startImport.isPending}
                 >
                   {t('documentImport.start')}
